@@ -1,0 +1,9 @@
+About:
+Sample code demonstrating how to to bind a native library to different languages.
+
+Building:
+Each language have build recipe scripts (either through Makefiles and/or shell scripts). Tests are also provided within "test" directory per language. Depedencies are not configured, so it is necessary to build the core libraries first (C and C++) before building others.
+
+License:
+The files in this project are licensed under "The MIT License". Please see the file LICENSE for more information.
+
