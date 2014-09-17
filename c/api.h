@@ -18,6 +18,10 @@ typedef void* CLibPerson;
 
 CLIB_API size_t CLErrNumGetMessage(CLibErrNum errnum, char* message, size_t messageSize);
 
+/* Library initialization routines. */
+CLIB_API CLibErrNum CLLibraryInitialize(void);
+CLIB_API void CLLibraryTerminate(void);
+
 CLIB_API CLibErrNum CLAddressCreate(
     int streetNum, const char* street,
     const char* city, const char* province,

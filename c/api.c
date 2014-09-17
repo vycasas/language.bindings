@@ -12,7 +12,27 @@ typedef enum _CoreErrNums
 }
 CoreErrNums;
 
-#define TO_CLIBERRNUM(errnum) ((CoreErrNums) errnum)
+typedef struct _CoreAddress
+{
+    int streetNum;
+    char street[40];
+    char city[16];
+    char province[8];
+    char country[16];
+    char zipCode[8];
+}
+CoreAddress;
+
+typedef struct _CorePerson
+{
+    char lastName[24];
+    char firstName[24];
+    int age;
+    CoreAddress address;
+}
+CorePerson;
+
+#define TO_CLIBERRNUM(errnum) ((size_t) errnum)
 
 #if defined(__cplusplus)
 extern "C"
@@ -47,16 +67,16 @@ CLIB_API size_t CLErrNumGetMessage(CLibErrNum errnum, char* message, size_t mess
     return (result);
 }
 
-typedef struct _CoreAddress
+CLIB_API CLibErrNum CLLibraryInitialize(void)
 {
-    int streetNum;
-    char street[40];
-    char city[16];
-    char province[8];
-    char country[16];
-    char zipCode[8];
+    /* Just stub. */
+    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
-CoreAddress;
+
+CLIB_API void CLLibraryTerminate(void)
+{
+    return;
+}
 
 CLIB_API CLibErrNum CLAddressCreate(
     int streetNum, const char* street,
@@ -233,15 +253,6 @@ CLIB_API CLibErrNum CLAddressToString(CLibAddress address, char* str, size_t str
 
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
-
-typedef struct _CorePerson
-{
-    char lastName[24];
-    char firstName[24];
-    int age;
-    CoreAddress address;
-}
-CorePerson;
 
 CLIB_API CLibErrNum CLPersonCreate(
    const char* lastName, const char* firstName,

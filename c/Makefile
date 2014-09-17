@@ -11,7 +11,7 @@ LDFLAGS := -shared -flto
 LINKLIBS := -lc
 
 $(OUTDIR)/libclib.dylib : $(OBJDIR)/api_c.o
-	$(LD) -o $@ $(LDFLAGS) $< $(LINKLIBS)
+	$(LD) -o $@ $(LDFLAGS) $^ $(LINKLIBS)
 
 $(OBJDIR)/api_c.o : api.c api.h
 	$(CC) -o $@ -c $< $(CFLAGS) $(INCLUDEDIRS)
