@@ -104,11 +104,11 @@ namespace CXXLib
         CLibPerson _impl;
     }; // class Person
 
-    class CXXLIB_API Generator
+    class CXXLIB_API GeneratorBase
     {
     public:
-        Generator(void);
-        virtual ~Generator(void) = 0;
+        GeneratorBase(void);
+        virtual ~GeneratorBase(void) = 0;
 
         virtual int generateInt(int data) const = 0;
         virtual std::string generateString(int data) const = 0;
@@ -119,12 +119,12 @@ namespace CXXLib
             char* result, size_t resultSize, size_t* charWritten,
             void* userData
         );
-    }; // class Generator
+    }; // class GeneratorBase
 
     struct CXXLIB_API GeneratorFunctions
     {
-        static void PrintIntUsingGenerator(std::unique_ptr<Generator> generator);
-        static void PrintStringUsingGenerator(std::unique_ptr<Generator> generator);
+        static void PrintIntUsingGenerator(std::unique_ptr<GeneratorBase> generator);
+        static void PrintStringUsingGenerator(std::unique_ptr<GeneratorBase> generator);
 
         GeneratorFunctions(void) = delete;
         ~GeneratorFunctions(void) = delete;

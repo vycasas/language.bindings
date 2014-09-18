@@ -384,23 +384,23 @@ namespace CXXLib
         return (std::string(buffer.data()));
     }
 
-    Generator::Generator(void)
+    GeneratorBase::GeneratorBase(void)
     { return; }
 
-    Generator::~Generator(void)
+    GeneratorBase::~GeneratorBase(void)
     { return; }
 
-    CLibErrNum Generator::IntFunction(int data, int* result, void* userData)
+    CLibErrNum GeneratorBase::IntFunction(int data, int* result, void* userData)
     {
         if (result == nullptr || userData == nullptr)
             return (2);
 
-        Generator* generatorPtr = reinterpret_cast<Generator*>(userData);
+        GeneratorBase* generatorPtr = reinterpret_cast<GeneratorBase*>(userData);
         *result = generatorPtr->generateInt(data);
         return (0);
     }
 
-    CLibErrNum Generator::StringFunction(
+    CLibErrNum GeneratorBase::StringFunction(
         int data,
         char* result, size_t resultSize, size_t* charWritten,
         void* userData
@@ -410,7 +410,7 @@ namespace CXXLib
         if (result == nullptr || resultSize == 0 || userData == nullptr)
             return (2);
 
-        Generator* generatorPtr = reinterpret_cast<Generator*>(userData);
+        GeneratorBase* generatorPtr = reinterpret_cast<GeneratorBase*>(userData);
         auto implResult = generatorPtr->generateString(data);
         std::strncpy(result, implResult.data(), resultSize);
 
@@ -420,7 +420,7 @@ namespace CXXLib
         return (0);
     }
 
-    void GeneratorFunctions::PrintIntUsingGenerator(std::unique_ptr<Generator> generator)
+    void GeneratorFunctions::PrintIntUsingGenerator(std::unique_ptr<GeneratorBase> generator)
     {
         // This is easily achievable if we are not going through a C ABI, but our sample requires doing so.
         auto c_api_call_result = CLib::CLCorePrintIntUsingGenerator(generator.release());
@@ -428,7 +428,7 @@ namespace CXXLib
         return;
     }
 
-    void GeneratorFunctions::PrintStringUsingGenerator(std::unique_ptr<Generator> generator)
+    void GeneratorFunctions::PrintStringUsingGenerator(std::unique_ptr<GeneratorBase> generator)
     {
         auto c_api_call_result = CLib::CLCorePrintStringUsingGenerator(generator.release());
         CXXLIB_API_CHECK(c_api_call_result);
