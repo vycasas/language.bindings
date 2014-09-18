@@ -35,9 +35,24 @@ namespace CXXLib
         std::string _message;
         CLibErrNum _impl;
 
+        friend struct Library;
         friend class Address;
         friend class Person;
-    };
+        friend struct GeneratorFunctions;
+    }; // class Exception
+
+    struct CXXLIB_API Library
+    {
+        static void initialize(void);
+        static void terminate(void);
+
+        Library(void) = delete;
+        ~Library(void) = delete;
+        Library(const Library&) = delete;
+        Library(const Library&&) = delete;
+        Library& operator=(const Library&) = delete;
+        Library& operator=(const Library&&) = delete;
+    }; // struct Library
 
     class CXXLIB_API Address
     {
@@ -88,6 +103,36 @@ namespace CXXLib
     private:
         CLibPerson _impl;
     }; // class Person
+
+    class CXXLIB_API Generator
+    {
+    public:
+        Generator(void);
+        virtual ~Generator(void) = 0;
+
+        virtual int generateInt(int data) const = 0;
+        virtual std::string generateString(int data) const = 0;
+
+        static CLibErrNum IntFunction(int data, int* result, void* userData);
+        static CLibErrNum StringFunction(
+            int data,
+            char* result, size_t resultSize, size_t* charWritten,
+            void* userData
+        );
+    }; // class Generator
+
+    struct CXXLIB_API GeneratorFunctions
+    {
+        static void PrintIntUsingGenerator(std::unique_ptr<Generator> generator);
+        static void PrintStringUsingGenerator(std::unique_ptr<Generator> generator);
+
+        GeneratorFunctions(void) = delete;
+        ~GeneratorFunctions(void) = delete;
+        GeneratorFunctions(const GeneratorFunctions&) = delete;
+        GeneratorFunctions(const GeneratorFunctions&&) = delete;
+        GeneratorFunctions& operator=(const GeneratorFunctions&) = delete;
+        GeneratorFunctions& operator=(const GeneratorFunctions&&) = delete;
+    }; // struct GeneratorFunctions
 } // namespace CXXLib
 
 #endif // !defined(CXXLIB_API_HXX)
