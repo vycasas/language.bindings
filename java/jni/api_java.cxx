@@ -2,6 +2,7 @@
 
 #include "api_java.hxx"
 
+#include <algorithm>
 #include <codecvt>
 #include <cstdint>
 #include <locale>
@@ -33,7 +34,7 @@
         jenv->Throw(jniEx); \
     }
 
-namespace
+namespace // Implementation Details
 {
     // utility wrapper to adapt locale-bound facets for wstring/wbuffer convert
     template<class facetT>
@@ -51,7 +52,7 @@ namespace
         if (javaLibExceptionClass == nullptr)
             return (nullptr);
 
-        jmethodID constructorID = jenv->GetMethodID(javaLibExceptionClass, "<init>", "(L)V");
+        jmethodID constructorID = jenv->GetMethodID(javaLibExceptionClass, "<init>", "(J)V");
 
         if (constructorID == nullptr)
             return (nullptr);
@@ -71,7 +72,111 @@ namespace
 
         return (result);
     }
-}
+
+    class JavaLibException : public CXXLib::Exception
+    {
+    public:
+        JavaLibException(void) : CXXLib::Exception()
+        { return; }
+
+    private:
+        JavaLibException(CLibErrNum errNum) : CXXLib::Exception(errNum)
+        { return; }
+
+        friend class JavaLibGeneratorImpl;
+    }; // class Exception
+
+    class JavaLibGeneratorImpl : public CXXLib::GeneratorBase
+    {
+    public:
+        JavaLibGeneratorImpl(JNIEnv* jenv, jobject impl);
+
+        virtual ~JavaLibGeneratorImpl(void) override;
+
+        virtual int generateInt(int data) const override;
+        virtual std::string generateString(int data) const override;
+
+        JNIEnv* _jenv;
+        jobject _impl;
+    }; // class JavaLibGeneratorImpl
+
+    JavaLibGeneratorImpl::JavaLibGeneratorImpl(JNIEnv* jenv, jobject impl) :
+        _jenv(jenv)
+    {
+        // Inform JVM to make this object as "do not garbage collect!"
+        _impl = _jenv->NewGlobalRef(impl);
+        return;
+    }
+
+    JavaLibGeneratorImpl::~JavaLibGeneratorImpl(void)
+    {
+        // Inform JVM that this object can be cleaned by garbage collector.
+        _jenv->DeleteGlobalRef(_impl);
+        return;
+    }
+
+    int JavaLibGeneratorImpl::generateInt(int data) const
+    {
+        if (_jenv == nullptr || _impl == nullptr) {
+            throw (JavaLibException(2));
+        }
+
+        jclass igeneratorClass /* net.dotslashzero.javalib.IGenerator */ =
+            _jenv->FindClass("net/dotslashzero/javalib/IGenerator");
+
+        if (igeneratorClass == nullptr) {
+            throw (JavaLibException(2));
+        }
+
+        jmethodID generateIntID = _jenv->GetMethodID(igeneratorClass, "generateInt", "(I)I");
+
+        if (generateIntID == nullptr) {
+            throw (JavaLibException(2));
+        }
+
+        jint result = _jenv->CallIntMethod(_impl, generateIntID, static_cast<jint>(data));
+
+        return (static_cast<int>(result));
+    }
+
+    std::string JavaLibGeneratorImpl::generateString(int data) const
+    {
+        if (_jenv == nullptr || _impl == nullptr) {
+            throw (JavaLibException(2));
+        }
+
+        jclass igeneratorClass /* net.dotslashzero.javalib.IGenerator */ =
+            _jenv->FindClass("net/dotslashzero/javalib/IGenerator");
+
+        if (igeneratorClass == nullptr) {
+            throw (JavaLibException(2));
+        }
+
+        jmethodID generateStringID = _jenv->GetMethodID(igeneratorClass, "generateInt", "(I)Ljava/lang/String;");
+
+        if (generateStringID == nullptr) {
+            throw (JavaLibException(2));
+        }
+
+        jstring result = static_cast<jstring>(
+            _jenv->CallObjectMethod(_impl, generateStringID, static_cast<jint>(data))
+        );
+
+        if (result == nullptr)
+            return ("");
+
+        jboolean isStringCopy = JNI_FALSE;
+        const char* resultBuffer = _jenv->GetStringUTFChars(result, &isStringCopy);
+
+        std::string cxxResult(resultBuffer);
+
+        if (isStringCopy) {
+            _jenv->ReleaseStringUTFChars(result, resultBuffer);
+        }
+
+        return (cxxResult);
+    }
+} // namespace // Implementation Details
 
 /*
  * Class:     net_dotslashzero_javalib_JavaLibException
@@ -103,6 +208,7 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetM
     JNIEnv* jenv, jclass, jlong exceptionImpl, jcharArray message
 )
 {
+    BEGIN_EX_GUARD(jenv);
     auto* exceptionPtr = GET_CORE_EXCEPTION_PTR(exceptionImpl);
 
     if (exceptionPtr == nullptr)
@@ -119,6 +225,7 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetM
     auto u16ExMessage = conv16.from_bytes(exMessage.data());
 
     jenv->SetCharArrayRegion(message, 0, u16ExMessage.size(), reinterpret_cast<const jchar*>(u16ExMessage.data()));
+    END_EX_GUARD(jenv);
 
     return (0);
 }
@@ -137,6 +244,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeCreateAddress
     jobject addressImpl
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     // Before we create an actual Address, let us evaluate the parameters first so we don't need to do clean up if
     // something fails.
 
@@ -230,6 +339,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeCreateAddress
     // it is important that we release here in case CallVoidMethod fails...
     coreAddressPtr.release();
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -264,6 +375,7 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreetNum(
     JNIEnv* jenv, jclass, jlong addressImpl, jobject streetNum
 )
 {
+    BEGIN_EX_GUARD(jenv);
     auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
 
     if (addressPtr == nullptr)
@@ -284,6 +396,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreetNum(
 
     jenv->CallVoidMethod(streetNum, setIntID, static_cast<jint>(coreStreetNum));
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -297,6 +411,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreet(
     JNIEnv* jenv, jclass, jlong addressImpl, jobject street
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
 
     if (addressPtr == nullptr)
@@ -319,6 +435,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreet(
 
     jenv->CallVoidMethod(street, setValueID, streetValue);
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -332,6 +450,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCity(
     JNIEnv* jenv, jclass, jlong addressImpl, jobject city
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
 
     if (addressPtr == nullptr)
@@ -354,6 +474,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCity(
 
     jenv->CallVoidMethod(city, setValueID, cityValue);
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -367,6 +489,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetProvince(
     JNIEnv* jenv, jclass, jlong addressImpl, jobject province
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
 
     if (addressPtr == nullptr)
@@ -389,6 +513,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetProvince(
 
     jenv->CallVoidMethod(province, setValueID, provinceValue);
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -402,6 +528,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCountry(
     JNIEnv* jenv, jclass, jlong addressImpl, jobject country
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
 
     if (addressPtr == nullptr)
@@ -424,6 +552,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCountry(
 
     jenv->CallVoidMethod(country, setValueID, countryValue);
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -437,6 +567,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetZipCode(
     JNIEnv* jenv, jclass, jlong addressImpl, jobject zipCode
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
 
     if (addressPtr == nullptr)
@@ -459,6 +591,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetZipCode(
 
     jenv->CallVoidMethod(zipCode, setValueID, zipCodeValue);
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -475,6 +609,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeCreatePerson(
     jobject personImpl
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     const char* jstringCstr = nullptr;
     jboolean isStringCopy = JNI_FALSE;
 
@@ -532,6 +668,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeCreatePerson(
     // it is important that we release here in case CallVoidMethod fails...
     corePersonPtr.release();
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -565,6 +703,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetLastName(
     JNIEnv* jenv, jclass, jlong personImpl, jobject lastName
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
 
     if (personPtr == nullptr)
@@ -587,6 +727,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetLastName(
 
     jenv->CallVoidMethod(lastName, setValueID, lastNameValue);
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -600,6 +742,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetFirstName(
     JNIEnv* jenv, jclass, jlong personImpl, jobject firstName
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
 
     if (personPtr == nullptr)
@@ -622,6 +766,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetFirstName(
 
     jenv->CallVoidMethod(firstName, setValueID, firstNameValue);
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -635,6 +781,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAge(
     JNIEnv* jenv, jclass, jlong personImpl, jobject age
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
 
     if (personPtr == nullptr)
@@ -655,6 +803,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAge(
 
     jenv->CallVoidMethod(age, setIntID, static_cast<jint>(coreAge));
 
+    END_EX_GUARD(jenv);
+
     return (0);
 }
 
@@ -668,6 +818,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAddress(
     JNIEnv* jenv, jclass, jlong personImpl, jobject addressImpl
 )
 {
+    BEGIN_EX_GUARD(jenv);
+
     auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
 
     if (personPtr == nullptr)
@@ -702,6 +854,8 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAddress(
 
     // it is important that we release here in case CallVoidMethod fails...
     coreNewAddressPtr.release();
+
+    END_EX_GUARD(jenv);
 
     return (0);
 }

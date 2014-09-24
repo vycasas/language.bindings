@@ -23,19 +23,36 @@ namespace CXXLibCore
         virtual std::string generateString(int data) const = 0;
     }; // class Generator
 
-    int GetIntUsingGenerator(const Generator& generator)
+    class Printer
+    {
+    public:
+        Printer(std::unique_ptr<Generator> generator) : 
+            _generator(std::move(generator))
+        { return; }
+
+        void printInt(void);
+        void printString(void);
+
+    private:
+        std::unique_ptr<Generator> _generator;
+    }; // class Printer
+
+    void Printer::printInt(void)
     {
         std::random_device rd;
         std::uniform_int_distribution<int> dist(0, 999);
-        return (generator.generateInt(dist(rd)));
+        std::cout << "The value of int is: " << _generator->generateInt(dist(rd)) << std::endl;
+        return;
     }
 
-    std::string GetStringUsingGenerator(const Generator& generator)
+    void Printer::printString(void)
     {
         std::random_device rd;
         std::uniform_int_distribution<int> dist(0, 999);
-        return (generator.generateString(dist(rd)));
+        std::cout << "The value of string is: " << _generator->generateString(dist(rd)) << std::endl;
+        return;
     }
+
 } // namespace CXXLibCore
 
 // C interface for the Generator sample. Not necessary, but added for demonstration purposes.
@@ -48,6 +65,7 @@ namespace CLib
         char* result, size_t resultSize, size_t* charWritten,
         void* userData
     );
+    typedef void* CLCorePrinter;
 
     namespace CXXImplDetail
     {
@@ -109,7 +127,7 @@ namespace CLib
             std::unique_ptr<CXXImplDetail::CLibGeneratorImpl> result(
                 new CXXImplDetail::CLibGeneratorImpl(intFunction, stringFunction, userData)
             );
-            *generator = reinterpret_cast<CLCoreGenerator>(result.release());
+            *generator = static_cast<CLCoreGenerator>(result.release());
         }
         catch (...) {
             return (1);
@@ -125,7 +143,7 @@ namespace CLib
 
         try {
             std::unique_ptr<CXXImplDetail::CLibGeneratorImpl> ownedPtr(
-                reinterpret_cast<CXXImplDetail::CLibGeneratorImpl*>(generator)
+                static_cast<CXXImplDetail::CLibGeneratorImpl*>(generator)
             );
         }
         catch (...) {
@@ -135,18 +153,21 @@ namespace CLib
         return (0);
     }
 
-    CLibErrNum CLCorePrintIntUsingGenerator(CLCoreGenerator generator)
+    CLibErrNum CLCorePrinterCreate(CLCoreGenerator generator, CLCorePrinter* printer)
     {
-        if (generator == nullptr)
+        if (generator == nullptr || printer == nullptr)
             return (2);
 
         try {
-            std::unique_ptr<CXXImplDetail::CLibGeneratorImpl> ownedPtr(
-                reinterpret_cast<CXXImplDetail::CLibGeneratorImpl*>(generator)
+            std::unique_ptr<CXXLibCore::Generator> coreGenerator(
+                std::move(static_cast<CXXImplDetail::CLibGeneratorImpl*>(generator))
             );
 
-            auto result = CXXLibCore::GetIntUsingGenerator(*ownedPtr);
-            std::cout << "The value of int is: " << result << std::endl;
+            std::unique_ptr<CXXLibCore::Printer> corePrinter(
+                new CXXLibCore::Printer(std::move(coreGenerator))
+            );
+
+            *printer = static_cast<CLCorePrinter>(corePrinter.release());
         }
         catch (...) {
             return (1);
@@ -155,18 +176,15 @@ namespace CLib
         return (0);
     }
 
-    CLibErrNum CLCorePrintStringUsingGenerator(CLCoreGenerator generator)
+    CLibErrNum CLCorePrinterDestroy(CLCorePrinter printer)
     {
-        if (generator == nullptr)
+        if (printer == nullptr)
             return (2);
 
         try {
-            std::unique_ptr<CXXImplDetail::CLibGeneratorImpl> ownedPtr(
-                reinterpret_cast<CXXImplDetail::CLibGeneratorImpl*>(generator)
+            std::unique_ptr<CXXLibCore::Printer> ownedPtr(
+                static_cast<CXXLibCore::Printer*>(printer)
             );
-
-            auto result = CXXLibCore::GetStringUsingGenerator(*ownedPtr);
-            std::cout << "The value of string is: " << result << std::endl;
         }
         catch (...) {
             return (1);
@@ -174,6 +192,39 @@ namespace CLib
 
         return (0);
     }
+
+    CLibErrNum CLCorePrinterPrintInt(CLCorePrinter printer)
+    {
+        if (printer == nullptr)
+            return (2);
+
+        try {
+            CXXLibCore::Printer* corePrinter = static_cast<CXXLibCore::Printer*>(printer);
+            corePrinter->printInt();
+        }
+        catch (...) {
+            return (1);
+        }
+
+        return (0);
+    }
+
+    CLibErrNum CLCorePrinterPrintString(CLCorePrinter printer)
+    {
+        if (printer == nullptr)
+            return (2);
+
+        try {
+            CXXLibCore::Printer* corePrinter = static_cast<CXXLibCore::Printer*>(printer);
+            corePrinter->printString();
+        }
+        catch (...) {
+            return (1);
+        }
+
+        return (0);
+    }
+
 } // namespace CLib
 
 namespace CXXLib
@@ -419,19 +470,25 @@ namespace CXXLib
 
         return (0);
     }
-
-    void GeneratorFunctions::PrintIntUsingGenerator(std::unique_ptr<GeneratorBase> generator)
+/*
+    Printer::Printer(std::unique_ptr<GeneratorBase> generator)
     {
-        // This is easily achievable if we are not going through a C ABI, but our sample requires doing so.
-        auto c_api_call_result = CLib::CLCorePrintIntUsingGenerator(generator.release());
-        CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
 
-    void GeneratorFunctions::PrintStringUsingGenerator(std::unique_ptr<GeneratorBase> generator)
+    Printer::~Printer(void)
     {
-        auto c_api_call_result = CLib::CLCorePrintStringUsingGenerator(generator.release());
-        CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
+
+    void Printer::printInt(void)
+    {
+        return;
+    }
+
+    void Printer::printString(void)
+    {
+        return;
+    }
+*/
 } // namespace CXXLib

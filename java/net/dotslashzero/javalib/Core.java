@@ -69,6 +69,14 @@ class Core
         }
     }
 
+    static class PrinterType extends NativeType
+    {
+        public PrinterType(long impl)
+        {
+            super(Long.valueOf(impl));
+        }
+    }
+
     public static class ApiBase<T extends NativeType>
     {
         T _impl;

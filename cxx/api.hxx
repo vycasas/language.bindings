@@ -13,6 +13,12 @@ namespace CXXLib
     class CXXLIB_API Exception : std::exception
     {
     public:
+        Exception(void) :
+            std::exception(),
+            _message(""),
+            _impl(0)
+        { return; }
+
         Exception(const Exception& src) :
             std::exception(src),
             _message(src._message),
@@ -29,16 +35,17 @@ namespace CXXLib
 
         virtual const char* what(void) const noexcept override;
 
-    private:
+    protected:
         Exception(CLibErrNum errNum);
 
+    private:
         std::string _message;
         CLibErrNum _impl;
 
         friend struct Library;
         friend class Address;
         friend class Person;
-        friend struct GeneratorFunctions;
+        friend class Printer;
     }; // class Exception
 
     struct CXXLIB_API Library
@@ -121,18 +128,20 @@ namespace CXXLib
         );
     }; // class GeneratorBase
 
-    struct CXXLIB_API GeneratorFunctions
+    class CXXLIB_API Printer
     {
-        static void PrintIntUsingGenerator(std::unique_ptr<GeneratorBase> generator);
-        static void PrintStringUsingGenerator(std::unique_ptr<GeneratorBase> generator);
+    public:
+        Printer(std::unique_ptr<GeneratorBase> generator);
+        virtual ~Printer(void);
 
-        GeneratorFunctions(void) = delete;
-        ~GeneratorFunctions(void) = delete;
-        GeneratorFunctions(const GeneratorFunctions&) = delete;
-        GeneratorFunctions(const GeneratorFunctions&&) = delete;
-        GeneratorFunctions& operator=(const GeneratorFunctions&) = delete;
-        GeneratorFunctions& operator=(const GeneratorFunctions&&) = delete;
-    }; // struct GeneratorFunctions
+        void printInt(void);
+        void printString(void);
+
+        Printer(const Printer&) = delete;
+        Printer(const Printer&&) = delete;
+        Printer& operator=(const Printer&) = delete;
+        Printer& operator=(const Printer&&) = delete;
+    }; // class Printer
 } // namespace CXXLib
 
 #endif // !defined(CXXLIB_API_HXX)

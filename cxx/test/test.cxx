@@ -41,12 +41,6 @@ int main(void)
         CXXLib::Person person{ "Wayne", "Bruce", 25, address };
         std::cout << "New person created!" << std::endl;
         std::cout << person.toString() << std::endl;
-
-        std::unique_ptr<TestGenerator> generatorPtr(new TestGenerator);
-        CXXLib::GeneratorFunctions::PrintIntUsingGenerator(std::move(generatorPtr));
-        CXXLib::GeneratorFunctions::PrintStringUsingGenerator(
-            std::unique_ptr<CXXLib::GeneratorBase>(new TestGenerator)
-        );
     }
     catch (CXXLib::Exception& e) {
         std::cerr << "An error has occurred: " << e.getMessage() << std::endl;
