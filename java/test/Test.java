@@ -1,9 +1,28 @@
 import net.dotslashzero.javalib.Address;
+import net.dotslashzero.javalib.IGenerator;
 import net.dotslashzero.javalib.Library;
 import net.dotslashzero.javalib.Person;
+import net.dotslashzero.javalib.Printer;
 
 public class Test
 {
+    public static class MyGenerator implements IGenerator
+    {
+        public MyGenerator()
+        {
+        }
+
+        public int generateInt(int data)
+        {
+            return (data * data);
+        }
+
+        public String generateString(int data)
+        {
+            return ("" + data);
+        }
+    }
+
     public static void main(String[] args)
     {
         try {
@@ -20,6 +39,16 @@ public class Test
             System.out.println("New person created!");
             System.out.println("Person:");
             System.out.println(person.toString());
+
+            System.out.println("Creating a generator...");
+            MyGenerator generator = new MyGenerator();
+            System.out.println("New generator created!");
+            System.out.println("Creating a printer...");
+            Printer printer = new Printer(generator);
+            System.out.println("New printer created!");
+            System.out.println("Performing printer actions...");
+            printer.printInt();
+            printer.printString();
 
             Library.terminate();
         }

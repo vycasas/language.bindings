@@ -126,6 +126,7 @@ namespace CXXLib
             char* result, size_t resultSize, size_t* charWritten,
             void* userData
         );
+        static CLibErrNum DestroyFunction(void* userData);
     }; // class GeneratorBase
 
     class CXXLIB_API Printer
@@ -141,6 +142,10 @@ namespace CXXLib
         Printer(const Printer&&) = delete;
         Printer& operator=(const Printer&) = delete;
         Printer& operator=(const Printer&&) = delete;
+
+    private:
+        typedef void* CLibPrinter;
+        CLibPrinter _impl;
     }; // class Printer
 } // namespace CXXLib
 

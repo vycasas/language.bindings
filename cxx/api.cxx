@@ -65,6 +65,7 @@ namespace CLib
         char* result, size_t resultSize, size_t* charWritten,
         void* userData
     );
+    typedef CLibErrNum (*CLCoreGeneratorDestroyFunction)(void* userData);
     typedef void* CLCorePrinter;
 
     namespace CXXImplDetail
@@ -75,6 +76,7 @@ namespace CLib
             CLibGeneratorImpl(
                 CLCoreGenerateIntFunction generateIntImpl,
                 CLCoreGenerateStringFunction generateStringImpl,
+                CLCoreGeneratorDestroyFunction destroyImpl,
                 void* userData
             );
             virtual ~CLibGeneratorImpl(void);
@@ -84,18 +86,27 @@ namespace CLib
         private:
             CLCoreGenerateIntFunction _generateIntImpl;
             CLCoreGenerateStringFunction _generateStringImpl;
+            CLCoreGeneratorDestroyFunction _destroyImpl;
             void* _userData;
         }; // class CLibGeneratorImpl
 
         CLibGeneratorImpl::CLibGeneratorImpl(
             CLCoreGenerateIntFunction generateIntImpl,
             CLCoreGenerateStringFunction generateStringImpl,
+            CLCoreGeneratorDestroyFunction destroyImpl,
             void* userData
-        ) : _generateIntImpl(generateIntImpl), _generateStringImpl(generateStringImpl), _userData(userData)
+        ) :
+            _generateIntImpl(generateIntImpl),
+            _generateStringImpl(generateStringImpl),
+            _destroyImpl(destroyImpl),
+            _userData(userData)
         { return; }
 
         CLibGeneratorImpl::~CLibGeneratorImpl(void)
-        { return; }
+        {
+            this->_destroyImpl(_userData);
+            return;
+        }
 
         int CLibGeneratorImpl::generateInt(int data) const
         {
@@ -116,6 +127,7 @@ namespace CLib
     CLibErrNum CLCoreGeneratorCreate(
         CLCoreGenerateIntFunction intFunction,
         CLCoreGenerateStringFunction stringFunction,
+        CLCoreGeneratorDestroyFunction destroyFunction,
         void* userData,
         CLCoreGenerator* generator
     )
@@ -125,7 +137,7 @@ namespace CLib
 
         try {
             std::unique_ptr<CXXImplDetail::CLibGeneratorImpl> result(
-                new CXXImplDetail::CLibGeneratorImpl(intFunction, stringFunction, userData)
+                new CXXImplDetail::CLibGeneratorImpl(intFunction, stringFunction, destroyFunction, userData)
             );
             *generator = static_cast<CLCoreGenerator>(result.release());
         }
@@ -269,6 +281,7 @@ namespace CXXLib
     ) : _impl{nullptr}
     {
         auto c_api_call_result = CLAddressCreate(
+
             streetNum, street.data(),
             city.data(), province.data(),
             country.data(), zipCode.data(),
@@ -446,7 +459,7 @@ namespace CXXLib
         if (result == nullptr || userData == nullptr)
             return (2);
 
-        GeneratorBase* generatorPtr = reinterpret_cast<GeneratorBase*>(userData);
+        auto generatorPtr = reinterpret_cast<GeneratorBase*>(userData);
         *result = generatorPtr->generateInt(data);
         return (0);
     }
@@ -461,7 +474,7 @@ namespace CXXLib
         if (result == nullptr || resultSize == 0 || userData == nullptr)
             return (2);
 
-        GeneratorBase* generatorPtr = reinterpret_cast<GeneratorBase*>(userData);
+        auto generatorPtr = reinterpret_cast<GeneratorBase*>(userData);
         auto implResult = generatorPtr->generateString(data);
         std::strncpy(result, implResult.data(), resultSize);
 
@@ -470,25 +483,60 @@ namespace CXXLib
 
         return (0);
     }
-/*
+
+    CLibErrNum GeneratorBase::DestroyFunction(void* userData)
+    {
+        if (userData == nullptr)
+            return (2);
+
+        try {
+            std::unique_ptr<GeneratorBase> ownedPtr(
+                static_cast<GeneratorBase*>(userData)
+            );
+        }
+        catch (...) {
+            return (1);
+        }
+        return (0);
+    }
+
     Printer::Printer(std::unique_ptr<GeneratorBase> generator)
     {
+        CLib::CLCoreGenerator coreGenerator = nullptr;
+        auto* generatorPtr = generator.release();
+        auto c_api_call_result = CLib::CLCoreGeneratorCreate(
+            &GeneratorBase::IntFunction,
+            &GeneratorBase::StringFunction,
+            &GeneratorBase::DestroyFunction,
+            generatorPtr,
+            &coreGenerator
+        );
+        if (c_api_call_result != 0) {
+            generator.reset(generatorPtr);
+        }
+        CXXLIB_API_CHECK(c_api_call_result);
+        c_api_call_result = CLib::CLCorePrinterCreate(coreGenerator, &_impl);
+        CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
 
     Printer::~Printer(void)
     {
+        CLib::CLCorePrinterDestroy(_impl);
         return;
     }
 
     void Printer::printInt(void)
     {
+        auto c_api_call_result = CLib::CLCorePrinterPrintInt(_impl);
+        CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
 
     void Printer::printString(void)
     {
+        auto c_api_call_result = CLib::CLCorePrinterPrintString(_impl);
+        CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
-*/
 } // namespace CXXLib

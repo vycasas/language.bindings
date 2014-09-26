@@ -4,24 +4,22 @@
 
 #include <cxx/api.hxx>
 
-class TestGenerator : public CXXLib::GeneratorBase
+class MyGenerator : public CXXLib::GeneratorBase
 {
 public:
-    TestGenerator(void)
+    MyGenerator(void)
     { return; }
 
-    virtual ~TestGenerator(void)
+    virtual ~MyGenerator(void)
     { return; }
 
     virtual int generateInt(int data) const
     {
-        std::cout << "TestGenerator::generateInt(int)" << std::endl;
         return (data * data);
     }
 
     virtual std::string generateString(int data) const
     {
-        std::cout << "TestGenerator::generateString(int)" << std::endl;
         std::stringstream ss;
         ss << data;
         return (ss.str());
@@ -41,6 +39,15 @@ int main(void)
         CXXLib::Person person{ "Wayne", "Bruce", 25, address };
         std::cout << "New person created!" << std::endl;
         std::cout << person.toString() << std::endl;
+
+        std::cout << "Creating a new generator..." << std::endl;
+        std::unique_ptr<MyGenerator> generator(new MyGenerator);
+        std::cout << "New generator created!" << std::endl;
+        std::cout << "Creating a new printer..." << std::endl;
+        CXXLib::Printer printer(std::move(generator));
+        std::cout << "Performing printer actions..." << std::endl;
+        printer.printInt();
+        printer.printString();
     }
     catch (CXXLib::Exception& e) {
         std::cerr << "An error has occurred: " << e.getMessage() << std::endl;

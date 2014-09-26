@@ -6,6 +6,7 @@
 #include <codecvt>
 #include <cstdint>
 #include <locale>
+#include <memory>
 
 #include <cxx/api.hxx>
 
@@ -16,6 +17,7 @@
 #define GET_CORE_EXCEPTION_PTR(impl) GET_CORE_CLASS_PTR(impl, CXXLib::Exception)
 #define GET_CORE_ADDRESS_PTR(impl) GET_CORE_CLASS_PTR(impl, CXXLib::Address)
 #define GET_CORE_PERSON_PTR(impl) GET_CORE_CLASS_PTR(impl, CXXLib::Person)
+#define GET_CORE_PRINTER_PTR(impl) GET_CORE_CLASS_PTR(impl, CXXLib::Printer)
 
 #define BEGIN_EX_GUARD(jenv) \
     try {
@@ -152,7 +154,7 @@ namespace // Implementation Details
             throw (JavaLibException(2));
         }
 
-        jmethodID generateStringID = _jenv->GetMethodID(igeneratorClass, "generateInt", "(I)Ljava/lang/String;");
+        jmethodID generateStringID = _jenv->GetMethodID(igeneratorClass, "generateString", "(I)Ljava/lang/String;");
 
         if (generateStringID == nullptr) {
             throw (JavaLibException(2));
@@ -854,6 +856,115 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAddress(
 
     // it is important that we release here in case CallVoidMethod fails...
     coreNewAddressPtr.release();
+
+    END_EX_GUARD(jenv);
+
+    return (0);
+}
+
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativeCreatePrinter
+ * Signature: (Lnet/dotslashzero/javalib/IGenerator;Lnet/dotslashzero/javalib/Core/PrinterType;)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinter(
+    JNIEnv* jenv, jclass, jobject generatorInstance, jobject printerImpl
+)
+{
+    BEGIN_EX_GUARD(jenv);
+
+    // Create a JavaLibGeneratorImpl
+    std::unique_ptr<JavaLibGeneratorImpl> generator(new JavaLibGeneratorImpl(jenv, generatorInstance));
+    std::unique_ptr<CXXLib::Printer> corePrinterPtr(new CXXLib::Printer(std::move(generator)));
+
+    // call printerImpl.setAddress(long impl); - long is actually a jlong in native type
+
+    jclass corePrinterTypeClass /* net.dotslashzero.javalib.Core.PrinterType */ =
+        jenv->FindClass("net/dotslashzero/javalib/Core$PrinterType");
+
+    if (corePrinterTypeClass == nullptr)
+        return (1);
+
+    jmethodID setAddressID = jenv->GetMethodID(corePrinterTypeClass, "setAddress", "(J)V");
+
+    if (setAddressID == nullptr)
+        return (1);
+
+    jlong impl = reinterpret_cast<jlong>(corePrinterPtr.get());
+
+    jenv->CallVoidMethod(printerImpl, setAddressID, impl);
+
+    // it is important that we release here in case CallVoidMethod fails...
+    corePrinterPtr.release();
+
+    END_EX_GUARD(jenv);
+
+    return (0);
+}
+
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativeDestroyPrinter
+ * Signature: (J)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyPrinter(
+    JNIEnv*, jclass, jlong printerImpl
+)
+{
+    auto* printerPtr = GET_CORE_PRINTER_PTR(printerImpl);
+
+    if (printerPtr == nullptr)
+        return (-1);
+
+    delete (printerPtr);
+
+    return (0);
+}
+
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativePrintInt
+ * Signature: (J)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintInt(
+    JNIEnv* jenv, jclass, jlong printerImpl
+)
+{
+    BEGIN_EX_GUARD(jenv);
+
+    auto* printerPtr = GET_CORE_PRINTER_PTR(printerImpl);
+
+    if (printerPtr == nullptr)
+        return (-1);
+
+    printerPtr->printInt();
+
+    END_EX_GUARD(jenv);
+
+    return (0);
+}
+
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativePrintString
+ * Signature: (J)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintString(
+    JNIEnv* jenv, jclass, jlong printerImpl
+)
+{
+    BEGIN_EX_GUARD(jenv);
+
+    auto* printerPtr = GET_CORE_PRINTER_PTR(printerImpl);
+
+    if (printerPtr == nullptr)
+        return (-1);
+
+    printerPtr->printString();
 
     END_EX_GUARD(jenv);
 

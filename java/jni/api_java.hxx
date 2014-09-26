@@ -178,4 +178,44 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAddress(
     JNIEnv* jenv, jclass, jlong personImpl, jobject addressImpl
 );
 
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativeCreatePrinter
+ * Signature: (Lnet/dotslashzero/javalib/IGenerator;Lnet/dotslashzero/javalib/Core/PrinterType;)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinter(
+    JNIEnv* jenv, jclass, jobject generatorInstance, jobject printerImpl
+);
+
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativeDestroyPrinter
+ * Signature: (J)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyPrinter(
+    JNIEnv*, jclass, jlong printerImpl
+);
+
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativePrintInt
+ * Signature: (J)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintInt(
+    JNIEnv* jenv, jclass, jlong printerImpl
+);
+
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativePrintString
+ * Signature: (J)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintString(
+    JNIEnv* jenv, jclass, jlong printerImpl
+);
+
 #endif // !defined(JAVALIB_API_H)

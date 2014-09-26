@@ -1,8 +1,8 @@
 package net.dotslashzero.javalib;
 
-interface IGenerator
+public interface IGenerator
 {
-    int generateInt(int data);
+    public int generateInt(int data);
 
-    String generateString(int data);
+    public String generateString(int data);
 }

@@ -10,24 +10,33 @@ public class Printer extends Core.ApiBase<Core.PrinterType>
     public Printer(IGenerator generator)
     {
         _impl = new Core.PrinterType(0);
-        nativePrinterCreate(generator, _impl);
+        nativeCreatePrinter(generator, _impl);
     }
 
-    private static native int nativePrinterCreate(IGenerator generator, Core.PrinterType printerImpl);
+    private static native int nativeCreatePrinter(IGenerator generator, Core.PrinterType printerImpl);
+
+    @Override
+    protected void finalize()
+    {
+        nativeDestroyPrinter(this.getImpl());
+        return;
+    }
+
+    private static native int nativeDestroyPrinter(long printerImpl);
 
     public void printInt()
     {
-        nativePrinterPrintInt(_impl);
+        nativePrintInt(this.getImpl());
         return;
     }
 
-    private static native int nativePrinterPrintInt(Core.PrinterType printerImpl);
+    private static native int nativePrintInt(long printerImpl);
 
     public void printString()
     {
-        nativePrinterPrintString(_impl);
+        nativePrintString(this.getImpl());
         return;
     }
 
-    private static native int nativePrinterPrintString(Core.PrinterType printerImpl);
+    private static native int nativePrintString(long printerImpl);
 }
