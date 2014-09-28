@@ -11,7 +11,7 @@ CXXFLAGS := -std=c++11 -stdlib=libc++ -O3 -fpic -fPIC -fvisibility=hidden -flto 
 INCLUDEDIRS := $(JNI_INCLUDE_DIRS) -I$(PROJECTROOT)
 LD := clang++
 LDFLAGS := -stdlib=libc++ -shared -flto
-LINKLIBS := -L$(OUTDIR) -lcxxlib -lclib -lc++ -lc
+LINKLIBS := -L$(OUTDIR) -lcxxlib -lc++ -lclib -lc
 
 JAVA := java
 CLASSPATH := $(OUTDIR)

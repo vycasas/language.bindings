@@ -8,7 +8,7 @@ CXXFLAGS := -std=c++11 -stdlib=libc++ -O3 -fpie -fPIE -flto \
 INCLUDEDIRS := -I$(PROJECTROOT)
 LD := clang++
 LDFLAGS := -stdlib=libc++ -flto
-LINKLIBS := -L$(OUTDIR) -lcxxlib -lclib -lc++ -lc
+LINKLIBS := -L$(OUTDIR) -lcxxlib -lc++ -lclib -lc
 
 $(OUTDIR)/test_cxx : $(OBJDIR)/test_cxx.o
 	$(LD) -o $@ $(LDFLAGS) $< $(LINKLIBS)
