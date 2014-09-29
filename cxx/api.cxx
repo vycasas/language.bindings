@@ -281,10 +281,21 @@ namespace CXXLib
     ) : _impl{nullptr}
     {
         auto c_api_call_result = CLAddressCreate(
-
             streetNum, street.data(),
             city.data(), province.data(),
             country.data(), zipCode.data(),
+            &_impl
+        );
+        CXXLIB_API_CHECK(c_api_call_result);
+        return;
+    }
+
+    Address::Address(const Address& address)
+    {
+        auto c_api_call_result = CLAddressCreate(
+            address.getStreetNum(), address.getStreet().data(),
+            address.getCity().data(), address.getProvince().data(),
+            address.getCountry().data(), address.getZipCode().data(),
             &_impl
         );
         CXXLIB_API_CHECK(c_api_call_result);
@@ -295,6 +306,23 @@ namespace CXXLib
     {
         CLAddressDestroy(_impl);
         return;
+    }
+
+    Address& Address::operator=(const Address& address)
+    {
+        if (_impl != nullptr) {
+            CLAddressDestroy(_impl);
+            _impl = nullptr;
+        }
+
+        auto c_api_call_result = CLAddressCreate(
+            address.getStreetNum(), address.getStreet().data(),
+            address.getCity().data(), address.getProvince().data(),
+            address.getCountry().data(), address.getZipCode().data(),
+            &_impl
+        );
+        CXXLIB_API_CHECK(c_api_call_result);
+        return (*this);
     }
 
     int Address::getStreetNum(void) const
@@ -379,6 +407,7 @@ namespace CXXLib
             const Address& address
     ) : _impl{nullptr}
     {
+        // Remember: address._impl is copied.
         auto c_api_call_result = CLPersonCreate(
             lastName.data(),
             firstName.data(),
@@ -387,7 +416,19 @@ namespace CXXLib
             &_impl
         );
         CXXLIB_API_CHECK(c_api_call_result);
+        return;
+    }
 
+    Person::Person(const Person& person)
+    {
+        auto c_api_call_result = CLPersonCreate(
+            person.getLastName().data(),
+            person.getFirstName().data(),
+            person.getAge(),
+            person.getAddress()._impl,
+            &_impl
+        );
+        CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
 
@@ -395,6 +436,23 @@ namespace CXXLib
     {
         CLPersonDestroy(_impl);
         return;
+    }
+
+    Person& Person::operator=(const Person& person)
+    {
+        if (_impl != nullptr) {
+            CLPersonDestroy(_impl);
+            _impl = nullptr;
+        }
+        auto c_api_call_result = CLPersonCreate(
+            person.getLastName().data(),
+            person.getFirstName().data(),
+            person.getAge(),
+            person.getAddress()._impl,
+            &_impl
+        );
+        CXXLIB_API_CHECK(c_api_call_result);
+        return (*this);
     }
 
     std::string Person::getLastName(void) const

@@ -10,6 +10,7 @@ public class Person extends Core.ApiBase<Core.PersonType>
     public Person(String lastName, String firstName, int age, Address address) throws JavaLibException
     {
         _impl = new Core.PersonType(0);
+        // native function makes a copy of the address argument.
         nativeCreatePerson(lastName, firstName, age, address.getImpl(), _impl);
     }
 

@@ -37,6 +37,9 @@ CLIB_API CLibErrNum CLAddressGetCountry(CLibAddress address, char* country, size
 CLIB_API CLibErrNum CLAddressGetZipCode(CLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten);
 CLIB_API CLibErrNum CLAddressToString(CLibAddress address, char* str, size_t strSize, size_t* charWritten);
 
+/*
+** Note: CLPersonCreate makes a copy of address argument, so it does not need to be persisted.
+*/
 CLIB_API CLibErrNum CLPersonCreate(
    const char* lastName, const char* firstName,
    int age, CLibAddress address,

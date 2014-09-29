@@ -277,6 +277,7 @@ CLIB_API CLibErrNum CLPersonCreate(
     strncpy(corePerson->lastName, lastName, 24);
     strncpy(corePerson->firstName, firstName, 24);
     corePerson->age = age;
+    /* make a copy of coreAddr... */
     memcpy(&(corePerson->address), coreAddr, sizeof (CoreAddress));
 
     *newPerson = (CLibPerson) corePerson;

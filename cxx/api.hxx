@@ -69,8 +69,11 @@ namespace CXXLib
             const std::string& city, const std::string& province,
             const std::string& country, const std::string& zipCode
         );
+        Address(const Address& address);
 
         ~Address(void) noexcept;
+
+        Address& operator=(const Address& address);
 
         int getStreetNum(void) const;
         std::string getStreet(void) const;
@@ -91,14 +94,20 @@ namespace CXXLib
     class CXXLIB_API Person
     {
     public:
+        ///
+        /// Note: The address is copied and need not to be persisted after Person is created.
+        ///
         Person(
             const std::string& lastName,
             const std::string& firstName,
             int age,
             const Address& address
         );
+        Person(const Person& person);
 
         ~Person(void) noexcept;
+
+        Person& operator=(const Person& person);
 
         std::string getLastName(void) const;
         std::string getFirstName(void) const;
@@ -133,15 +142,16 @@ namespace CXXLib
     {
     public:
         Printer(std::unique_ptr<GeneratorBase> generator);
+        Printer(const Printer&) = delete;
+        Printer(const Printer&&) = delete;
+
         virtual ~Printer(void);
+
+        Printer& operator=(const Printer&) = delete;
+        Printer& operator=(const Printer&&) = delete;
 
         void printInt(void);
         void printString(void);
-
-        Printer(const Printer&) = delete;
-        Printer(const Printer&&) = delete;
-        Printer& operator=(const Printer&) = delete;
-        Printer& operator=(const Printer&&) = delete;
 
     private:
         typedef void* CLibPrinter;
