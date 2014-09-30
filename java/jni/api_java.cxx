@@ -24,19 +24,19 @@
 #define END_EX_GUARD(jenv) \
     } \
     catch (CXXLib::Exception& e) { \
-        jthrowable jniEx = MakeJNIException(jenv, e); \
+        jthrowable jniEx = JavaLibCore::MakeJNIException(jenv, e); \
         if (jniEx == nullptr) \
             return (2); \
         jenv->Throw(jniEx); \
     } \
     catch (std::exception& e) { \
-        jthrowable jniEx = MakeJNIException(jenv, CXXLib::Exception(e)); \
+        jthrowable jniEx = JavaLibCore::MakeJNIException(jenv, CXXLib::Exception(e)); \
         if (jniEx == nullptr) \
             return (2); \
         jenv->Throw(jniEx); \
     }
 
-namespace // Implementation Details
+namespace JavaLibCore
 {
     // utility wrapper to adapt locale-bound facets for wstring/wbuffer convert
     template<class facetT>
@@ -75,20 +75,17 @@ namespace // Implementation Details
         return (result);
     }
 
-    class JavaLibException : public CXXLib::Exception
+    class JavaLibException final : public CXXLib::Exception
     {
     public:
         JavaLibException(void) : CXXLib::Exception()
         { return; }
 
-    private:
         JavaLibException(CLibErrNum errNum) : CXXLib::Exception(errNum)
         { return; }
-
-        friend class JavaLibGeneratorImpl;
     }; // class Exception
 
-    class JavaLibGeneratorImpl : public CXXLib::GeneratorBase
+    class JavaLibGeneratorImpl final : public CXXLib::GeneratorBase
     {
     public:
         JavaLibGeneratorImpl(JNIEnv* jenv, jobject impl);
@@ -178,7 +175,7 @@ namespace // Implementation Details
 
         return (cxxResult);
     }
-} // namespace // Implementation Details
+} // namespace JavaLibCore
 
 /*
  * Class:     net_dotslashzero_javalib_JavaLibException
@@ -223,7 +220,7 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetM
     // also: jchar's type is unsigned 16 bit type
 
     // convert exMessage to UTF-16 string
-    std::wstring_convert<deletable_facet<std::codecvt<char16_t, char, std::mbstate_t>>, char16_t> conv16;
+    std::wstring_convert<JavaLibCore::deletable_facet<std::codecvt<char16_t, char, std::mbstate_t>>, char16_t> conv16;
     auto u16ExMessage = conv16.from_bytes(exMessage.data());
 
     jenv->SetCharArrayRegion(message, 0, u16ExMessage.size(), reinterpret_cast<const jchar*>(u16ExMessage.data()));
@@ -875,7 +872,9 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinter
     BEGIN_EX_GUARD(jenv);
 
     // Create a JavaLibGeneratorImpl
-    std::unique_ptr<JavaLibGeneratorImpl> generator(new JavaLibGeneratorImpl(jenv, generatorInstance));
+    std::unique_ptr<JavaLibCore::JavaLibGeneratorImpl> generator(
+        new JavaLibCore::JavaLibGeneratorImpl(jenv, generatorInstance)
+    );
     std::unique_ptr<CXXLib::Printer> corePrinterPtr(new CXXLib::Printer(std::move(generator)));
 
     // call printerImpl.setAddress(long impl); - long is actually a jlong in native type

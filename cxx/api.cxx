@@ -70,7 +70,7 @@ namespace CLib
 
     namespace CXXImplDetail
     {
-        class CLibGeneratorImpl : public CXXLibCore::Generator
+        class CLibGeneratorImpl final : public CXXLibCore::Generator
         {
         public:
             CLibGeneratorImpl(
