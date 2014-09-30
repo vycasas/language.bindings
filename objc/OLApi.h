@@ -49,6 +49,10 @@ extern "C"
 
 @end /* interface OLPerson */
 
+/*
+** There is an issue with protocols when transferring ownership. I have to investigate this issue further. In the mean
+** time, a normal interface works (and throwing exceptions on non-overriden required methods).
+** In particular, there is an issue when retaining and transfering ownership to and from ARC system.
 @protocol OLGenerator <NSObject>
 
 @required
@@ -56,11 +60,17 @@ extern "C"
 - (int) generateIntWithData:(int)data;
 - (NSString*) generateStringWithData:(int)data;
 
-@end /* protocol Generator */
+@end *//* protocol OLGenerator */
+
+@interface OLGenerator : NSObject
+- (void) dealloc;
+- (int) generateIntWithData:(int)data;
+- (NSString*) generateStringWithData:(int)data;
+@end /* interface OLGenerator */
 
 @interface OLPrinter : NSObject
 
-- (id) initWithGenerator:(id<OLGenerator>*)generator;
+- (id) initWithGenerator:(OLGenerator*)generator;
 - (void) dealloc;
 - (void) printInt;
 - (void) printString;

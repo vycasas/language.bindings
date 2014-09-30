@@ -3,10 +3,10 @@ OUTDIR := $(PROJECTROOT)/out
 OBJDIR := $(OUTDIR)/obj
 
 OC := clang
-OFLAGS := -std=c11 -O3 -fpie -fPIE -flto \
+OFLAGS := -std=c11 -O3 -fobjc-arc -fpie -fPIE -flto \
 	-W -Wall -Wextra -Werror -pedantic -pedantic-errors
 OXX := clang++
-OXXFLAGS := -std=c++11 -stdlib=libc++ -O3 -fpic -fPIC -fvisibility=hidden -flto \
+OXXFLAGS := -std=c++11 -stdlib=libc++ -O3 -fobjc-arc -fpic -fPIC -fvisibility=hidden -flto \
 	-W -Wall -Wextra -Werror -pedantic -pedantic-errors
 INCLUDEDIRS := -I$(PROJECTROOT)
 LD := clang++
