@@ -1,0 +1,43 @@
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+project(Language_Bindings)
+
+option(BUILD_C "Build C Library." ON)
+option(BUILD_CXX "Build C++ wrapper." OFF)
+option(BUILD_JAVA "Build Java wrapper." OFF)
+option(BUILD_OBJC "Build Objective-C wrapper." OFF)
+
+if (NOT CMAKE_BUILD_TYPE OR "${CMAKE_BUILD_TYPE}" STREQUAL "")
+    set(CMAKE_BUILD_TYPE "Release")
+endif ()
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+if (BUILD_C)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/c)
+endif ()
+
+if (BUILD_CXX)
+    if (NOT BUILD_C)
+        message(FATAL_ERROR "C++ wrapper requires building C library.")
+        return ()
+    endif ()
+    add_subdirectory(${CMAKE_SOURCE_DIR}/cxx)
+endif ()
+
+if (BUILD_JAVA)
+    if (NOT BUILD_CXX)
+        message(FATAL_ERROR "Java wrapper requires building C library and C++ wrapper.")
+        return ()
+    endif ()
+    add_subdirectory(${CMAKE_SOURCE_DIR}/java)
+endif ()
+
+if (BUILD_OBJC)
+    if (NOT BUILD_CXX)
+        message(FATAL_ERROR "Objective-C wrapper requires building C library and C++ wrapper.")
+        return ()
+    endif ()
+    add_subdirectory(${CMAKE_SOURCE_DIR}/objc)
+endif ()
