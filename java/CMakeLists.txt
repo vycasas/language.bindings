@@ -2,15 +2,15 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(javalib CXX)
 
 if (UNIX)
-    set(CXX_FLAGS "-std=c++11 -O3 -flto -W -Wall -Wextra -Werror -pedantic -pedantic-errors")
+    set(CXX_FLAGS "-std=c++11 -W -Wall -Wextra -Werror -pedantic -pedantic-errors")
     set(SHARED_LIBRARY_CXX_FLAGS "-fpic -fPIC -fvisibility=hidden")
     set(EXECUTABLE_CXX_FLAGS "-fpie -fPIE")
-    set(LINKER_FLAGS "-flto")
+    set(LINKER_FLAGS "")
     set(SHARED_LIBRARY_LINKER_FLAGS "")
     set(EXECUTABLE_LINKER_FLAGS "")
     set(SYSTEM_LIBS c++ c)
 elseif (MSVC)
-    set(CXX_FLAGS "/O2")
+    set(CXX_FLAGS "")
     set(SHARED_LIBRARY_CXX_FLAGS "")
     set(EXECUTABLE_CXX_FLAGS "")
     set(LINKER_FLAGS "")
@@ -51,10 +51,20 @@ add_custom_command(
 add_dependencies(javalibjar javalib)
 
 file(GLOB TEST_JAVA_SOURCES test/*.java)
-add_custom_target(
-    test_java ALL
-    COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR} -verbose -deprecation -Werror
-        -cp ${CMAKE_BINARY_DIR}:${CMAKE_BINARY_DIR}/JavaLib.jar ${TEST_JAVA_SOURCES}
-    DEPENDS ${TEST_JAVA_SOURCES}
-)
+if (UNIX)
+    add_custom_target(
+        test_java ALL
+        COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR} -verbose -deprecation -Werror
+            -cp ${CMAKE_BINARY_DIR}:${CMAKE_BINARY_DIR}/JavaLib.jar ${TEST_JAVA_SOURCES}
+        DEPENDS ${TEST_JAVA_SOURCES}
+    )
+else ()
+    add_custom_target(
+        test_java ALL
+        COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR} -verbose -deprecation -Werror
+            -cp "${CMAKE_BINARY_DIR};${CMAKE_BINARY_DIR}/JavaLib.jar" ${TEST_JAVA_SOURCES}
+        DEPENDS ${TEST_JAVA_SOURCES}
+        VERBATIM
+    )
+endif ()
 add_dependencies(test_java javalibjar)

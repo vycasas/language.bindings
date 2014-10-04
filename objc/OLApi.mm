@@ -36,7 +36,6 @@ namespace OBJCLibCore
         }
     } // namespace Utils
 
-
     class OBJCLibException final : public CXXLib::Exception
     {
     public:

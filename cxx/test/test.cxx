@@ -29,6 +29,8 @@ public:
 int main(void)
 {
     try {
+        CXXLib::Library::initialize();
+
         std::cout << "Creating a new address..." << std::endl;
         CXXLib::Address address{ 9898, "Corner St.", "Gotham", "CA", "Antartica", "4132" };
         std::cout << "New address created!" << std::endl;
@@ -45,9 +47,12 @@ int main(void)
         std::cout << "New generator created!" << std::endl;
         std::cout << "Creating a new printer..." << std::endl;
         CXXLib::Printer printer(std::move(generator));
+        std::cout << "New printer created!" << std::endl;
         std::cout << "Performing printer actions..." << std::endl;
         printer.printInt();
         printer.printString();
+
+        CXXLib::Library::terminate();
     }
     catch (CXXLib::Exception& e) {
         std::cerr << "An error has occurred: " << e.getMessage() << std::endl;

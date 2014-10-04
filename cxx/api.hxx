@@ -2,11 +2,19 @@
 #define CXXLIB_API_HXX
 
 #include <exception>
+#include <memory>
 #include <string>
 
 #include <C/api.h>
 
 #define CXXLIB_API __attribute__ ((visibility ("default")))
+#if defined(_MSC_VER)
+    #undef CXXLIB_API
+    #define CXXLIB_API __declspec(dllexport)
+    // noexcept is not supported in MSVC 12.0
+    #pragma warning(disable:4251)
+    #define noexcept
+#endif // defined(_MSC_VER)
 
 namespace CXXLib
 {
@@ -48,7 +56,7 @@ namespace CXXLib
         friend class Printer;
     }; // class Exception
 
-    struct CXXLIB_API Library
+    struct CXXLIB_API Library final
     {
         static void initialize(void);
         static void terminate(void);
@@ -61,7 +69,7 @@ namespace CXXLib
         Library& operator=(const Library&&) = delete;
     }; // struct Library
 
-    class CXXLIB_API Address
+    class CXXLIB_API Address final
     {
     public:
         Address(
@@ -91,7 +99,7 @@ namespace CXXLib
         friend class Person;
     }; // class Address
 
-    class CXXLIB_API Person
+    class CXXLIB_API Person final
     {
     public:
         ///
@@ -152,6 +160,12 @@ namespace CXXLib
 
         void printInt(void);
         void printString(void);
+
+    protected:
+        // These members are added to work around with a C++/CLI compile issue.
+        // See C++/CLI solution for details.
+        Printer(void) : _impl(nullptr) { return; }
+        void createInstance(std::unique_ptr<GeneratorBase>&& generator);
 
     private:
         typedef void* CLibPrinter;

@@ -135,6 +135,11 @@ namespace JavaLibCore
 
         jint result = _jenv->CallIntMethod(_impl, generateIntID, static_cast<jint>(data));
 
+        if (_jenv->ExceptionCheck() == JNI_TRUE) {
+            _jenv->ExceptionClear();
+            throw (JavaLibException(2));
+        }
+
         return (static_cast<int>(result));
     }
 
@@ -159,7 +164,12 @@ namespace JavaLibCore
 
         jstring result = static_cast<jstring>(
             _jenv->CallObjectMethod(_impl, generateStringID, static_cast<jint>(data))
-        );
+         );
+
+        if (_jenv->ExceptionCheck() == JNI_TRUE) {
+            _jenv->ExceptionClear();
+            throw (JavaLibException(2));
+        }
 
         if (result == nullptr)
             return ("");
@@ -223,7 +233,9 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetM
     std::wstring_convert<JavaLibCore::deletable_facet<std::codecvt<char16_t, char, std::mbstate_t>>, char16_t> conv16;
     auto u16ExMessage = conv16.from_bytes(exMessage.data());
 
-    jenv->SetCharArrayRegion(message, 0, u16ExMessage.size(), reinterpret_cast<const jchar*>(u16ExMessage.data()));
+    jenv->SetCharArrayRegion(
+        message, 0, static_cast<jsize>(u16ExMessage.size()), reinterpret_cast<const jchar*>(u16ExMessage.data())
+    );
     END_EX_GUARD(jenv);
 
     return (0);

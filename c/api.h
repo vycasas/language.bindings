@@ -1,14 +1,20 @@
 #if !defined(CLIB_API_H)
 #define CLIB_API_H
 
+#define CLIB_MODULE_VISIBLE __attribute__ ((visibility ("default")))
+#if defined(_MSC_VER)
+    #undef CLIB_MODULE_VISIBLE
+    #define CLIB_MODULE_VISIBLE __declspec(dllexport)
+#endif /* defined(_MSC_VER) */
+
 #if defined(__cplusplus)
-#define CLIB_API \
-    extern "C" \
-    __attribute__ ((visibility ("default")))
-#else /* defined(__cpluscplus) */
-#define CLIB_API \
-    __attribute__ ((visibility ("default")))
-#endif /* defined(__cpluscplus) */
+    #define CLIB_API \
+        extern "C" \
+        CLIB_MODULE_VISIBLE
+#else /* defined(__cplusplus) */
+    #define CLIB_API \
+        CLIB_MODULE_VISIBLE
+#endif /* defined(__cplusplus) */
 
 #include <stddef.h>
 

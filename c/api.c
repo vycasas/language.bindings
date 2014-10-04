@@ -4,6 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define INLINE inline
+
+#if defined(_MSC_VER)
+    #undef strncpy
+    #define strncpy(buffer, source, bufferSize) strncpy_s(buffer, bufferSize, source, _TRUNCATE)
+    #define snprintf sprintf_s
+    #undef INLINE
+    #define INLINE __inline
+#endif /* defined(_WIN32) */
+
 typedef enum _CoreErrNums
 {
     COREERRNUM_NO_ERROR = 0,
@@ -37,7 +47,7 @@ CorePerson;
 #if defined(__cplusplus)
 extern "C"
 #endif // defined(__cplusplus)
-static inline const char* CoreGetErrorMessage(CoreErrNums errnum)
+static INLINE const char* CoreGetErrorMessage(CoreErrNums errnum)
 {
     switch (errnum) {
         case (COREERRNUM_NO_ERROR):

@@ -6,6 +6,11 @@
 #include <memory>
 #include <random>
 
+#if defined(_MSC_VER)
+    #define _CRT_SECURE_NO_WARNINGS 1
+    #pragma warning(disable:4996)
+#endif // defined(_MSC_VER)
+
 #define CXXLIB_API_CHECK(result) \
     if (result != 0) \
         throw (CXXLib::Exception(result));
@@ -70,6 +75,17 @@ namespace CLib
 
     namespace CXXImplDetail
     {
+        // For use with throwing exceptions within this namespace.
+        class CLibException final : public CXXLib::Exception
+        {
+        public:
+            CLibException(void) : CXXLib::Exception()
+            { return; }
+
+            CLibException(CLibErrNum errNum) : CXXLib::Exception(errNum)
+            { return; }
+        }; // class CLibException
+
         class CLibGeneratorImpl final : public CXXLibCore::Generator
         {
         public:
@@ -110,17 +126,27 @@ namespace CLib
 
         int CLibGeneratorImpl::generateInt(int data) const
         {
-            int result;
-            this->_generateIntImpl(data, &result, _userData); // note: evaluate result and handle appropriately.
-            return (result);
+            try {
+                int result;
+                this->_generateIntImpl(data, &result, _userData); // note: evaluate result and handle appropriately.
+                return (result);
+            }
+            catch (...) {
+                throw (CLibException(2));
+            }
         }
 
         std::string CLibGeneratorImpl::generateString(int data) const
         {
-            char buffer[1024];
-            this->_generateStringImpl(data, buffer, 1024, nullptr, _userData);
-            std::string result(buffer);
-            return (result);
+            try {
+                char buffer[1024];
+                this->_generateStringImpl(data, buffer, 1024, nullptr, _userData);
+                std::string result(buffer);
+                return (result);
+            }
+            catch (...) {
+                throw (CLibException(2));
+            }
         }
     } // namespace CXXImplDetail
 
@@ -595,6 +621,14 @@ namespace CXXLib
     {
         auto c_api_call_result = CLib::CLCorePrinterPrintString(_impl);
         CXXLIB_API_CHECK(c_api_call_result);
+        return;
+    }
+
+    void Printer::createInstance(std::unique_ptr<GeneratorBase>&& generator)
+    {
+        std::unique_ptr<Printer> instance(new Printer(std::move(generator)));
+        _impl = instance->_impl;
+        instance.release();
         return;
     }
 } // namespace CXXLib
