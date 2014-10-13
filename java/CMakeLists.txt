@@ -17,6 +17,7 @@ elseif (MSVC)
     set(SHARED_LIBRARY_LINKER_FLAGS "")
     set(EXECUTABLE_LINKER_FLAGS "")
     set(SYSTEM_LIBS "")
+    add_definitions(-DUNICODE -D_UNICODE)
 endif ()
 
 find_package(Java)
