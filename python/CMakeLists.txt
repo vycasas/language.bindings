@@ -49,8 +49,12 @@ add_custom_command(
     COMMAND ${COPY_COMMAND} ${COPY_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}/pythonlib.py ${CMAKE_BINARY_DIR}/pythonlib.py
     VERBATIM
 )
+
 add_custom_target(
     test_python ALL
     COMMAND ${COPY_COMMAND} ${COPY_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}/test/test.py ${CMAKE_BINARY_DIR}/test.py
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test/test.py
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test/test.py
     VERBATIM
 )
+add_dependencies(test_python pythonlib)

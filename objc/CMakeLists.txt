@@ -37,6 +37,8 @@ add_custom_target(
     COMMAND ${CMAKE_C_COMPILER} -std=c11 -O3 -fobjc-arc -fpie -fPIE -flto
         -W -Wall -Wextra -Werror -pedantic -pedantic-errors -I${CMAKE_SOURCE_DIR}
         -c ${CMAKE_CURRENT_SOURCE_DIR}/test/test.m
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test/test.m
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test/test.m
     VERBATIM
 )
 add_custom_command(
@@ -46,5 +48,6 @@ add_custom_command(
     COMMAND ${CMAKE_C_COMPILER} -flto -o ${CMAKE_BINARY_DIR}/test_objc test.o
         $<TARGET_FILE:objclib>
         -framework Foundation -lobjc -L${CMAKE_BINARY_DIR} -lcxxlib -lc++ -lclib -lc
+    VERBATIM
 )
 add_dependencies(test_objc objclib)

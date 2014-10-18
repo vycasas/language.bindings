@@ -46,7 +46,6 @@ namespace CXXLib
     protected:
         Exception(CLibErrNum errNum);
 
-    private:
         std::string _message;
         CLibErrNum _impl;
 
@@ -146,7 +145,7 @@ namespace CXXLib
         static CLibErrNum DestroyFunction(void* userData);
     }; // class GeneratorBase
 
-    class CXXLIB_API Printer
+    class CXXLIB_API Printer final
     {
     public:
         Printer(std::unique_ptr<GeneratorBase> generator);

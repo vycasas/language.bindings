@@ -41,13 +41,16 @@ add_custom_target(
     javalibjar ALL
     COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_CURRENT_BINARY_DIR} -verbose -deprecation -Werror
         -cp ${CMAKE_BINARY_DIR} ${JAVA_SOURCES}
+    SOURCES ${JAVA_SOURCES}
     DEPENDS ${JAVA_SOURCES}
+    VERBATIM
 )
 add_custom_command(
     TARGET javalibjar
     POST_BUILD
     COMMAND ${Java_JAR_EXECUTABLE} cvf ${CMAKE_BINARY_DIR}/JavaLib.jar net/
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    VERBATIM
 )
 add_dependencies(javalibjar javalib)
 
@@ -57,7 +60,9 @@ if (UNIX)
         test_java ALL
         COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR} -verbose -deprecation -Werror
             -cp ${CMAKE_BINARY_DIR}:${CMAKE_BINARY_DIR}/JavaLib.jar ${TEST_JAVA_SOURCES}
+        SOURCES ${TEST_JAVA_SOURCES}
         DEPENDS ${TEST_JAVA_SOURCES}
+        VERBATIM
     )
 else ()
     add_custom_target(
@@ -65,6 +70,7 @@ else ()
         COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR} -verbose -deprecation -Werror
             -cp "${CMAKE_BINARY_DIR};${CMAKE_BINARY_DIR}/JavaLib.jar" ${TEST_JAVA_SOURCES}
         DEPENDS ${TEST_JAVA_SOURCES}
+        SOURCES ${TEST_JAVA_SOURCES}
         VERBATIM
     )
 endif ()
