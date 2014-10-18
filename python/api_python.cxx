@@ -1,7 +1,5 @@
 #include "api_python.hxx"
 
-#include <iomanip>
-#include <iostream>
 #include <memory>
 
 #include <cxx/api.hxx>
@@ -443,14 +441,8 @@ PyObject* PLPersonGetAddress(PyObject*, PyObject* args, PyObject* keywords)
 
     auto* corePersonPtr = PythonLibCore::Utils::GetCorePtr<CXXLib::Person>(corePerson);
 
-    auto coreAddress = corePersonPtr->getAddress();
-
     std::unique_ptr<CXXLib::Address> address(
-        new CXXLib::Address(
-            coreAddress.getStreetNum(), coreAddress.getStreet(),
-            coreAddress.getCity(), coreAddress.getProvince(),
-            coreAddress.getCountry(), coreAddress.getZipCode()
-        )
+        new CXXLib::Address(corePersonPtr->getAddress())
     );
 
     PyObject* result = Py_BuildValue("K", reinterpret_cast<unsigned PY_LONG_LONG>(address.get()));
