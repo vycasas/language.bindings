@@ -35,6 +35,39 @@ module RubyLib
         def self.terminate
             RubyLibNative::Library::terminate
         end
+
+        def self.get_version_string
+            args = {
+                'version_string' => nil
+            }
+            result = RubyLibNative::Library::get_version_string(args)
+            if result != 0
+                raise RubyLibError.new(result)
+            end
+            return args['version_string']
+        end
+
+        def self.get_version_major
+            args = {
+                'version_major' => nil
+            }
+            result = RubyLibNative::Library::get_version_major(args)
+            if result != 0
+                raise RubyLibError.new(result)
+            end
+            return args['version_major']
+        end
+
+        def self.get_version_minor
+            args = {
+                'version_minor' => nil
+            }
+            result = RubyLibNative::Library::get_version_minor(args)
+            if result != 0
+                raise RubyLibError.new(result)
+            end
+            return args['version_minor']
+        end
     end # class Library
 
     class Address < Object

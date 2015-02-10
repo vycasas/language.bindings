@@ -27,6 +27,9 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_library(objclib STATIC OLApi.h OLApi.mm)
 target_link_libraries(objclib cxxlib clib ${SYSTEM_LIBS})
 set_target_properties(objclib PROPERTIES COMPILE_FLAGS "${STATIC_LIBRARY_CXX_FLAGS}")
+if (APPLE)
+    set_target_properties(objclib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
+endif ()
 
 # At the moment, CMake treats .m file as C++ source (which is not correct...), so we have to build manually.
 #add_library(test_objc test/test.m)

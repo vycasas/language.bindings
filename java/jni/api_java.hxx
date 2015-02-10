@@ -32,6 +32,34 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetM
 );
 
 /*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeGetVersionString
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedString;)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionString(
+    JNIEnv* jenv, jclass, jobject versionString
+);
+
+/*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeGetVersionMajor
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)I
+ */
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMajor(
+    JNIEnv* jenv, jclass, jobject versionMajor
+);
+
+/*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeGetVersionMinor
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)I
+ */
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMinor(
+    JNIEnv* jenv, jclass, jobject versionMinor
+);
+
+/*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeCreateAddress
  * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lnet/dotslashzero/javalib/Core/AddressType;)I

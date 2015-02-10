@@ -204,6 +204,22 @@ extern "C"
     }
     return;
 }
+
++ (NSString*) getVersionString
+{
+    return (OBJCLibCore::Utils::CXXStdStringToNSString(CXXLib::Library::getVersionString()));
+}
+
++ (NSUInteger) getVersionMajor
+{
+    return (CXXLib::Library::getVersionMajor());
+}
+
++ (NSUInteger) getVersionMinor
+{
+    return (CXXLib::Library::getVersionMinor());
+}
+
 @end // implementation OLLibrary
 
 @implementation OLAddress

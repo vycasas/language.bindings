@@ -24,6 +24,15 @@ PYTHONLIB_API
 PyObject* PLLibraryTerminate(PyObject*, PyObject*);
 
 PYTHONLIB_API
+PyObject* PLLibraryGetVersionString(PyObject*, PyObject*);
+
+PYTHONLIB_API
+PyObject* PLLibraryGetVersionMajor(PyObject*, PyObject*);
+
+PYTHONLIB_API
+PyObject* PLLibraryGetVersionMinor(PyObject*, PyObject*);
+
+PYTHONLIB_API
 PyObject* PLAddressCreate(PyObject*, PyObject*, PyObject*);
     
 PYTHONLIB_API

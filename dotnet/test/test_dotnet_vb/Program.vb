@@ -17,6 +17,8 @@ Module Program
         Try
             Library.Initialize()
 
+            Console.Out.WriteLine("Library initialized... version {0}", Library.GetVersionString())
+
             Console.Out.WriteLine("Creating a new address...")
             Dim address As Address = New Address(
                 9898, "Corner St.",

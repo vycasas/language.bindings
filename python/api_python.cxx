@@ -99,6 +99,9 @@ PyMethodDef _G_METHODS[] =
     // Library
     { "library_initialize", PLLibraryInitialize, METH_NOARGS, nullptr },
     { "library_terminate", PLLibraryTerminate, METH_NOARGS, nullptr },
+    { "library_get_version_string", PLLibraryGetVersionString,  METH_NOARGS, nullptr },
+    { "library_get_version_major", PLLibraryGetVersionMajor,  METH_NOARGS, nullptr },
+    { "library_get_version_minor", PLLibraryGetVersionMinor,  METH_NOARGS, nullptr },
 
     // Address
     { "address_create", (PyCFunction) PLAddressCreate, METH_VARARGS | METH_KEYWORDS, nullptr },
@@ -147,7 +150,25 @@ PyObject* PLLibraryTerminate(PyObject*, PyObject*)
     CXXLib::Library::terminate();
     return (Py_BuildValue("i", 0));
 }
-    
+
+PYTHONLIB_API
+PyObject* PLLibraryGetVersionString(PyObject*, PyObject*)
+{
+    return (Py_BuildValue("s", CXXLib::Library::getVersionString().c_str()));
+}
+
+PYTHONLIB_API
+PyObject* PLLibraryGetVersionMajor(PyObject*, PyObject*)
+{
+    return (Py_BuildValue("K", CXXLib::Library::getVersionMajor()));
+}
+
+PYTHONLIB_API
+PyObject* PLLibraryGetVersionMinor(PyObject*, PyObject*)
+{
+    return (Py_BuildValue("K", CXXLib::Library::getVersionMinor()));
+}
+
 PYTHONLIB_API
 PyObject* PLAddressCreate(PyObject*, PyObject* args, PyObject* keywords)
 {

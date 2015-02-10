@@ -300,6 +300,21 @@ namespace CXXLib
         return;
     }
 
+    std::string Library::getVersionString(void)
+    {
+        return (std::string(CLLibraryGetVersionString()));
+    }
+
+    size_t Library::getVersionMajor(void)
+    {
+        return (CLLibraryGetVersionMajor());
+    }
+
+    size_t Library::getVersionMinor(void)
+    {
+        return (CLLibraryGetVersionMinor());
+    }
+
     Address::Address(
         int streetNum, const std::string& street,
         const std::string& city, const std::string& province,

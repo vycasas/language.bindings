@@ -43,6 +43,9 @@ target_link_libraries(pythonlib ${PYTHON_LIBRARIES} cxxlib clib ${SYSTEM_LIBS})
 set_target_properties(pythonlib PROPERTIES COMPILE_FLAGS "${SHARED_LIBRARY_CXX_FLAGS}")
 set_target_properties(pythonlib PROPERTIES OUTPUT_NAME "pythonlib_native")
 set_target_properties(pythonlib PROPERTIES PREFIX "")
+if (APPLE)
+    set_target_properties(pythonlib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
+endif ()
 add_custom_command(
     TARGET pythonlib
     POST_BUILD

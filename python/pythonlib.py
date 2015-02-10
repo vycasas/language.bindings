@@ -61,6 +61,18 @@ class Library(object):
             Library.is_initialized = False
         return
 
+    @staticmethod
+    def get_version_string():
+        return _pythonlib_native.library_get_version_string()
+
+    @staticmethod
+    def get_version_major():
+        return _pythonlib_native.library_get_version_major()
+
+    @staticmethod
+    def get_version_minor():
+        return _pythonlib_native.library_get_version_minor()
+
 def _check_if_initialized():
     if not Library.is_initialized:
         raise PythonLibError('PythonLib is not initialized. Please call Library.initialize() first')

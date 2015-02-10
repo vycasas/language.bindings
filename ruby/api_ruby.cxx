@@ -112,6 +112,9 @@ void Init_rubylibnative(void)
     LibraryModule = rb_define_module_under(RubyLibNativeModule, "Library");
     rb_define_module_function(LibraryModule, "initialize", RUBY_METHOD_FUNC(RLLibraryInitialize), 0);
     rb_define_module_function(LibraryModule, "terminate", RUBY_METHOD_FUNC(RLLibraryTerminate), 0);
+    rb_define_module_function(LibraryModule, "get_version_string", RUBY_METHOD_FUNC(RLLibraryGetVersionString), 1);
+    rb_define_module_function(LibraryModule, "get_version_major", RUBY_METHOD_FUNC(RLLibraryGetVersionMajor), 1);
+    rb_define_module_function(LibraryModule, "get_version_minor", RUBY_METHOD_FUNC(RLLibraryGetVersionMinor), 1);
 
     // Address
     AddressModule = rb_define_module_under(RubyLibNativeModule, "Address");
@@ -168,6 +171,51 @@ VALUE RLLibraryTerminate(VALUE)
     }
     catch (...) { }
     return (INT2NUM(0));
+}
+
+RUBYLIB_API
+VALUE RLLibraryGetVersionString(VALUE, VALUE args)
+{
+    BEGIN_EX_GUARD;
+
+    rb_hash_aset(
+        args,
+        rb_str_new_cstr("version_string"),
+        rb_str_new_cstr(CXXLib::Library::getVersionString().c_str())
+    );
+
+    return (INT2NUM(0));
+    END_EX_GUARD;
+}
+
+RUBYLIB_API
+VALUE RLLibraryGetVersionMajor(VALUE, VALUE args)
+{
+    BEGIN_EX_GUARD;
+
+    rb_hash_aset(
+        args,
+        rb_str_new_cstr("version_major"),
+        SIZET2NUM(CXXLib::Library::getVersionMajor())
+    );
+
+    return (INT2NUM(0));
+    END_EX_GUARD;
+}
+
+RUBYLIB_API
+VALUE RLLibraryGetVersionMinor(VALUE, VALUE args)
+{
+    BEGIN_EX_GUARD;
+
+    rb_hash_aset(
+        args,
+        rb_str_new_cstr("version_minor"),
+        SIZET2NUM(CXXLib::Library::getVersionMinor())
+    );
+
+    return (INT2NUM(0));
+    END_EX_GUARD;
 }
 
 RUBYLIB_API

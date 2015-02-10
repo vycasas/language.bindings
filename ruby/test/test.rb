@@ -18,6 +18,10 @@ end
 begin
     RubyLib::Library::initialize
 
+    puts('Library initialized... version %{version_string}' %
+        { :version_string => RubyLib::Library::get_version_string }
+    )
+
     puts('Creating new address...')
     address = RubyLib::Address.new(9898, 'Corner St.', 'Gotham', 'CA', 'Antartica', '4132')
     puts('New address created!')

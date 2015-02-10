@@ -14,6 +14,10 @@
     #define INLINE __inline
 #endif /* defined(_WIN32) */
 
+static const size_t CLIB_VERSION_MAJOR = 1;
+static const size_t CLIB_VERSION_MINOR = 5;
+static const char* const CLIB_VERSION_STRING = "1.5";
+
 typedef enum _CoreErrNums
 {
     COREERRNUM_NO_ERROR = 0,
@@ -86,6 +90,21 @@ CLIB_API CLibErrNum CLLibraryInitialize(void)
 CLIB_API void CLLibraryTerminate(void)
 {
     return;
+}
+
+CLIB_API const char* CLLibraryGetVersionString(void)
+{
+    return (CLIB_VERSION_STRING);
+}
+
+CLIB_API size_t CLLibraryGetVersionMajor(void)
+{
+    return (CLIB_VERSION_MAJOR);
+}
+
+CLIB_API size_t CLLibraryGetVersionMinor(void)
+{
+    return (CLIB_VERSION_MINOR);
 }
 
 CLIB_API CLibErrNum CLAddressCreate(

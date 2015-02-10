@@ -106,6 +106,25 @@ class Core
         }
     }
 
+    static class WrappedLong extends WrappedType<Long>
+    {
+        public WrappedLong(Long value)
+        {
+            super(value);
+        }
+
+        public void setLong(long value)
+        {
+            this.setValue(Long.valueOf(value));
+            return;
+        }
+
+        public long getLong()
+        {
+            return (this.getValue().longValue());
+        }
+    }
+
     static class WrappedString extends WrappedType<String>
     {
         public WrappedString(String value)

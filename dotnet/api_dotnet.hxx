@@ -29,6 +29,9 @@ namespace DotNetLib
     public:
         static void Initialize(void);
         static void Terminate(void);
+        static System::String^ GetVersionString(void);
+		static System::UInt64 GetVersionMajor(void);
+		static System::UInt64 GetVersionMinor(void);
 	}; // ref class Library
 
     public ref class Address sealed

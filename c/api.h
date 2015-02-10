@@ -28,6 +28,10 @@ CLIB_API size_t CLErrNumGetMessage(CLibErrNum errnum, char* message, size_t mess
 CLIB_API CLibErrNum CLLibraryInitialize(void);
 CLIB_API void CLLibraryTerminate(void);
 
+CLIB_API const char* CLLibraryGetVersionString(void);
+CLIB_API size_t CLLibraryGetVersionMajor(void);
+CLIB_API size_t CLLibraryGetVersionMinor(void);
+
 CLIB_API CLibErrNum CLAddressCreate(
     int streetNum, const char* street,
     const char* city, const char* province,

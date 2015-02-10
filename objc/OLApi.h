@@ -16,6 +16,9 @@ extern "C"
 @interface OLLibrary : NSObject
 + (void) initialize;
 + (void) terminate;
++ (NSString*) getVersionString;
++ (NSUInteger) getVersionMajor;
++ (NSUInteger) getVersionMinor;
 @end /* interface OLLibrary */
 
 @interface OLAddress : NSObject

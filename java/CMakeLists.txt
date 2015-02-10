@@ -35,6 +35,9 @@ include_directories(
 add_library(javalib SHARED jni/api_java.cxx jni/api_java.hxx)
 target_link_libraries(javalib ${JAVA_JVM_LIBRARY} cxxlib clib ${SYSTEM_LIBS})
 set_target_properties(javalib PROPERTIES COMPILE_FLAGS "${SHARED_LIBRARY_CXX_FLAGS}")
+if (APPLE)
+    set_target_properties(javalib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
+endif ()
 
 file(GLOB JAVA_SOURCES net/dotslashzero/javalib/*.java)
 add_custom_target(

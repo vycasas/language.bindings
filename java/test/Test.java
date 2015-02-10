@@ -28,6 +28,9 @@ public class Test
         try {
             Library.initialize();
 
+            System.out.print("Library initialized... version ");
+            System.out.println(Library.getVersionString());
+
             System.out.println("Creating a new address...");
             Address addr = new Address(9898, "Corner St.", "Gotham", "CA", "Antartica", "4132");
             System.out.println("New address created!");

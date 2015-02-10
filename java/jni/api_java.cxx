@@ -242,6 +242,102 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetM
 }
 
 /*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeGetVersionString
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedString;)I
+ */
+JAVALIB_API
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionString(
+    JNIEnv* jenv, jclass, jobject versionString
+)
+{
+    BEGIN_EX_GUARD(jenv);
+
+    std::string coreVersionString = CXXLib::Library::getVersionString();
+
+    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
+        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+
+    if (WrappedStringClass == nullptr)
+        return (1);
+
+    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+
+    if (setStringID == nullptr)
+        return (1);
+
+    jstring versionStringValue = jenv->NewStringUTF(coreVersionString.data());
+
+    jenv->CallVoidMethod(versionString, setStringID, versionStringValue);
+
+    END_EX_GUARD(jenv);
+
+    return (0);
+}
+
+/*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeGetVersionMajor
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)I
+ */
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMajor(
+    JNIEnv* jenv, jclass, jobject versionMajor
+)
+{
+    BEGIN_EX_GUARD(jenv);
+
+    size_t coreVersionMajor = CXXLib::Library::getVersionMajor();
+
+    jclass WrappedLongClass /* net.dotslashzero.javalib.Core.WrappedLong */ =
+        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedLong");
+
+    if (WrappedLongClass == nullptr)
+        return (1);
+
+    jmethodID setLongID = jenv->GetMethodID(WrappedLongClass, "setLong", "(J)V");
+
+    if (setLongID == nullptr)
+        return (1);
+
+    jenv->CallVoidMethod(versionMajor, setLongID, static_cast<jlong>(coreVersionMajor));
+
+    END_EX_GUARD(jenv);
+
+    return (0);
+}
+
+/*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeGetVersionMinor
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)I
+ */
+JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMinor(
+    JNIEnv* jenv, jclass, jobject versionMinor
+)
+{
+    BEGIN_EX_GUARD(jenv);
+
+    size_t coreVersionMinor = CXXLib::Library::getVersionMinor();
+
+    jclass WrappedLongClass /* net.dotslashzero.javalib.Core.WrappedLong */ =
+        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedLong");
+
+    if (WrappedLongClass == nullptr)
+        return (1);
+
+    jmethodID setLongID = jenv->GetMethodID(WrappedLongClass, "setLong", "(J)V");
+
+    if (setLongID == nullptr)
+        return (1);
+
+    jenv->CallVoidMethod(versionMinor, setLongID, static_cast<jlong>(coreVersionMinor));
+
+    END_EX_GUARD(jenv);
+
+    return (0);
+}
+
+/*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeCreateAddress
  * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lnet/dotslashzero/javalib/Core/AddressType;)I
@@ -437,14 +533,14 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreet(
     if (WrappedStringClass == nullptr)
         return (1);
 
-    jmethodID setValueID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
 
-    if (setValueID == nullptr)
+    if (setStringID == nullptr)
         return (1);
 
     jstring streetValue = jenv->NewStringUTF(coreStreet.data());
 
-    jenv->CallVoidMethod(street, setValueID, streetValue);
+    jenv->CallVoidMethod(street, setStringID, streetValue);
 
     END_EX_GUARD(jenv);
 
@@ -476,14 +572,14 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCity(
     if (WrappedStringClass == nullptr)
         return (1);
 
-    jmethodID setValueID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
 
-    if (setValueID == nullptr)
+    if (setStringID == nullptr)
         return (1);
 
     jstring cityValue = jenv->NewStringUTF(coreCity.data());
 
-    jenv->CallVoidMethod(city, setValueID, cityValue);
+    jenv->CallVoidMethod(city, setStringID, cityValue);
 
     END_EX_GUARD(jenv);
 
@@ -515,14 +611,14 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetProvince(
     if (WrappedStringClass == nullptr)
         return (1);
 
-    jmethodID setValueID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
 
-    if (setValueID == nullptr)
+    if (setStringID == nullptr)
         return (1);
 
     jstring provinceValue = jenv->NewStringUTF(coreProvince.data());
 
-    jenv->CallVoidMethod(province, setValueID, provinceValue);
+    jenv->CallVoidMethod(province, setStringID, provinceValue);
 
     END_EX_GUARD(jenv);
 
@@ -554,14 +650,14 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCountry(
     if (WrappedStringClass == nullptr)
         return (1);
 
-    jmethodID setValueID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
 
-    if (setValueID == nullptr)
+    if (setStringID == nullptr)
         return (1);
 
     jstring countryValue = jenv->NewStringUTF(coreCountry.data());
 
-    jenv->CallVoidMethod(country, setValueID, countryValue);
+    jenv->CallVoidMethod(country, setStringID, countryValue);
 
     END_EX_GUARD(jenv);
 
@@ -593,14 +689,14 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetZipCode(
     if (WrappedStringClass == nullptr)
         return (1);
 
-    jmethodID setValueID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
 
-    if (setValueID == nullptr)
+    if (setStringID == nullptr)
         return (1);
 
     jstring zipCodeValue = jenv->NewStringUTF(coreZipCode.data());
 
-    jenv->CallVoidMethod(zipCode, setValueID, zipCodeValue);
+    jenv->CallVoidMethod(zipCode, setStringID, zipCodeValue);
 
     END_EX_GUARD(jenv);
 
@@ -729,14 +825,14 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetLastName(
     if (WrappedStringClass == nullptr)
         return (1);
 
-    jmethodID setValueID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
 
-    if (setValueID == nullptr)
+    if (setStringID == nullptr)
         return (1);
 
     jstring lastNameValue = jenv->NewStringUTF(coreLastName.data());
 
-    jenv->CallVoidMethod(lastName, setValueID, lastNameValue);
+    jenv->CallVoidMethod(lastName, setStringID, lastNameValue);
 
     END_EX_GUARD(jenv);
 
@@ -768,14 +864,14 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetFirstName(
     if (WrappedStringClass == nullptr)
         return (1);
 
-    jmethodID setValueID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
 
-    if (setValueID == nullptr)
+    if (setStringID == nullptr)
         return (1);
 
     jstring firstNameValue = jenv->NewStringUTF(coreFirstName.data());
 
-    jenv->CallVoidMethod(firstName, setValueID, firstNameValue);
+    jenv->CallVoidMethod(firstName, setStringID, firstNameValue);
 
     END_EX_GUARD(jenv);
 

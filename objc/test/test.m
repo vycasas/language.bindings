@@ -37,6 +37,8 @@ int main(void)
     @try {
         [OLLibrary initialize];
 
+        NSLog(@"Library initialized... version %@\n", [OLLibrary getVersionString]);
+
         NSLog(@"Creating a new Address...");
         OLAddress* address = [[OLAddress alloc]
             initWithStreetNum:9898

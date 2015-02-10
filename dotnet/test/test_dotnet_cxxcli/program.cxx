@@ -21,6 +21,8 @@ int main(array<System::String^>^ args)
     try {
         Library::Initialize();
 
+		Console::Out->WriteLine("Library initialized... version {0}", Library::GetVersionString());
+
         Console::Out->WriteLine("Creating a new address...");
         Address^ address = gcnew Address(
             9898, "Corner St.",

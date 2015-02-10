@@ -164,6 +164,27 @@ namespace DotNetLib
         return;
     }
 
+	System::String^ Library::GetVersionString(void)
+	{
+		BEGIN_EX_GUARD;
+		return (DotNetLibCore::Utils::CXXStdStringToSystemString(CXXLib::Library::getVersionString()));
+		END_EX_GUARD;
+	}
+
+	System::UInt64 Library::GetVersionMajor(void)
+	{
+		BEGIN_EX_GUARD;
+		return (static_cast<System::UInt64>(CXXLib::Library::getVersionMajor()));
+		END_EX_GUARD;
+	}
+
+	System::UInt64 Library::GetVersionMinor(void)
+	{
+		BEGIN_EX_GUARD;
+		return (static_cast<System::UInt64>(CXXLib::Library::getVersionMinor()));
+		END_EX_GUARD;
+	}
+
     Address::Address(
         int streetNum,
         System::String^ street,

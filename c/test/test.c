@@ -14,6 +14,8 @@ int main(void)
 
     CLLibraryInitialize();
 
+    fprintf(stdout, "Library initialized... version %s\n", CLLibraryGetVersionString());
+
     fprintf(stdout, "Creating a new address...\n");
     error = CLAddressCreate(9898, "Corner St.", "Gotham", "CA", "Antartica", "4132", &address);
     if (error != 0) {

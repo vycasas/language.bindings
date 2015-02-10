@@ -45,6 +45,7 @@ set_target_properties(rubylib PROPERTIES PREFIX "")
 if (APPLE)
     # Important, Ruby modules for Mac OS requires .bundle suffix to be loaded.
     set_target_properties(rubylib PROPERTIES SUFFIX ".bundle")
+    set_target_properties(rubylib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
 endif ()
 add_custom_command(
     TARGET rubylib

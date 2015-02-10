@@ -19,6 +19,8 @@ def main(args):
     try:
         pythonlib.Library.initialize()
 
+        print('Library initialized... version {}'.format(pythonlib.Library.get_version_string()))
+
         print('Creating a new address...')
         address = pythonlib.Address(9898, 'Corner St.', 'Gotham', 'CA', 'Antartica', '4132')
         print('New address created!')

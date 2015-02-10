@@ -60,6 +60,10 @@ namespace CXXLib
         static void initialize(void);
         static void terminate(void);
 
+        static std::string getVersionString(void);
+        static size_t getVersionMajor(void);
+        static size_t getVersionMinor(void);
+
         Library(void) = delete;
         ~Library(void) = delete;
         Library(const Library&) = delete;
