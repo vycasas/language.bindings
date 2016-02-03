@@ -31,7 +31,7 @@ int main(void)
     try {
         CXXLib::Library::initialize();
     
-        std::cout << "Library initialized... version " << CLLibraryGetVersionString() << std::endl;
+        std::cout << "Library initialized... version " << CXXLib::Library::getVersionString() << std::endl;
 
         std::cout << "Creating a new address..." << std::endl;
         CXXLib::Address address{ 9898, "Corner St.", "Gotham", "CA", "Antartica", "4132" };

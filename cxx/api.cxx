@@ -529,11 +529,14 @@ namespace CXXLib
 
     Address Person::getAddress(void) const
     {
+        // we need to make sure that we don't take ownership of this Person's Address impl...
         Address address;
         auto c_api_call_result = CLPersonGetAddress(_impl, &(address._impl));
         CXXLIB_API_CHECK(c_api_call_result);
 
-        return (address);
+        Address result(address); // make a copy
+        address._impl = nullptr; // remove reference
+        return (result);
     }
 
     std::string Person::toString(void) const
