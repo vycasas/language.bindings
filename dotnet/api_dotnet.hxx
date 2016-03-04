@@ -24,15 +24,15 @@ namespace DotNetLib
         CXXLib::Exception* _impl;
     }; // ref class Exception
 
-	public ref class Library abstract sealed
-	{
+    public ref class Library abstract sealed
+    {
     public:
         static void Initialize(void);
         static void Terminate(void);
         static System::String^ GetVersionString(void);
 		static System::UInt64 GetVersionMajor(void);
 		static System::UInt64 GetVersionMinor(void);
-	}; // ref class Library
+    }; // ref class Library
 
     public ref class Address sealed
     {
