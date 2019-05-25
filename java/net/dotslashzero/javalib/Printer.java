@@ -15,8 +15,9 @@ public class Printer extends Core.ApiBase<Core.PrinterType>
 
     private static native int nativeCreatePrinter(IGenerator generator, Core.PrinterType printerImpl);
 
+	@SuppressWarnings("deprecation")
     @Override
-    protected void finalize()
+    protected synchronized void finalize()
     {
         nativeDestroyPrinter(this.getImpl());
         return;

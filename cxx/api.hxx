@@ -1,11 +1,12 @@
 #if !defined(CXXLIB_API_HXX)
 #define CXXLIB_API_HXX
 
+#include <api.h>
+
+#include <array>
 #include <exception>
 #include <memory>
 #include <string>
-
-#include <C/api.h>
 
 #define CXXLIB_API __attribute__ ((visibility ("default")))
 #if defined(_MSC_VER)
@@ -18,7 +19,7 @@
 
 namespace CXXLib
 {
-    class CXXLIB_API Exception : std::exception
+    class Exception : public std::exception
     {
     public:
         Exception(void) :
@@ -39,12 +40,26 @@ namespace CXXLib
             _impl(2)
         { return; }
 
-        std::string getMessage(void) const;
+        std::string getMessage(void) const
+		{
+			return (_message);
+		}
 
-        virtual const char* what(void) const noexcept override;
+        virtual const char* what(void) const noexcept override
+		{
+			return (getMessage().data());
+		}
 
     protected:
-        Exception(CLibErrNum errNum);
+        Exception(CLibErrNum errNum) : _impl{ errNum }
+		{
+			std::array<char, 40> buffer;
+			buffer.fill('\0');
+			CLErrNumGetMessage(_impl, buffer.data(), buffer.size());
+
+			_message = std::string(buffer.data());
+			return;
+		}
 
         std::string _message;
         CLibErrNum _impl;
@@ -149,7 +164,7 @@ namespace CXXLib
         static CLibErrNum DestroyFunction(void* userData);
     }; // class GeneratorBase
 
-    class CXXLIB_API Printer final
+    class CXXLIB_API Printer
     {
     public:
         Printer(std::unique_ptr<GeneratorBase> generator);

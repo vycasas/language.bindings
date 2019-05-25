@@ -2,44 +2,52 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(dotnetlib CXX)
 
 if (NOT MSVC)
-    message(FATAL_ERROR "Only MSVC compilers are supported for .NET.")
+    message(FATAL_ERROR "Only MSVC compilers are supported for .NET projects.")
     return ()
 endif ()
 
-set(CXX_FLAGS "/clr")
-set(SHARED_LIBRARY_CXX_FLAGS "")
-set(EXECUTABLE_CXX_FLAGS "")
-set(LINKER_FLAGS "")
-set(SHARED_LIBRARY_LINKER_FLAGS "")
-set(EXECUTABLE_LINKER_FLAGS "")
-set(SYSTEM_LIBS)
+set(DOTNETLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(DOTNETLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(DOTNETLIB_RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(DOTNETLIB_HEADER_FILES "${DOTNETLIB_HEADER_DIR}/api_dotnet.hxx")
+set(DOTNETLIB_SOURCE_FILES "${DOTNETLIB_SOURCE_DIR}/api_dotnet.cxx")
+set(DOTNETLIB_RESOURCE_FILES
+    "${DOTNETLIB_RESOURCE_DIR}/resource.hxx"
+    "${DOTNETLIB_RESOURCE_DIR}/assemblyinfo.cxx"
+    "${DOTNETLIB_RESOURCE_DIR}/app.ico"
+    "${DOTNETLIB_RESOURCE_DIR}/app.rc")
 
-set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-set(CMAKE_SHARED_LINKER_FLAGS "${LINKER_FLAGS} ${SHARED_LIBRARY_LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS} ${EXECUTABLE_LINKER_FLAGS}")
-include_directories(${CMAKE_SOURCE_DIR})
+set(DOTNETLIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
+set(DOTNETLIB_COMPILE_OPTIONS /W4 /WX /EHa /GR /openmp-)
+set(DOTNETLIB_LINK_OPTIONS /WX)
 
-add_library(dotnetlib SHARED api_dotnet.cxx api_dotnet.hxx resource.hxx assemblyinfo.cxx app.ico app.rc)
-target_link_libraries(dotnetlib cxxlib clib)
-set_target_properties(dotnetlib PROPERTIES OUTPUT_NAME "DotNetLib")
-set_target_properties(dotnetlib PROPERTIES COMPILE_FLAGS "${SHARED_LIBRARY_CXX_FLAGS}")
-set_target_properties(dotnetlib PROPERTIES VS_DOTNET_REFERECES "System")
+add_library(
+    dotnetlib SHARED
+    ${DOTNETLIB_HEADER_FILES}
+    ${DOTNETLIB_SOURCE_FILES})
 
-string(REPLACE "/RTC1" " " CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-string(REPLACE "/EHsc" "/EHa" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+target_compile_definitions(
+    dotnetlib
+    PUBLIC ${DOTNETLIB_COMPILE_DEFINITIONS})
+target_compile_options(
+    dotnetlib
+    PRIVATE ${DOTNETLIB_COMPILE_OPTIONS})
+target_include_directories(
+    dotnetlib
+    PRIVATE ${DOTNETLIB_HEADER_DIR})
+target_link_options(
+    dotnetlib
+    PRIVATE ${DOTNETLIB_LINK_OPTIONS})
+target_link_libraries(dotnetlib
+    PUBLIC cxxlib)
 
-# C# and VB tests are not included. They can be ran separately.
-add_executable(
-    test_dotnet
-    test/test_dotnet_cxxcli/program.cxx
-    test/test_dotnet_cxxcli/assemblyinfo.cxx
-    test/test_dotnet_cxxcli/resource.hxx
-    test/test_dotnet_cxxcli/app.ico
-    test/test_dotnet_cxxcli/app.rc
-)
-target_link_libraries(test_dotnet dotnetlib cxxlib clib ${SYSTEM_LIBS})
-set_target_properties(test_dotnet PROPERTIES COMPILE_FLAGS "${EXECUTABLE_CXX_FLAGS}")
-set_target_properties(dotnetlib PROPERTIES VS_DOTNET_REFERECES "$<TARGET_FILE:dotnetlib>;System")
+set_target_properties(dotnetlib
+    PROPERTIES COMMON_LANGUAGE_RUNTIME "")
+set_target_properties(dotnetlib
+    PROPERTIES DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2")
+set_target_properties(dotnetlib
+    PROPERTIES OUTPUT_NAME "DotNetLib")
+set_target_properties(dotnetlib
+    PROPERTIES VS_DOTNET_REFERECES "System")
 
-string(REPLACE "/RTC1" " " CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-string(REPLACE "/EHsc" "/EHa" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")

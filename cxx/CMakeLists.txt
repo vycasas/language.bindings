@@ -1,37 +1,42 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(cxxlib CXX)
 
+set(CXXLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CXXLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
+set(CXXLIB_HEADER_FILES
+    "${CXXLIB_HEADER_DIR}/api.hxx")
+set(CXXLIB_SOURCE_FILES
+    "${CXXLIB_SOURCE_DIR}/api.cxx")
+
 if (UNIX)
-    set(CXX_FLAGS "-std=c++11 -W -Wall -Wextra -Werror -pedantic -pedantic-errors")
-    set(SHARED_LIBRARY_CXX_FLAGS "-fpic -fPIC -fvisibility=hidden")
-    set(EXECUTABLE_CXX_FLAGS "-fpie -fPIE")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS c++ c)
+    set(CXXLIB_COMPILE_DEFINITIONS)
+    set(CXXLIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
+    set(CXXLIB_LINK_OPTIONS)
 elseif (MSVC)
-    set(CXX_FLAGS "")
-    set(SHARED_LIBRARY_CXX_FLAGS "")
-    set(EXECUTABLE_CXX_FLAGS "")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS "")
-    add_definitions(-DUNICODE -D_UNICODE)
+    set(CXXLIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
+    set(CXXLIB_COMPILE_OPTIONS /W4 /WX /EHsc /GR /openmp-)
+    set(CXXLIB_LINK_OPTIONS /WX)
 endif ()
 
-set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-set(CMAKE_SHARED_LINKER_FLAGS "${LINKER_FLAGS} ${SHARED_LIBRARY_LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS} ${EXECUTABLE_LINKER_FLAGS}")
-include_directories(${CMAKE_SOURCE_DIR})
+add_library(
+    cxxlib SHARED
+    ${CXXLIB_HEADER_FILES}
+    ${CXXLIB_SOURCE_FILES})
+target_compile_definitions(
+    cxxlib
+    PRIVATE ${CXXLIB_COMPILE_DEFINITIONS})
+target_compile_options(
+    cxxlib
+    PRIVATE ${CXXLIB_COMPILE_OPTIONS})
+target_include_directories(
+    cxxlib
+    PUBLIC ${CXXLIB_HEADER_DIR})
+target_link_options(
+    cxxlib
+    PRIVATE ${CXXLIB_LINK_OPTIONS})
+target_link_libraries(
+    cxxlib
+    PUBLIC clib)
 
-add_library(cxxlib SHARED api.cxx api.hxx)
-target_link_libraries(cxxlib clib ${SYSTEM_LIBS})
-set_target_properties(cxxlib PROPERTIES COMPILE_FLAGS "${SHARED_LIBRARY_CXX_FLAGS}")
-if (APPLE)
-    set_target_properties(cxxlib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
-endif ()
-
-add_executable(test_cxx test/test.cxx)
-target_link_libraries(test_cxx cxxlib clib ${SYSTEM_LIBS})
-set_target_properties(test_cxx PROPERTIES COMPILE_FLAGS "${EXECUTABLE_CXX_FLAGS}")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")

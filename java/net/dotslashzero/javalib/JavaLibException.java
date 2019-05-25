@@ -13,9 +13,10 @@ public class JavaLibException extends Exception
     {
         _impl = new Core.ExceptionType(impl);
     }
-
+	
+	@SuppressWarnings("deprecation")
     @Override
-    protected void finalize()
+    protected synchronized void finalize()
     {
         //nativeDestroyException(this.getImpl());
         return;
