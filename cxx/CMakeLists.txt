@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(cxxlib CXX)
 
 set(CXXLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -23,6 +23,7 @@ add_library(
     cxxlib SHARED
     ${CXXLIB_HEADER_FILES}
     ${CXXLIB_SOURCE_FILES})
+
 target_compile_definitions(
     cxxlib
     PRIVATE ${CXXLIB_COMPILE_DEFINITIONS})

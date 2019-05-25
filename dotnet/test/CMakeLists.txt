@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(dotnetlib_test CXX)
 
 if (NOT MSVC)
@@ -27,6 +27,7 @@ add_executable(
     dotnetlib_test
     ${DOTNETLIB_TEST_HEADER_FILES}
     ${DOTNETLIB_TEST_SOURCE_FILES})
+
 target_compile_definitions(
     dotnetlib_test
     PRIVATE ${DOTNETLIB_TEST_COMPILE_DEFINITIONS})

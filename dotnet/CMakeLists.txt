@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(dotnetlib CXX)
 
 if (NOT MSVC)
@@ -28,7 +28,7 @@ add_library(
 
 target_compile_definitions(
     dotnetlib
-    PUBLIC ${DOTNETLIB_COMPILE_DEFINITIONS})
+    PRIVATE ${DOTNETLIB_COMPILE_DEFINITIONS})
 target_compile_options(
     dotnetlib
     PRIVATE ${DOTNETLIB_COMPILE_OPTIONS})

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(clib C)
 
 #TODO: version generation
@@ -25,6 +25,7 @@ add_library(
     clib SHARED
     ${CLIB_HEADER_FILES}
     ${CLIB_SOURCE_FILES})
+
 target_compile_definitions(
     clib
     PRIVATE ${CLIB_COMPILE_DEFINITIONS})

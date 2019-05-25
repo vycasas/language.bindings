@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(javalib CXX)
 
 find_package(Java)
@@ -26,6 +26,7 @@ add_library(
     javalib SHARED
     ${JAVALIB_HEADER_FILES}
     ${JAVALIB_SOURCE_FILES})
+
 target_compile_definitions(
     javalib
     PRIVATE ${JAVALIB_COMPILE_DEFINITIONS})
@@ -42,6 +43,7 @@ target_link_libraries(
     javalib
     PRIVATE cxxlib)
 
+# Build the JAR wrappers for Java projects to consume
 file(GLOB JAVA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/net/dotslashzero/javalib/*.java")
 add_custom_target(
     javalib_jar ALL

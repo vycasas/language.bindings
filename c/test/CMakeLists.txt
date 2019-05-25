@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(clib_test C)
 
 set(CLIB_TEST_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -10,7 +10,7 @@ set(CLIB_TEST_SOURCE_FILES
 
 if (UNIX)
     set(CLIB_TEST_COMPILE_DEFINITIONS)
-    set(CLIB_TEST_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpie fPIE)
+    set(CLIB_TEST_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpie -fPIE)
     set(CLIB_TEST_LINK_OPTIONS)
 elseif (MSVC)
     set(CLIB_TEST_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
@@ -22,6 +22,7 @@ add_executable(
     clib_test
     ${CLIB_TEST_HEADER_FILES}
     ${CLIB_TEST_SOURCE_FILES})
+
 target_compile_definitions(
     clib_test
     PRIVATE ${CLIB_TEST_COMPILE_DEFINITIONS})
