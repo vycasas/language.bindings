@@ -8,7 +8,11 @@
     #define CLIB_MODULE_VISIBILITY __declspec(dllexport)
 #endif /* defined(_MSC_VER) */
 
-#define CLIB_CALLING_CONVENTION __stdcall
+#define CLIB_CALLING_CONVENTION
+#if defined(_MSC_VER)
+  #undef CLIB_CALLING_CONVENTION
+  #define CLIB_CALLING_CONVENTION __stdcall
+#endif /* defined(_MSC_VER) */
 
 #if defined(__cplusplus)
     #define CLIB_API(rt) \
