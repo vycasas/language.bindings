@@ -1,10 +1,10 @@
 #include "api.hxx"
 
-#include <array>
+#include <chrono>
 #include <cstring>
+#include <ctime>
 #include <iostream>
 #include <memory>
-#include <random>
 
 #if defined(_MSC_VER)
     #define _CRT_SECURE_NO_WARNINGS 1
@@ -44,17 +44,15 @@ namespace CXXLibCore
 
     void Printer::printInt(void)
     {
-        std::random_device rd;
-        std::uniform_int_distribution<int> dist(0, 999);
-        std::cout << "The value of int is: " << _generator->generateInt(dist(rd)) << std::endl;
+		auto someInt = static_cast<int>(std::chrono::seconds(std::time(nullptr)).count());
+        std::cout << "The value of int is: " << _generator->generateInt(someInt) << std::endl;
         return;
     }
 
     void Printer::printString(void)
     {
-        std::random_device rd;
-        std::uniform_int_distribution<int> dist(0, 999);
-        std::cout << "The value of string is: " << _generator->generateString(dist(rd)) << std::endl;
+		auto someInt = static_cast<int>(std::chrono::seconds(std::time(nullptr)).count());
+        std::cout << "The value of string is: " << _generator->generateString(someInt) << std::endl;
         return;
     }
 
@@ -267,26 +265,6 @@ namespace CLib
 
 namespace CXXLib
 {
-    Exception::Exception(CLibErrNum errNum) : _impl{errNum}
-    {
-        std::array<char, 40> buffer;
-        buffer.fill('\0');
-        CLErrNumGetMessage(_impl, buffer.data(), buffer.size());
-
-        _message = std::string(buffer.data());
-        return;
-    }
-
-    std::string Exception::getMessage(void) const
-    {
-        return (_message);
-    }
-
-    const char* Exception::what(void) const noexcept
-    {
-        return (getMessage().data());
-    }
-
     void Library::initialize(void)
     {
         auto c_api_call_result = CLLibraryInitialize();

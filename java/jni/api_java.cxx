@@ -8,7 +8,7 @@
 #include <locale>
 #include <memory>
 
-#include <cxx/api.hxx>
+#include <api.hxx>
 
 // helper macros
 #define GET_CORE_CLASS_PTR(impl, T) \
@@ -38,14 +38,27 @@
 
 namespace JavaLibCore
 {
-    // utility wrapper to adapt locale-bound facets for wstring/wbuffer convert
-    template<class facetT>
-    struct deletable_facet : facetT
-    {
-        template<class... argsT>
-        deletable_facet(argsT&&... args) : facetT(std::forward<argsT>(args)...) { return; }
-        ~deletable_facet(void) { return; }
-    };
+	namespace Utils
+	{
+		inline std::u16string ConvertToU16string(std::string const& str)
+		{
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4996)
+#endif // defined(_MSC_VER)
+			std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> strConverter; // note: deprecated since C++17 warnings are being suppressed for this
+			auto wstrString = strConverter.from_bytes(str.c_str());
+			std::u16string result(wstrString.size(), u'\0');
+			for (std::size_t i = 0; i < wstrString.size(); i++)
+			{
+				result[i] = static_cast<char16_t>(wstrString[i]);
+			}
+			return (result);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif // defined(_MSC_VER)
+		}
+	} // namespace Utils
 
     jthrowable MakeJNIException(JNIEnv* jenv, const CXXLib::Exception& e)
     {
@@ -229,13 +242,12 @@ JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetM
     // note: part of this function's pre-condition is that message is at least 512 in size.
     // also: jchar's type is unsigned 16 bit type
 
-    // convert exMessage to UTF-16 string
-    std::wstring_convert<JavaLibCore::deletable_facet<std::codecvt<char16_t, char, std::mbstate_t>>, char16_t> conv16;
-    auto u16ExMessage = conv16.from_bytes(exMessage.data());
+	auto u16ExMessage = JavaLibCore::Utils::ConvertToU16string(exMessage);
 
     jenv->SetCharArrayRegion(
         message, 0, static_cast<jsize>(u16ExMessage.size()), reinterpret_cast<const jchar*>(u16ExMessage.data())
     );
+	
     END_EX_GUARD(jenv);
 
     return (0);

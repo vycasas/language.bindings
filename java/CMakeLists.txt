@@ -1,80 +1,65 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(javalib CXX)
-
-if (UNIX)
-    set(CXX_FLAGS "-std=c++11 -W -Wall -Wextra -Werror -pedantic -pedantic-errors")
-    set(SHARED_LIBRARY_CXX_FLAGS "-fpic -fPIC -fvisibility=hidden")
-    set(EXECUTABLE_CXX_FLAGS "-fpie -fPIE")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS c++ c)
-elseif (MSVC)
-    set(CXX_FLAGS "")
-    set(SHARED_LIBRARY_CXX_FLAGS "")
-    set(EXECUTABLE_CXX_FLAGS "")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS "")
-    add_definitions(-DUNICODE -D_UNICODE)
-endif ()
 
 find_package(Java)
 find_package(JNI)
 
-set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-set(CMAKE_SHARED_LINKER_FLAGS "${LINKER_FLAGS} ${SHARED_LIBRARY_LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS} ${EXECUTABLE_LINKER_FLAGS}")
-include_directories(
-    ${CMAKE_SOURCE_DIR}
-    ${JAVA_INCLUDE_PATH}
-    ${JAVA_INCLUDE_PATH2}
-)
+set(JAVALIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/jni")
+set(JAVALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/jni")
 
-add_library(javalib SHARED jni/api_java.cxx jni/api_java.hxx)
-target_link_libraries(javalib ${JAVA_JVM_LIBRARY} cxxlib clib ${SYSTEM_LIBS})
-set_target_properties(javalib PROPERTIES COMPILE_FLAGS "${SHARED_LIBRARY_CXX_FLAGS}")
-if (APPLE)
-    set_target_properties(javalib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
+set(JAVALIB_HEADER_FILES
+    "${JAVALIB_HEADER_DIR}/api_java.hxx")
+set(JAVALIB_SOURCE_FILES
+    "${JAVALIB_SOURCE_DIR}/api_java.cxx")
+
+if (UNIX)
+    set(JAVALIB_COMPILE_DEFINITIONS)
+    set(JAVALIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
+    set(JAVALIB_LINK_OPTIONS)
+elseif (MSVC)
+    set(JAVALIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
+    set(JAVALIB_COMPILE_OPTIONS /W4 /WX /EHsc /GR /openmp-)
+    set(JAVALIB_LINK_OPTIONS /WX)
 endif ()
 
-file(GLOB JAVA_SOURCES net/dotslashzero/javalib/*.java)
+add_library(
+    javalib SHARED
+    ${JAVALIB_HEADER_FILES}
+    ${JAVALIB_SOURCE_FILES})
+
+target_compile_definitions(
+    javalib
+    PRIVATE ${JAVALIB_COMPILE_DEFINITIONS})
+target_compile_options(
+    javalib
+    PRIVATE ${JAVALIB_COMPILE_OPTIONS})
+target_include_directories(
+    javalib
+    PRIVATE ${JAVALIB_HEADER_DIR} ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
+target_link_options(
+    javalib
+    PRIVATE ${JAVALIB_LINK_OPTIONS})
+target_link_libraries(
+    javalib
+    PRIVATE cxxlib)
+
+# Build the JAR wrappers for Java projects to consume
+file(GLOB JAVA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/net/dotslashzero/javalib/*.java")
 add_custom_target(
-    javalibjar ALL
+    javalib_jar ALL
     COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_CURRENT_BINARY_DIR} -verbose -deprecation -Werror
-        -cp ${CMAKE_BINARY_DIR} ${JAVA_SOURCES}
+        -cp ${CMAKE_CURRENT_SOURCE_DIR} ${JAVA_SOURCES}
     SOURCES ${JAVA_SOURCES}
     DEPENDS ${JAVA_SOURCES}
     VERBATIM
 )
 add_custom_command(
-    TARGET javalibjar
+    TARGET javalib_jar
     POST_BUILD
-    COMMAND ${Java_JAR_EXECUTABLE} cvf ${CMAKE_BINARY_DIR}/JavaLib.jar net/
+    COMMAND ${Java_JAR_EXECUTABLE} cvf "$<TARGET_FILE_DIR:javalib>/JavaLib.jar" net/
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     VERBATIM
 )
-add_dependencies(javalibjar javalib)
+add_dependencies(javalib_jar javalib)
 
-file(GLOB TEST_JAVA_SOURCES test/*.java)
-if (UNIX)
-    add_custom_target(
-        test_java ALL
-        COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR} -verbose -deprecation -Werror
-            -cp ${CMAKE_BINARY_DIR}:${CMAKE_BINARY_DIR}/JavaLib.jar ${TEST_JAVA_SOURCES}
-        SOURCES ${TEST_JAVA_SOURCES}
-        DEPENDS ${TEST_JAVA_SOURCES}
-        VERBATIM
-    )
-else ()
-    add_custom_target(
-        test_java ALL
-        COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR} -verbose -deprecation -Werror
-            -cp "${CMAKE_BINARY_DIR};${CMAKE_BINARY_DIR}/JavaLib.jar" ${TEST_JAVA_SOURCES}
-        DEPENDS ${TEST_JAVA_SOURCES}
-        SOURCES ${TEST_JAVA_SOURCES}
-        VERBATIM
-    )
-endif ()
-add_dependencies(test_java javalibjar)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")

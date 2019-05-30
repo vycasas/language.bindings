@@ -1,37 +1,42 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(clib C)
 
+#TODO: version generation
+
+set(CLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
+set(CLIB_HEADER_FILES
+    "${CLIB_HEADER_DIR}/api.h")
+set(CLIB_SOURCE_FILES
+    "${CLIB_SOURCE_DIR}/api.c")
+
 if (UNIX)
-    set(C_FLAGS "-std=c11 -W -Wall -Wextra -Werror -pedantic -pedantic-errors")
-    set(SHARED_LIBRARY_C_FLAGS "-fpic -fPIC -fvisibility=hidden")
-    set(EXECUTABLE_C_FLAGS "-fpie -fPIE")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS c)
+    set(CLIB_COMPILE_DEFINITIONS)
+    set(CLIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
+    set(CLIB_LINK_OPTIONS)
 elseif (MSVC)
-    set(C_FLAGS "")
-    set(SHARED_LIBRARY_C_FLAGS "")
-    set(EXECUTABLE_C_FLAGS "")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS "")
-    add_definitions(-DUNICODE -D_UNICODE)
+    set(CLIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
+    set(CLIB_COMPILE_OPTIONS /W4 /WX /EHsc /GR /openmp- /TC)
+    set(CLIB_LINK_OPTIONS /WX)
 endif ()
 
-set(CMAKE_C_FLAGS "${C_FLAGS} ${CMAKE_C_FLAGS}")
-set(CMAKE_SHARED_LINKER_FLAGS "${LINKER_FLAGS} ${SHARED_LIBRARY_LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS} ${EXECUTABLE_LINKER_FLAGS}")
-include_directories(${CMAKE_SOURCE_DIR})
+add_library(
+    clib SHARED
+    ${CLIB_HEADER_FILES}
+    ${CLIB_SOURCE_FILES})
 
-add_library(clib SHARED api.c api.h)
-target_link_libraries(clib ${SYSTEM_LIBS})
-set_target_properties(clib PROPERTIES COMPILE_FLAGS "${SHARED_LIBRARY_C_FLAGS}")
-if (APPLE)
-    set_target_properties(clib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
-endif ()
+target_compile_definitions(
+    clib
+    PRIVATE ${CLIB_COMPILE_DEFINITIONS})
+target_compile_options(
+    clib
+    PRIVATE ${CLIB_COMPILE_OPTIONS})
+target_include_directories(
+    clib
+    PUBLIC ${CLIB_HEADER_DIR})
+target_link_options(
+    clib
+    PRIVATE ${CLIB_LINK_OPTIONS})
 
-add_executable(test_c test/test.c)
-target_link_libraries(test_c clib ${SYSTEM_LIBS})
-set_target_properties(test_c PROPERTIES COMPILE_FLAGS "${EXECUTABLE_C_FLAGS}")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")

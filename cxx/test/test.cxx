@@ -2,7 +2,7 @@
 #include <memory>
 #include <sstream>
 
-#include <cxx/api.hxx>
+#include <api.hxx>
 
 class MyGenerator : public CXXLib::GeneratorBase
 {

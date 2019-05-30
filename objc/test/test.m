@@ -1,6 +1,6 @@
-#import <Foundation/Foundation.h>
+#import <OLApi.h> // TODO: create a Framework and use #import <ObjCLib/ObjCLib.h>
 
-#import <objc/OLApi.h>
+#import <Foundation/Foundation.h>
 
 @interface MyGenerator : OLGenerator
 - (id) init;
@@ -35,7 +35,8 @@
 int main(void)
 {
     @try {
-        [OLLibrary initialize];
+        // there seems to be an implicit call to this...
+        // [OLLibrary initialize];
 
         NSLog(@"Library initialized... version %@\n", [OLLibrary getVersionString]);
 

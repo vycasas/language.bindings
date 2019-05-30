@@ -18,6 +18,7 @@ public:
 
 int main(array<System::String^>^ args)
 {
+	static_cast<void>(args);
     try {
         Library::Initialize();
 

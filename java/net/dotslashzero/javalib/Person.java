@@ -18,9 +18,10 @@ public class Person extends Core.ApiBase<Core.PersonType>
         String lastName, String firstName, int age, long addressImpl,
         Core.PersonType personImpl
     );
-
+	
+	@SuppressWarnings("deprecation")
     @Override
-    protected void finalize()
+    protected synchronized void finalize()
     {
         nativeDestroyPerson(this.getImpl());
         return;

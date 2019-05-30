@@ -25,9 +25,10 @@ public class Address extends Core.ApiBase<Core.AddressType>
         String country, String zipCode,
         Core.AddressType addressImpl
     );
-
+	
+	@SuppressWarnings("deprecation")
     @Override
-    protected void finalize()
+    protected synchronized void finalize()
     {
         nativeDestroyAddress(this.getImpl());
         return;

@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <cxx/api.hxx>
+#include <api.hxx>
 
 namespace DotNetLib
 {

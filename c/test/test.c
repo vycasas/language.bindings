@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <c/api.h>
+#include <api.h>
 
 int main(void)
 {
