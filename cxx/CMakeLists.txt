@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(cxxlib CXX)
 
-set(CXXLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(CXXLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CXXLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
+set(CXXLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 
 set(CXXLIB_HEADER_FILES
-    "${CXXLIB_HEADER_DIR}/api.hxx")
+    "${CXXLIB_HEADER_DIR}/cxxlib/cxxlib.hxx")
 set(CXXLIB_SOURCE_FILES
-    "${CXXLIB_SOURCE_DIR}/api.cxx")
+    "${CXXLIB_SOURCE_DIR}/cxxlib.cxx")
 
 if (UNIX)
     set(CXXLIB_COMPILE_DEFINITIONS)
