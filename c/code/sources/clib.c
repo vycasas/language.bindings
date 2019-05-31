@@ -1,22 +1,21 @@
-#include "api.h"
+#include <clib/clib.h>
+
+#include <lb_common/version.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#define INLINE inline
+#define CLIB_INLINE inline
 
 #if defined(_MSC_VER)
     #undef strncpy
     #define strncpy(buffer, source, bufferSize) strncpy_s(buffer, bufferSize, source, _TRUNCATE)
     #define snprintf sprintf_s
-    #undef INLINE
-    #define INLINE __inline
+    #undef CLIB_INLINE
+    #define CLIB_INLINE __inline
 #endif /* defined(_WIN32) */
-
-static const size_t CLIB_VERSION_MAJOR = 1;
-static const size_t CLIB_VERSION_MINOR = 5;
-static const char* const CLIB_VERSION_STRING = "1.5";
 
 typedef enum _CoreErrNums
 {
@@ -51,7 +50,7 @@ CorePerson;
 #if defined(__cplusplus)
 extern "C"
 #endif // defined(__cplusplus)
-static INLINE const char* CoreGetErrorMessage(CoreErrNums errnum)
+static CLIB_INLINE char const* CoreGetErrorMessage(CoreErrNums errnum)
 {
     switch (errnum) {
         case (COREERRNUM_NO_ERROR):
@@ -65,10 +64,10 @@ static INLINE const char* CoreGetErrorMessage(CoreErrNums errnum)
     }
 }
 
-CLIB_API size_t CLErrNumGetMessage(CLibErrNum errnum, char* message, size_t messageSize)
+CLIB_API(size_t) CLibErrNumGetMessage(CLibErrNum errnum, char* message, size_t messageSize)
 {
     size_t result = 0;
-    const char* const errMessage = CoreGetErrorMessage(errnum);
+    char const* const errMessage = CoreGetErrorMessage(errnum);
 
     if (message != NULL && messageSize > 0) {
         strncpy(message, errMessage, messageSize);
@@ -81,36 +80,46 @@ CLIB_API size_t CLErrNumGetMessage(CLibErrNum errnum, char* message, size_t mess
     return (result);
 }
 
-CLIB_API CLibErrNum CLLibraryInitialize(void)
+CLIB_API(CLibErrNum) CLibLibraryInitialize(void)
 {
     /* Just stub. */
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API void CLLibraryTerminate(void)
+CLIB_API(void) CLibLibraryTerminate(void)
 {
     return;
 }
 
-CLIB_API const char* CLLibraryGetVersionString(void)
+CLIB_API(char const*) CLibLibraryGetVersionString(void)
 {
-    return (CLIB_VERSION_STRING);
+    return (LB_VERSION_STRING);
 }
 
-CLIB_API size_t CLLibraryGetVersionMajor(void)
+CLIB_API(size_t) CLibLibraryGetVersionMajor(void)
 {
-    return (CLIB_VERSION_MAJOR);
+    return (LB_VERSION_MAJOR);
 }
 
-CLIB_API size_t CLLibraryGetVersionMinor(void)
+CLIB_API(size_t) CLibLibraryGetVersionMinor(void)
 {
-    return (CLIB_VERSION_MINOR);
+    return (LB_VERSION_MINOR);
 }
 
-CLIB_API CLibErrNum CLAddressCreate(
-    int streetNum, const char* street,
-    const char* city, const char* province,
-    const char* country, const char* zipCode,
+CLIB_API(size_t) CLibLibraryGetVersionPatch(void)
+{
+    return (LB_VERSION_PATCH);
+}
+
+CLIB_API(char const*) CLibLibraryGetVersionExtra(void)
+{
+    return (LB_VERSION_EXTRA);
+}
+
+CLIB_API(CLibErrNum) CLibAddressCreate(
+    int streetNum, char const* street,
+    char const* city, char const* province,
+    char const* country, char const* zipCode,
     CLibAddress* newAddress
 )
 {
@@ -135,7 +144,7 @@ CLIB_API CLibErrNum CLAddressCreate(
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLAddressDestroy(CLibAddress address)
+CLIB_API(CLibErrNum) CLibAddressDestroy(CLibAddress address)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -146,18 +155,18 @@ CLIB_API CLibErrNum CLAddressDestroy(CLibAddress address)
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLAddressGetStreetNumber(CLibAddress address, int* streetNum)
+CLIB_API(CLibErrNum) CLibAddressGetStreetNumber(CLibAddress address, int* streetNum)
 {
     if (address == NULL || streetNum == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-    
+
     CoreAddress* coreAddr = (CoreAddress*) address;
     *streetNum = coreAddr->streetNum;
 
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLAddressGetStreet(CLibAddress address, char* street, size_t streetSize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibAddressGetStreet(CLibAddress address, char* street, size_t streetSize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -176,7 +185,7 @@ CLIB_API CLibErrNum CLAddressGetStreet(CLibAddress address, char* street, size_t
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLAddressGetCity(CLibAddress address, char* city, size_t citySize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibAddressGetCity(CLibAddress address, char* city, size_t citySize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -195,7 +204,7 @@ CLIB_API CLibErrNum CLAddressGetCity(CLibAddress address, char* city, size_t cit
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLAddressGetProvince(CLibAddress address, char* province, size_t provinceSize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibAddressGetProvince(CLibAddress address, char* province, size_t provinceSize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -214,7 +223,7 @@ CLIB_API CLibErrNum CLAddressGetProvince(CLibAddress address, char* province, si
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLAddressGetCountry(CLibAddress address, char* country, size_t countrySize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibAddressGetCountry(CLibAddress address, char* country, size_t countrySize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -233,7 +242,7 @@ CLIB_API CLibErrNum CLAddressGetCountry(CLibAddress address, char* country, size
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLAddressGetZipCode(CLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibAddressGetZipCode(CLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -252,7 +261,7 @@ CLIB_API CLibErrNum CLAddressGetZipCode(CLibAddress address, char* zipCode, size
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLAddressToString(CLibAddress address, char* str, size_t strSize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibAddressToString(CLibAddress address, char* str, size_t strSize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -283,8 +292,8 @@ CLIB_API CLibErrNum CLAddressToString(CLibAddress address, char* str, size_t str
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLPersonCreate(
-   const char* lastName, const char* firstName,
+CLIB_API(CLibErrNum) CLibPersonCreate(
+   char const* lastName, char const* firstName,
    int age, CLibAddress address,
    CLibPerson* newPerson
 )
@@ -314,7 +323,7 @@ CLIB_API CLibErrNum CLPersonCreate(
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLPersonDestroy(CLibPerson person)
+CLIB_API(CLibErrNum) CLibPersonDestroy(CLibPerson person)
 {
     if (person == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -325,7 +334,7 @@ CLIB_API CLibErrNum CLPersonDestroy(CLibPerson person)
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLPersonGetLastName(CLibPerson person, char* lastName, size_t lastNameSize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibPersonGetLastName(CLibPerson person, char* lastName, size_t lastNameSize, size_t* charWritten)
 {
     if (person == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -344,7 +353,7 @@ CLIB_API CLibErrNum CLPersonGetLastName(CLibPerson person, char* lastName, size_
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLPersonGetFirstName(CLibPerson person, char* firstName, size_t firstNameSize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibPersonGetFirstName(CLibPerson person, char* firstName, size_t firstNameSize, size_t* charWritten)
 {
     if (person == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -363,7 +372,7 @@ CLIB_API CLibErrNum CLPersonGetFirstName(CLibPerson person, char* firstName, siz
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLPersonGetAge(CLibPerson person, int* age)
+CLIB_API(CLibErrNum) CLibPersonGetAge(CLibPerson person, int* age)
 {
     if (person == NULL || age == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -374,13 +383,13 @@ CLIB_API CLibErrNum CLPersonGetAge(CLibPerson person, int* age)
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLPersonGetAddress(CLibPerson person, CLibAddress* address)
+CLIB_API(CLibErrNum) CLibPersonGetAddress(CLibPerson person, CLibAddress* address)
 {
     if (person == NULL || address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
 
     CorePerson* corePerson = (CorePerson*) person;
-    CLAddressCreate(
+    CLibAddressCreate(
         corePerson->address.streetNum, corePerson->address.street,
         corePerson->address.city, corePerson->address.province,
         corePerson->address.country, corePerson->address.zipCode,
@@ -390,7 +399,7 @@ CLIB_API CLibErrNum CLPersonGetAddress(CLibPerson person, CLibAddress* address)
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API CLibErrNum CLPersonToString(CLibPerson person, char* str, size_t strSize, size_t* charWritten)
+CLIB_API(CLibErrNum) CLibPersonToString(CLibPerson person, char* str, size_t strSize, size_t* charWritten)
 {
     if (person == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -420,6 +429,15 @@ CLIB_API CLibErrNum CLPersonToString(CLibPerson person, char* str, size_t strSiz
 
     if (charWritten != NULL)
         *charWritten = numChars;
+
+    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+}
+
+CLIB_API(CLibErrNum) CLibGetNumber(CLibGetNumberCallbackFunction fnCallback)
+{
+    int generatedNumber = (int) time(NULL);
+    if (fnCallback != NULL)
+        fnCallback(generatedNumber);
 
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
