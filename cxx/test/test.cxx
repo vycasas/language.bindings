@@ -1,8 +1,8 @@
+#include <cxxlib/cxxlib.hxx>
+
 #include <iostream>
 #include <memory>
 #include <sstream>
-
-#include <api.hxx>
 
 class MyGenerator : public CXXLib::GeneratorBase
 {

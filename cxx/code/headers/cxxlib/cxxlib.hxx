@@ -1,7 +1,6 @@
-#if !defined(CXXLIB_API_HXX)
-#define CXXLIB_API_HXX
+#pragma once
 
-#include <api.h>
+#include <clib/clib.h>
 
 #include <array>
 #include <exception>
@@ -55,7 +54,7 @@ namespace CXXLib
 		{
 			std::array<char, 40> buffer;
 			buffer.fill('\0');
-			CLErrNumGetMessage(_impl, buffer.data(), buffer.size());
+			CLibErrNumGetMessage(_impl, buffer.data(), buffer.size());
 
 			_message = std::string(buffer.data());
 			return;
@@ -191,4 +190,3 @@ namespace CXXLib
     }; // class Printer
 } // namespace CXXLib
 
-#endif // !defined(CXXLIB_API_HXX)
