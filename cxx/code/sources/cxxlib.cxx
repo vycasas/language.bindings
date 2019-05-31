@@ -1,4 +1,4 @@
-#include "api.hxx"
+#include <cxxlib/cxxlib.hxx>
 
 #include <chrono>
 #include <cstring>
@@ -61,15 +61,15 @@ namespace CXXLibCore
 // C interface for the Generator sample. Not necessary, but added for demonstration purposes.
 namespace CLib
 {
-    typedef void* CLCoreGenerator;
-    typedef CLibErrNum (*CLCoreGenerateIntFunction)(int data, int* result, void* userData);
-    typedef CLibErrNum (*CLCoreGenerateStringFunction)(
+    typedef void* CLibCoreGenerator;
+    typedef CLibErrNum (*CLibCoreGenerateIntFunction)(int data, int* result, void* userData);
+    typedef CLibErrNum (*CLibCoreGenerateStringFunction)(
         int data,
         char* result, size_t resultSize, size_t* charWritten,
         void* userData
     );
-    typedef CLibErrNum (*CLCoreGeneratorDestroyFunction)(void* userData);
-    typedef void* CLCorePrinter;
+    typedef CLibErrNum (*CLibCoreGeneratorDestroyFunction)(void* userData);
+    typedef void* CLibCorePrinter;
 
     namespace CXXImplDetail
     {
@@ -88,9 +88,9 @@ namespace CLib
         {
         public:
             CLibGeneratorImpl(
-                CLCoreGenerateIntFunction generateIntImpl,
-                CLCoreGenerateStringFunction generateStringImpl,
-                CLCoreGeneratorDestroyFunction destroyImpl,
+                CLibCoreGenerateIntFunction generateIntImpl,
+                CLibCoreGenerateStringFunction generateStringImpl,
+                CLibCoreGeneratorDestroyFunction destroyImpl,
                 void* userData
             );
             virtual ~CLibGeneratorImpl(void);
@@ -98,16 +98,16 @@ namespace CLib
             virtual int generateInt(int data) const override;
             virtual std::string generateString(int data) const override;
         private:
-            CLCoreGenerateIntFunction _generateIntImpl;
-            CLCoreGenerateStringFunction _generateStringImpl;
-            CLCoreGeneratorDestroyFunction _destroyImpl;
+            CLibCoreGenerateIntFunction _generateIntImpl;
+            CLibCoreGenerateStringFunction _generateStringImpl;
+            CLibCoreGeneratorDestroyFunction _destroyImpl;
             void* _userData;
         }; // class CLibGeneratorImpl
 
         CLibGeneratorImpl::CLibGeneratorImpl(
-            CLCoreGenerateIntFunction generateIntImpl,
-            CLCoreGenerateStringFunction generateStringImpl,
-            CLCoreGeneratorDestroyFunction destroyImpl,
+            CLibCoreGenerateIntFunction generateIntImpl,
+            CLibCoreGenerateStringFunction generateStringImpl,
+            CLibCoreGeneratorDestroyFunction destroyImpl,
             void* userData
         ) :
             _generateIntImpl(generateIntImpl),
@@ -148,12 +148,12 @@ namespace CLib
         }
     } // namespace CXXImplDetail
 
-    CLibErrNum CLCoreGeneratorCreate(
-        CLCoreGenerateIntFunction intFunction,
-        CLCoreGenerateStringFunction stringFunction,
-        CLCoreGeneratorDestroyFunction destroyFunction,
+    CLibErrNum CLibCoreGeneratorCreate(
+        CLibCoreGenerateIntFunction intFunction,
+        CLibCoreGenerateStringFunction stringFunction,
+        CLibCoreGeneratorDestroyFunction destroyFunction,
         void* userData,
-        CLCoreGenerator* generator
+        CLibCoreGenerator* generator
     )
     {
         if (generator == nullptr)
@@ -163,7 +163,7 @@ namespace CLib
             std::unique_ptr<CXXImplDetail::CLibGeneratorImpl> result(
                 new CXXImplDetail::CLibGeneratorImpl(intFunction, stringFunction, destroyFunction, userData)
             );
-            *generator = static_cast<CLCoreGenerator>(result.release());
+            *generator = static_cast<CLibCoreGenerator>(result.release());
         }
         catch (...) {
             return (1);
@@ -172,7 +172,7 @@ namespace CLib
         return (0);
     }
 
-    CLibErrNum CLCoreGeneratorDestroy(CLCoreGenerator generator)
+    CLibErrNum CLibCoreGeneratorDestroy(CLibCoreGenerator generator)
     {
         if (generator == nullptr)
             return (2);
@@ -189,7 +189,7 @@ namespace CLib
         return (0);
     }
 
-    CLibErrNum CLCorePrinterCreate(CLCoreGenerator generator, CLCorePrinter* printer)
+    CLibErrNum CLibCorePrinterCreate(CLibCoreGenerator generator, CLibCorePrinter* printer)
     {
         if (generator == nullptr || printer == nullptr)
             return (2);
@@ -203,7 +203,7 @@ namespace CLib
                 new CXXLibCore::Printer(std::move(coreGenerator))
             );
 
-            *printer = static_cast<CLCorePrinter>(corePrinter.release());
+            *printer = static_cast<CLibCorePrinter>(corePrinter.release());
         }
         catch (...) {
             return (1);
@@ -212,7 +212,7 @@ namespace CLib
         return (0);
     }
 
-    CLibErrNum CLCorePrinterDestroy(CLCorePrinter printer)
+    CLibErrNum CLibCorePrinterDestroy(CLibCorePrinter printer)
     {
         if (printer == nullptr)
             return (2);
@@ -229,7 +229,7 @@ namespace CLib
         return (0);
     }
 
-    CLibErrNum CLCorePrinterPrintInt(CLCorePrinter printer)
+    CLibErrNum CLibCorePrinterPrintInt(CLibCorePrinter printer)
     {
         if (printer == nullptr)
             return (2);
@@ -245,7 +245,7 @@ namespace CLib
         return (0);
     }
 
-    CLibErrNum CLCorePrinterPrintString(CLCorePrinter printer)
+    CLibErrNum CLibCorePrinterPrintString(CLibCorePrinter printer)
     {
         if (printer == nullptr)
             return (2);
@@ -267,30 +267,30 @@ namespace CXXLib
 {
     void Library::initialize(void)
     {
-        auto c_api_call_result = CLLibraryInitialize();
+        auto c_api_call_result = CLibLibraryInitialize();
         CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
 
     void Library::terminate(void)
     {
-        CLLibraryTerminate();
+        CLibLibraryTerminate();
         return;
     }
 
     std::string Library::getVersionString(void)
     {
-        return (std::string(CLLibraryGetVersionString()));
+        return (std::string(CLibLibraryGetVersionString()));
     }
 
     size_t Library::getVersionMajor(void)
     {
-        return (CLLibraryGetVersionMajor());
+        return (CLibLibraryGetVersionMajor());
     }
 
     size_t Library::getVersionMinor(void)
     {
-        return (CLLibraryGetVersionMinor());
+        return (CLibLibraryGetVersionMinor());
     }
 
     Address::Address(
@@ -299,7 +299,7 @@ namespace CXXLib
         const std::string& country, const std::string& zipCode
     ) : _impl{nullptr}
     {
-        auto c_api_call_result = CLAddressCreate(
+        auto c_api_call_result = CLibAddressCreate(
             streetNum, street.data(),
             city.data(), province.data(),
             country.data(), zipCode.data(),
@@ -311,7 +311,7 @@ namespace CXXLib
 
     Address::Address(const Address& address)
     {
-        auto c_api_call_result = CLAddressCreate(
+        auto c_api_call_result = CLibAddressCreate(
             address.getStreetNum(), address.getStreet().data(),
             address.getCity().data(), address.getProvince().data(),
             address.getCountry().data(), address.getZipCode().data(),
@@ -323,18 +323,18 @@ namespace CXXLib
 
     Address::~Address(void) noexcept
     {
-        CLAddressDestroy(_impl);
+        CLibAddressDestroy(_impl);
         return;
     }
 
     Address& Address::operator=(const Address& address)
     {
         if (_impl != nullptr) {
-            CLAddressDestroy(_impl);
+            CLibAddressDestroy(_impl);
             _impl = nullptr;
         }
 
-        auto c_api_call_result = CLAddressCreate(
+        auto c_api_call_result = CLibAddressCreate(
             address.getStreetNum(), address.getStreet().data(),
             address.getCity().data(), address.getProvince().data(),
             address.getCountry().data(), address.getZipCode().data(),
@@ -347,7 +347,7 @@ namespace CXXLib
     int Address::getStreetNum(void) const
     {
         int result = -1;
-        auto c_api_call_result = CLAddressGetStreetNumber(_impl, &result);
+        auto c_api_call_result = CLibAddressGetStreetNumber(_impl, &result);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (result);
@@ -358,7 +358,7 @@ namespace CXXLib
         std::array<char, 40> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLAddressGetStreet(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibAddressGetStreet(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -369,7 +369,7 @@ namespace CXXLib
         std::array<char, 16> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLAddressGetCity(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibAddressGetCity(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -380,7 +380,7 @@ namespace CXXLib
         std::array<char, 8> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLAddressGetProvince(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibAddressGetProvince(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -391,7 +391,7 @@ namespace CXXLib
         std::array<char, 16> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLAddressGetCountry(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibAddressGetCountry(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -402,7 +402,7 @@ namespace CXXLib
         std::array<char, 8> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLAddressGetZipCode(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibAddressGetZipCode(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -413,7 +413,7 @@ namespace CXXLib
         std::array<char, 256> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLAddressToString(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibAddressToString(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -427,7 +427,7 @@ namespace CXXLib
     ) : _impl{nullptr}
     {
         // Remember: address._impl is copied.
-        auto c_api_call_result = CLPersonCreate(
+        auto c_api_call_result = CLibPersonCreate(
             lastName.data(),
             firstName.data(),
             age,
@@ -440,7 +440,7 @@ namespace CXXLib
 
     Person::Person(const Person& person)
     {
-        auto c_api_call_result = CLPersonCreate(
+        auto c_api_call_result = CLibPersonCreate(
             person.getLastName().data(),
             person.getFirstName().data(),
             person.getAge(),
@@ -453,17 +453,17 @@ namespace CXXLib
 
     Person::~Person(void) noexcept
     {
-        CLPersonDestroy(_impl);
+        CLibPersonDestroy(_impl);
         return;
     }
 
     Person& Person::operator=(const Person& person)
     {
         if (_impl != nullptr) {
-            CLPersonDestroy(_impl);
+            CLibPersonDestroy(_impl);
             _impl = nullptr;
         }
-        auto c_api_call_result = CLPersonCreate(
+        auto c_api_call_result = CLibPersonCreate(
             person.getLastName().data(),
             person.getFirstName().data(),
             person.getAge(),
@@ -479,7 +479,7 @@ namespace CXXLib
         std::array<char, 24> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLPersonGetLastName(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibPersonGetLastName(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -490,7 +490,7 @@ namespace CXXLib
         std::array<char, 24> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLPersonGetFirstName(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibPersonGetFirstName(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -499,7 +499,7 @@ namespace CXXLib
     int Person::getAge(void) const
     {
         int result = -1;
-        auto c_api_call_result = CLPersonGetAge(_impl, &result);
+        auto c_api_call_result = CLibPersonGetAge(_impl, &result);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (result);
@@ -509,7 +509,7 @@ namespace CXXLib
     {
         // we need to make sure that we don't take ownership of this Person's Address impl...
         Address address;
-        auto c_api_call_result = CLPersonGetAddress(_impl, &(address._impl));
+        auto c_api_call_result = CLibPersonGetAddress(_impl, &(address._impl));
         CXXLIB_API_CHECK(c_api_call_result);
 
         Address result(address); // make a copy
@@ -522,7 +522,7 @@ namespace CXXLib
         std::array<char, 512> buffer;
         buffer.fill('\0');
 
-        auto c_api_call_result = CLPersonToString(_impl, buffer.data(), buffer.size(), nullptr);
+        auto c_api_call_result = CLibPersonToString(_impl, buffer.data(), buffer.size(), nullptr);
         CXXLIB_API_CHECK(c_api_call_result);
 
         return (std::string(buffer.data()));
@@ -582,9 +582,9 @@ namespace CXXLib
 
     Printer::Printer(std::unique_ptr<GeneratorBase> generator)
     {
-        CLib::CLCoreGenerator coreGenerator = nullptr;
+        CLib::CLibCoreGenerator coreGenerator = nullptr;
         auto* generatorPtr = generator.release();
-        auto c_api_call_result = CLib::CLCoreGeneratorCreate(
+        auto c_api_call_result = CLib::CLibCoreGeneratorCreate(
             &GeneratorBase::IntFunction,
             &GeneratorBase::StringFunction,
             &GeneratorBase::DestroyFunction,
@@ -595,27 +595,27 @@ namespace CXXLib
             generator.reset(generatorPtr);
         }
         CXXLIB_API_CHECK(c_api_call_result);
-        c_api_call_result = CLib::CLCorePrinterCreate(coreGenerator, &_impl);
+        c_api_call_result = CLib::CLibCorePrinterCreate(coreGenerator, &_impl);
         CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
 
     Printer::~Printer(void)
     {
-        CLib::CLCorePrinterDestroy(_impl);
+        CLib::CLibCorePrinterDestroy(_impl);
         return;
     }
 
     void Printer::printInt(void)
     {
-        auto c_api_call_result = CLib::CLCorePrinterPrintInt(_impl);
+        auto c_api_call_result = CLib::CLibCorePrinterPrintInt(_impl);
         CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
 
     void Printer::printString(void)
     {
-        auto c_api_call_result = CLib::CLCorePrinterPrintString(_impl);
+        auto c_api_call_result = CLib::CLibCorePrinterPrintString(_impl);
         CXXLIB_API_CHECK(c_api_call_result);
         return;
     }
