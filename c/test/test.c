@@ -1,9 +1,9 @@
-#include <clib/clib.h>
+#include <dotslashzero/clib/clib.h>
 
 #include <stdio.h>
 #include <string.h>
 
-void CLIB_CALLING_CONVENTION MyGetNumberCallbackFunction(int result)
+void DSZ_CLIB_CALLING_CONVENTION MyGetNumberCallbackFunction(int result)
 {
     fprintf(stdout, "MyGetNumberCallbackFunction called with: %d\n", result);
     return;
@@ -11,51 +11,51 @@ void CLIB_CALLING_CONVENTION MyGetNumberCallbackFunction(int result)
 
 int main(void)
 {
-    CLibErrNum error;
+    DszCLibErrNum error;
     char errorMessage[40];
-    CLibAddress address = NULL;
+    DszCLibAddress address = NULL;
     char addressString[256];
-    CLibPerson person = NULL;
+    DszCLibPerson person = NULL;
     char personString[512];
 
-    CLibLibraryInitialize();
+    DszCLibLibraryInitialize();
 
-    fprintf(stdout, "Library initialized... version %s\n", CLibLibraryGetVersionString());
+    fprintf(stdout, "Library initialized... version %s\n", DszCLibLibraryGetVersionString());
 
     fprintf(stdout, "Creating a new address...\n");
-    error = CLibAddressCreate(9898, "Corner St.", "Gotham", "CA", "Antartica", "4132", &address);
+    error = DszCLibAddressCreate(9898, "Corner St.", "Gotham", "CA", "Antartica", "4132", &address);
     if (error != 0) {
         memset(errorMessage, 0, 40);
-        CLibErrNumGetMessage(error, errorMessage, 40);
+        DszCLibErrNumGetMessage(error, errorMessage, 40);
         fprintf(stderr, "An error has occurred: %s\n", errorMessage);
         return (-1);
     }
     fprintf(stdout, "New address created!\n");
 
     memset(addressString, 0, 256);
-    CLibAddressToString(address, addressString, 256, NULL);
+    DszCLibAddressToString(address, addressString, 256, NULL);
     fprintf(stdout, "Address:\n%s\n", addressString);
 
     fprintf(stdout, "Creating a new person...\n");
-    error = CLibPersonCreate("Wayne", "Bruce", 25, address, &person);
+    error = DszCLibPersonCreate("Wayne", "Bruce", 25, address, &person);
     if (error != 0) {
         memset(errorMessage, 0, 40);
-        CLibErrNumGetMessage(error, errorMessage, 40);
+        DszCLibErrNumGetMessage(error, errorMessage, 40);
         fprintf(stderr, "An error has occurred: %s\n", errorMessage);
         return (-1);
     }
     fprintf(stdout, "New person created!\n");
 
     memset(personString, 0, 512);
-    CLibPersonToString(person, personString, 512, NULL);
+    DszCLibPersonToString(person, personString, 512, NULL);
     fprintf(stdout, "Person:\n%s\n", personString);
 
-    CLibPersonDestroy(person);
-    CLibAddressDestroy(address);
+    DszCLibPersonDestroy(person);
+    DszCLibAddressDestroy(address);
 
-    CLibGetNumber((CLibGetNumberCallbackFunction*) &MyGetNumberCallbackFunction);
+    DszCLibGetNumber((DszCLibGetNumberCallbackFunction*) &MyGetNumberCallbackFunction);
 
-    CLibLibraryTerminate();
+    DszCLibLibraryTerminate();
 
     return (0);
 }

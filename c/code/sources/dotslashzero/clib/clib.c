@@ -1,20 +1,20 @@
-#include <clib/clib.h>
+#include <dotslashzero/clib/clib.h>
 
-#include <lb_common/version.h>
+#include <dotslashzero/lb_common/version.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#define CLIB_INLINE inline
+#define DSZ_CLIB_INLINE inline
 
 #if defined(_MSC_VER)
     #undef strncpy
     #define strncpy(buffer, source, bufferSize) strncpy_s(buffer, bufferSize, source, _TRUNCATE)
     #define snprintf sprintf_s
-    #undef CLIB_INLINE
-    #define CLIB_INLINE __inline
+    #undef DSZ_CLIB_INLINE
+    #define DSZ_CLIB_INLINE __inline
 #endif /* defined(_WIN32) */
 
 typedef enum _CoreErrNums
@@ -50,7 +50,7 @@ CorePerson;
 #if defined(__cplusplus)
 extern "C"
 #endif // defined(__cplusplus)
-static CLIB_INLINE char const* CoreGetErrorMessage(CoreErrNums errnum)
+static DSZ_CLIB_INLINE char const* CoreGetErrorMessage(CoreErrNums errnum)
 {
     switch (errnum) {
         case (COREERRNUM_NO_ERROR):
@@ -64,7 +64,7 @@ static CLIB_INLINE char const* CoreGetErrorMessage(CoreErrNums errnum)
     }
 }
 
-CLIB_API(size_t) CLibErrNumGetMessage(CLibErrNum errnum, char* message, size_t messageSize)
+DSZ_CLIB_API(size_t) DszCLibErrNumGetMessage(DszCLibErrNum errnum, char* message, size_t messageSize)
 {
     size_t result = 0;
     char const* const errMessage = CoreGetErrorMessage(errnum);
@@ -80,47 +80,47 @@ CLIB_API(size_t) CLibErrNumGetMessage(CLibErrNum errnum, char* message, size_t m
     return (result);
 }
 
-CLIB_API(CLibErrNum) CLibLibraryInitialize(void)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibLibraryInitialize(void)
 {
     /* Just stub. */
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(void) CLibLibraryTerminate(void)
+DSZ_CLIB_API(void) DszCLibLibraryTerminate(void)
 {
     return;
 }
 
-CLIB_API(char const*) CLibLibraryGetVersionString(void)
+DSZ_CLIB_API(char const*) DszCLibLibraryGetVersionString(void)
 {
     return (LB_VERSION_STRING);
 }
 
-CLIB_API(size_t) CLibLibraryGetVersionMajor(void)
+DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionMajor(void)
 {
     return (LB_VERSION_MAJOR);
 }
 
-CLIB_API(size_t) CLibLibraryGetVersionMinor(void)
+DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionMinor(void)
 {
     return (LB_VERSION_MINOR);
 }
 
-CLIB_API(size_t) CLibLibraryGetVersionPatch(void)
+DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionPatch(void)
 {
     return (LB_VERSION_PATCH);
 }
 
-CLIB_API(char const*) CLibLibraryGetVersionExtra(void)
+DSZ_CLIB_API(char const*) DszCLibLibraryGetVersionExtra(void)
 {
     return (LB_VERSION_EXTRA);
 }
 
-CLIB_API(CLibErrNum) CLibAddressCreate(
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressCreate(
     int streetNum, char const* street,
     char const* city, char const* province,
     char const* country, char const* zipCode,
-    CLibAddress* newAddress
+    DszCLibAddress* newAddress
 )
 {
     if (newAddress == NULL)
@@ -139,12 +139,12 @@ CLIB_API(CLibErrNum) CLibAddressCreate(
     strncpy(coreAddr->country, country, 16);
     strncpy(coreAddr->zipCode, zipCode, 8);
 
-    *newAddress = (CLibAddress) coreAddr;
+    *newAddress = (DszCLibAddress) coreAddr;
 
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibAddressDestroy(CLibAddress address)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressDestroy(DszCLibAddress address)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -155,7 +155,7 @@ CLIB_API(CLibErrNum) CLibAddressDestroy(CLibAddress address)
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibAddressGetStreetNumber(CLibAddress address, int* streetNum)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetStreetNumber(DszCLibAddress address, int* streetNum)
 {
     if (address == NULL || streetNum == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -166,7 +166,7 @@ CLIB_API(CLibErrNum) CLibAddressGetStreetNumber(CLibAddress address, int* street
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibAddressGetStreet(CLibAddress address, char* street, size_t streetSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetStreet(DszCLibAddress address, char* street, size_t streetSize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -185,7 +185,7 @@ CLIB_API(CLibErrNum) CLibAddressGetStreet(CLibAddress address, char* street, siz
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibAddressGetCity(CLibAddress address, char* city, size_t citySize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetCity(DszCLibAddress address, char* city, size_t citySize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -204,7 +204,7 @@ CLIB_API(CLibErrNum) CLibAddressGetCity(CLibAddress address, char* city, size_t 
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibAddressGetProvince(CLibAddress address, char* province, size_t provinceSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetProvince(DszCLibAddress address, char* province, size_t provinceSize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -223,7 +223,7 @@ CLIB_API(CLibErrNum) CLibAddressGetProvince(CLibAddress address, char* province,
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibAddressGetCountry(CLibAddress address, char* country, size_t countrySize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetCountry(DszCLibAddress address, char* country, size_t countrySize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -242,7 +242,7 @@ CLIB_API(CLibErrNum) CLibAddressGetCountry(CLibAddress address, char* country, s
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibAddressGetZipCode(CLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetZipCode(DszCLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -261,7 +261,7 @@ CLIB_API(CLibErrNum) CLibAddressGetZipCode(CLibAddress address, char* zipCode, s
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibAddressToString(CLibAddress address, char* str, size_t strSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressToString(DszCLibAddress address, char* str, size_t strSize, size_t* charWritten)
 {
     if (address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -292,10 +292,10 @@ CLIB_API(CLibErrNum) CLibAddressToString(CLibAddress address, char* str, size_t 
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibPersonCreate(
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonCreate(
    char const* lastName, char const* firstName,
-   int age, CLibAddress address,
-   CLibPerson* newPerson
+   int age, DszCLibAddress address,
+   DszCLibPerson* newPerson
 )
 {
     if (newPerson == NULL)
@@ -318,12 +318,12 @@ CLIB_API(CLibErrNum) CLibPersonCreate(
     /* make a copy of coreAddr... */
     memcpy(&(corePerson->address), coreAddr, sizeof (CoreAddress));
 
-    *newPerson = (CLibPerson) corePerson;
+    *newPerson = (DszCLibPerson) corePerson;
 
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibPersonDestroy(CLibPerson person)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonDestroy(DszCLibPerson person)
 {
     if (person == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -334,7 +334,7 @@ CLIB_API(CLibErrNum) CLibPersonDestroy(CLibPerson person)
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibPersonGetLastName(CLibPerson person, char* lastName, size_t lastNameSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetLastName(DszCLibPerson person, char* lastName, size_t lastNameSize, size_t* charWritten)
 {
     if (person == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -353,7 +353,7 @@ CLIB_API(CLibErrNum) CLibPersonGetLastName(CLibPerson person, char* lastName, si
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibPersonGetFirstName(CLibPerson person, char* firstName, size_t firstNameSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetFirstName(DszCLibPerson person, char* firstName, size_t firstNameSize, size_t* charWritten)
 {
     if (person == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -372,7 +372,7 @@ CLIB_API(CLibErrNum) CLibPersonGetFirstName(CLibPerson person, char* firstName, 
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibPersonGetAge(CLibPerson person, int* age)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetAge(DszCLibPerson person, int* age)
 {
     if (person == NULL || age == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -383,13 +383,13 @@ CLIB_API(CLibErrNum) CLibPersonGetAge(CLibPerson person, int* age)
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibPersonGetAddress(CLibPerson person, CLibAddress* address)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetAddress(DszCLibPerson person, DszCLibAddress* address)
 {
     if (person == NULL || address == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
 
     CorePerson* corePerson = (CorePerson*) person;
-    CLibAddressCreate(
+    DszCLibAddressCreate(
         corePerson->address.streetNum, corePerson->address.street,
         corePerson->address.city, corePerson->address.province,
         corePerson->address.country, corePerson->address.zipCode,
@@ -399,7 +399,7 @@ CLIB_API(CLibErrNum) CLibPersonGetAddress(CLibPerson person, CLibAddress* addres
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibPersonToString(CLibPerson person, char* str, size_t strSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonToString(DszCLibPerson person, char* str, size_t strSize, size_t* charWritten)
 {
     if (person == NULL)
         return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
@@ -433,7 +433,7 @@ CLIB_API(CLibErrNum) CLibPersonToString(CLibPerson person, char* str, size_t str
     return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
 }
 
-CLIB_API(CLibErrNum) CLibGetNumber(CLibGetNumberCallbackFunction fnCallback)
+DSZ_CLIB_API(DszCLibErrNum) DszCLibGetNumber(DszCLibGetNumberCallbackFunction fnCallback)
 {
     int generatedNumber = (int) time(NULL);
     if (fnCallback != NULL)

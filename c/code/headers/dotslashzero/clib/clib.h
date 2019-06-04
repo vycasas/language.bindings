@@ -2,77 +2,77 @@
 
 #include <stddef.h>
 
-#define CLIB_MODULE_VISIBILITY __attribute__ ((visibility ("default")))
+#define DSZ_CLIB_MODULE_VISIBILITY __attribute__ ((visibility ("default")))
 #if defined(_MSC_VER)
-    #undef CLIB_MODULE_VISIBILITY
-    #define CLIB_MODULE_VISIBILITY __declspec(dllexport)
+    #undef DSZ_CLIB_MODULE_VISIBILITY
+    #define DSZ_CLIB_MODULE_VISIBILITY __declspec(dllexport)
 #endif /* defined(_MSC_VER) */
 
-#define CLIB_CALLING_CONVENTION
+#define DSZ_CLIB_CALLING_CONVENTION
 #if defined(_MSC_VER)
-    #undef CLIB_CALLING_CONVENTION
-    #define CLIB_CALLING_CONVENTION __stdcall
+    #undef DSZ_CLIB_CALLING_CONVENTION
+    #define DSZ_CLIB_CALLING_CONVENTION __stdcall
 #endif /* defined(_MSC_VER) */
 
 #if defined(__cplusplus)
-    #define CLIB_API(rt) \
+    #define DSZ_CLIB_API(rt) \
         extern "C" \
-        CLIB_MODULE_VISIBILITY rt CLIB_CALLING_CONVENTION
+        DSZ_CLIB_MODULE_VISIBILITY rt DSZ_CLIB_CALLING_CONVENTION
 #else /* defined(__cplusplus) */
-    #define CLIB_API(rt) \
-        CLIB_MODULE_VISIBILITY rt CLIB_CALLING_CONVENTION
+    #define DSZ_CLIB_API(rt) \
+        DSZ_CLIB_MODULE_VISIBILITY rt DSZ_CLIB_CALLING_CONVENTION
 #endif /* defined(__cplusplus) */
 
-typedef size_t CLibErrNum;
-typedef void* CLibAddress;
-typedef void* CLibPerson;
+typedef size_t DszCLibErrNum;
+typedef void* DszCLibAddress;
+typedef void* DszCLibPerson;
 
-CLIB_API(size_t) CLibErrNumGetMessage(CLibErrNum errnum, char* message, size_t messageSize);
+DSZ_CLIB_API(size_t) DszCLibErrNumGetMessage(DszCLibErrNum errnum, char* message, size_t messageSize);
 
 /* Library initialization routines. */
-CLIB_API(CLibErrNum) CLibLibraryInitialize(void);
-CLIB_API(void) CLibLibraryTerminate(void);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibLibraryInitialize(void);
+DSZ_CLIB_API(void) DszCLibLibraryTerminate(void);
 
-CLIB_API(char const*) CLibLibraryGetVersionString(void);
-CLIB_API(size_t) CLibLibraryGetVersionMajor(void);
-CLIB_API(size_t) CLibLibraryGetVersionMinor(void);
-CLIB_API(size_t) CLibLibraryGetVersionPatch(void);
-CLIB_API(char const*) CLibLibraryGetVersionExtra(void);
+DSZ_CLIB_API(char const*) DszCLibLibraryGetVersionString(void);
+DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionMajor(void);
+DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionMinor(void);
+DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionPatch(void);
+DSZ_CLIB_API(char const*) DszCLibLibraryGetVersionExtra(void);
 
-CLIB_API(CLibErrNum) CLibAddressCreate(
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressCreate(
     int streetNum, char const* street,
     char const* city, char const* province,
     char const* country, char const* zipCode,
-    CLibAddress* newAddress
+    DszCLibAddress* newAddress
 );
-CLIB_API(CLibErrNum) CLibAddressDestroy(CLibAddress address);
-CLIB_API(CLibErrNum) CLibAddressGetStreetNumber(CLibAddress address, int* streetNum);
-CLIB_API(CLibErrNum) CLibAddressGetStreet(CLibAddress address, char* street, size_t streetSize, size_t* charWritten);
-CLIB_API(CLibErrNum) CLibAddressGetCity(CLibAddress address, char* city, size_t citySize, size_t* charWritten);
-CLIB_API(CLibErrNum) CLibAddressGetProvince(CLibAddress address, char* province, size_t provinceSize, size_t* charWritten);
-CLIB_API(CLibErrNum) CLibAddressGetCountry(CLibAddress address, char* country, size_t countrySize, size_t* charWritten);
-CLIB_API(CLibErrNum) CLibAddressGetZipCode(CLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten);
-CLIB_API(CLibErrNum) CLibAddressToString(CLibAddress address, char* str, size_t strSize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressDestroy(DszCLibAddress address);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetStreetNumber(DszCLibAddress address, int* streetNum);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetStreet(DszCLibAddress address, char* street, size_t streetSize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetCity(DszCLibAddress address, char* city, size_t citySize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetProvince(DszCLibAddress address, char* province, size_t provinceSize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetCountry(DszCLibAddress address, char* country, size_t countrySize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetZipCode(DszCLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressToString(DszCLibAddress address, char* str, size_t strSize, size_t* charWritten);
 
 /*
-** Note: CLibPersonCreate makes a copy of address argument, so it does not need to be persisted.
+** Note: DszCLibPersonCreate makes a copy of address argument, so it does not need to be persisted.
 */
-CLIB_API(CLibErrNum) CLibPersonCreate(
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonCreate(
    char const* lastName, char const* firstName,
-   int age, CLibAddress address,
-   CLibPerson* newPerson
+   int age, DszCLibAddress address,
+   DszCLibPerson* newPerson
 );
-CLIB_API(CLibErrNum) CLibPersonDestroy(CLibPerson person);
-CLIB_API(CLibErrNum) CLibPersonGetLastName(CLibPerson person, char* lastName, size_t lastNameSize, size_t* charWritten);
-CLIB_API(CLibErrNum) CLibPersonGetFirstName(CLibPerson person, char* firstName, size_t firstNameSize, size_t* charWritten);
-CLIB_API(CLibErrNum) CLibPersonGetAge(CLibPerson person, int* age);
-CLIB_API(CLibErrNum) CLibPersonGetAddress(CLibPerson person, CLibAddress* address);
-CLIB_API(CLibErrNum) CLibPersonToString(CLibPerson person, char* str, size_t strSize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonDestroy(DszCLibPerson person);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetLastName(DszCLibPerson person, char* lastName, size_t lastNameSize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetFirstName(DszCLibPerson person, char* firstName, size_t firstNameSize, size_t* charWritten);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetAge(DszCLibPerson person, int* age);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetAddress(DszCLibPerson person, DszCLibAddress* address);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonToString(DszCLibPerson person, char* str, size_t strSize, size_t* charWritten);
 
 #if defined(_MSC_VER)
-typedef CLIB_MODULE_VISIBILITY void (CLIB_CALLING_CONVENTION *CLibGetNumberCallbackFunction)(int result);
+typedef DSZ_CLIB_MODULE_VISIBILITY void (DSZ_CLIB_CALLING_CONVENTION *DszCLibGetNumberCallbackFunction)(int result);
 #else /* defined(_MSC_VER) */
-typedef void *CLibGetNumberCallbackFunction(int result);
+typedef void *DszCLibGetNumberCallbackFunction(int result);
 #endif /* defined(_MSC_VER) */
 
-CLIB_API(CLibErrNum) CLibGetNumber(CLibGetNumberCallbackFunction fnCallback);
+DSZ_CLIB_API(DszCLibErrNum) DszCLibGetNumber(DszCLibGetNumberCallbackFunction fnCallback);

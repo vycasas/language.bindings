@@ -32,7 +32,7 @@ message("language.bindings version ${LB_VERSION_STRING}")
 set(LB_COMMON_HEADER_DIR "${CMAKE_BINARY_DIR}/headers")
 configure_file(
     "${CMAKE_SOURCE_DIR}/version.h.in"
-    "${LB_COMMON_HEADER_DIR}/lb_common/version.h")
+    "${LB_COMMON_HEADER_DIR}/dotslashzero/lb_common/version.h")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
