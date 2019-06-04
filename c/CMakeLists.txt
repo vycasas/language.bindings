@@ -5,12 +5,12 @@ set(LB_CLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_CLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 
 set(LB_CLIB_HEADER_FILES
-    "${LB_CLIB_HEADER_DIR}/clib/clib.h")
+    "${LB_CLIB_HEADER_DIR}/dotslashzero/clib/clib.h")
 set(LB_CLIB_SOURCE_FILES
-    "${LB_CLIB_SOURCE_DIR}/clib.c")
+    "${LB_CLIB_SOURCE_DIR}/dotslashzero/clib/clib.c")
 
-source_group(headers\\clib ${LB_CLIB_HEADER_FILES})
-source_group(sources ${LB_CLIB_SOURCE_FILES})
+source_group(headers\\dotslashzero\\clib ${LB_CLIB_HEADER_FILES})
+source_group(sources\\dotslashzero\\clib ${LB_CLIB_SOURCE_FILES})
 
 if (UNIX)
     set(LB_CLIB_COMPILE_DEFINITIONS)
