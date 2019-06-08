@@ -23,56 +23,135 @@
         DSZ_CLIB_MODULE_VISIBILITY rt DSZ_CLIB_CALLING_CONVENTION
 #endif /* defined(__cplusplus) */
 
-typedef size_t DszCLibErrNum;
-typedef void* DszCLibAddress;
-typedef void* DszCLibPerson;
+typedef size_t DszCLibErrorNum;
+typedef struct DszCLibAddress_* DszCLibAddress;
+typedef struct DszCLibPerson_* DszCLibPerson;
+typedef struct DszCLibGenerator_* DszCLibGenerator;
+typedef struct DszCLibPrinter_* DszCLibPrinter;
 
-DSZ_CLIB_API(size_t) DszCLibErrNumGetMessage(DszCLibErrNum errnum, char* message, size_t messageSize);
+/* Default values */
+size_t const DSZ_CLIB_ERRORNUM_NO_ERROR = 0;
+DszCLibAddress const DSZ_CLIB_ADDRESS_INVALID = NULL;
+DszCLibPerson const DSZ_CLIB_PERSON_INVALID = NULL;
+DszCLibGenerator const DSZ_CLIB_GENERATOR_INVALID = NULL;
+DszCLibPrinter const DSZ_CLIB_PRINTER_INVALID = NULL;
 
-/* Library initialization routines. */
-DSZ_CLIB_API(DszCLibErrNum) DszCLibLibraryInitialize(void);
-DSZ_CLIB_API(void) DszCLibLibraryTerminate(void);
+DSZ_CLIB_API(void) DszCLibErrorNumGetMessage(
+    DszCLibErrorNum errnum,
+    char* pMessage, size_t messageSize,
+    size_t* pCharsWritten);
 
-DSZ_CLIB_API(char const*) DszCLibLibraryGetVersionString(void);
-DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionMajor(void);
-DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionMinor(void);
-DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionPatch(void);
-DSZ_CLIB_API(char const*) DszCLibLibraryGetVersionExtra(void);
+/* Library initialization routines */
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryInitialize(void);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryUninitialize(void);
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressCreate(
+/* Library version information */
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionString(
+    char* pVersionString, size_t versionStringSize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionMajor(
+    size_t* pVersionMajor);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionMinor(
+    size_t* pVersionMinor);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionPatch(
+    size_t* pVersionPatch);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionExtra(
+    char* pVersionExtraString, size_t versionExtraStringSize,
+    size_t* pCharsWritten);
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     int streetNum, char const* street,
     char const* city, char const* province,
     char const* country, char const* zipCode,
-    DszCLibAddress* newAddress
-);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressDestroy(DszCLibAddress address);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetStreetNumber(DszCLibAddress address, int* streetNum);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetStreet(DszCLibAddress address, char* street, size_t streetSize, size_t* charWritten);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetCity(DszCLibAddress address, char* city, size_t citySize, size_t* charWritten);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetProvince(DszCLibAddress address, char* province, size_t provinceSize, size_t* charWritten);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetCountry(DszCLibAddress address, char* country, size_t countrySize, size_t* charWritten);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetZipCode(DszCLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressToString(DszCLibAddress address, char* str, size_t strSize, size_t* charWritten);
+    DszCLibAddress* pAddress);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressDestroy(
+    DszCLibAddress address);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNumber(
+    DszCLibAddress address,
+    int* pStreetNum);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreet(
+    DszCLibAddress address,
+    char* pStreet, size_t streetSize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCity(
+    DszCLibAddress address,
+    char* pCity, size_t citySize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetProvince(
+    DszCLibAddress address,
+    char* pProvince, size_t provinceSize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
+    DszCLibAddress address,
+    char* pCountry, size_t countrySize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetZipCode(
+    DszCLibAddress address,
+    char* pZipCode, size_t zipCodeSize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
+    DszCLibAddress address,
+    char* pAddressString, size_t addressStringSize,
+    size_t* pCharsWritten);
 
 /*
 ** Note: DszCLibPersonCreate makes a copy of address argument, so it does not need to be persisted.
 */
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonCreate(
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
    char const* lastName, char const* firstName,
    int age, DszCLibAddress address,
-   DszCLibPerson* newPerson
-);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonDestroy(DszCLibPerson person);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetLastName(DszCLibPerson person, char* lastName, size_t lastNameSize, size_t* charWritten);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetFirstName(DszCLibPerson person, char* firstName, size_t firstNameSize, size_t* charWritten);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetAge(DszCLibPerson person, int* age);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetAddress(DszCLibPerson person, DszCLibAddress* address);
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonToString(DszCLibPerson person, char* str, size_t strSize, size_t* charWritten);
+   DszCLibPerson* pPerson);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonDestroy(
+    DszCLibPerson person);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetLastName(
+    DszCLibPerson person,
+    char* pLastName, size_t lastNameSize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetFirstName(
+    DszCLibPerson person,
+    char* pFirstName, size_t firstNameSize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetAge(
+    DszCLibPerson person,
+    int* pAge);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetAddress(
+    DszCLibPerson person,
+    DszCLibAddress* pAddress);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonToString(
+    DszCLibPerson person,
+    char* pPersonString, size_t personStringSize,
+    size_t* pCharsWritten);
 
 #if defined(_MSC_VER)
-typedef DSZ_CLIB_MODULE_VISIBILITY void (DSZ_CLIB_CALLING_CONVENTION *DszCLibGetNumberCallbackFunction)(int result);
+typedef DSZ_CLIB_MODULE_VISIBILITY DszCLibErrorNum (DSZ_CLIB_CALLING_CONVENTION *DszCLibGenerateIntFunction)(
+    int data, int* pInt);
+typedef DSZ_CLIB_MODULE_VISIBILITY DszCLibErrorNum (DSZ_CLIB_CALLING_CONVENTION *DszCLibGenerateStringFunction)(
+    int data, char* pString, size_t stringSize,
+    size_t* pCharsWritten);
 #else /* defined(_MSC_VER) */
-typedef void *DszCLibGetNumberCallbackFunction(int result);
+typedef DszCLibErrorNum (*DszCLibGenerateIntFunction)(
+    int data, int* pInt);
+typedef DszCLibErrorNum (*DszCLibGenerateStringFunction)(
+    int data, char* pString, size_t stringSize,
+    size_t* pCharsWritten);
 #endif /* defined(_MSC_VER) */
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibGetNumber(DszCLibGetNumberCallbackFunction fnCallback);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibGeneratorCreate(
+    DszCLibGenerateIntFunction fnGenerateInt,
+    DszCLibGenerateStringFunction fnGenerateString,
+    DszCLibGenerator* pGenerator);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibGeneratorDestroy(
+    DszCLibGenerator generator);
+
+/*
+** Takes ownership of generator. Do not destroy generator after creating printer with this function.
+*/
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterCreate(
+    DszCLibGenerator generator,
+    DszCLibPrinter* pPrinter);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterDestroy(
+    DszCLibPrinter printer);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintInt(
+    DszCLibPrinter printer);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintString(
+    DszCLibPrinter printer);

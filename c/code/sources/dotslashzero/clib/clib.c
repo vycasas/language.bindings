@@ -7,25 +7,25 @@
 #include <string.h>
 #include <time.h>
 
-#define DSZ_CLIB_INLINE inline
+#define DSZ_CLIBCORE_INLINE inline
 
 #if defined(_MSC_VER)
     #undef strncpy
     #define strncpy(buffer, source, bufferSize) strncpy_s(buffer, bufferSize, source, _TRUNCATE)
     #define snprintf sprintf_s
-    #undef DSZ_CLIB_INLINE
-    #define DSZ_CLIB_INLINE __inline
+    #undef DSZ_CLIBCORE_INLINE
+    #define DSZ_CLIBCORE_INLINE __inline
 #endif /* defined(_WIN32) */
 
-typedef enum _CoreErrNums
+typedef enum DszCLibCoreErrorNum_
 {
-    COREERRNUM_NO_ERROR = 0,
-    COREERRNUM_GENERAL_ERROR = 1,
-    COREERRNUM_EXTERNAL_ERROR = 2
+    DSZ_CLIBCORE_ERRORNUM_NO_ERROR          = 0,
+    DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR     = 1,
+    DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR    = 2
 }
-CoreErrNums;
+DszCLibCoreErrorNum;
 
-typedef struct _CoreAddress
+typedef struct DszCLibCoreAddress_
 {
     int streetNum;
     char street[40];
@@ -34,410 +34,732 @@ typedef struct _CoreAddress
     char country[16];
     char zipCode[8];
 }
-CoreAddress;
+DszCLibCoreAddress;
 
-typedef struct _CorePerson
+typedef struct DszCLibCorePerson_
 {
     char lastName[24];
     char firstName[24];
     int age;
-    CoreAddress address;
+    DszCLibCoreAddress* pAddress;
 }
-CorePerson;
+DszCLibCorePerson;
 
-#define TO_CLIBERRNUM(errnum) ((size_t) errnum)
+typedef DszCLibErrorNum (*DszCLibCoreGenerateIntFunction)(
+    int data, int* pInt);
+typedef DszCLibErrorNum (*DszCLibCoreGenerateStringFunction)(
+    int data, char* pString, size_t stringSize,
+    size_t* pCharsWritten);
+
+typedef struct DszCLibCoreGenerator_
+{
+    DszCLibCoreGenerateIntFunction fnGenerateInt;
+    DszCLibCoreGenerateStringFunction fnGenerateString;
+}
+DszCLibCoreGenerator;
+
+typedef struct DszCLibCorePrinter_
+{
+    DszCLibCoreGenerator* pGenerator;
+}
+DszCLibCorePrinter;
+
+#define DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(errorNum) ((size_t) errorNum)
 
 #if defined(__cplusplus)
 extern "C"
 #endif // defined(__cplusplus)
-static DSZ_CLIB_INLINE char const* CoreGetErrorMessage(CoreErrNums errnum)
+static DSZ_CLIBCORE_INLINE char const* DszCLibCoreGetErrorMessage(
+    DszCLibCoreErrorNum errorNum)
 {
-    switch (errnum) {
-        case (COREERRNUM_NO_ERROR):
+    switch (errorNum) {
+        case (DSZ_CLIBCORE_ERRORNUM_NO_ERROR):
             return ("No error.");
-        case (COREERRNUM_GENERAL_ERROR):
+        case (DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR):
             return ("General error.");
-        case (COREERRNUM_EXTERNAL_ERROR):
+        case (DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR):
             return ("External error.");
         default:
             return ("Unknown error.");
     }
 }
 
-DSZ_CLIB_API(size_t) DszCLibErrNumGetMessage(DszCLibErrNum errnum, char* message, size_t messageSize)
+DSZ_CLIB_API(void) DszCLibErrorNumGetMessage(
+    DszCLibErrorNum errorNum,
+    char* pMessage, size_t messageSize,
+    size_t* pCharsWritten)
 {
     size_t result = 0;
-    char const* const errMessage = CoreGetErrorMessage(errnum);
+    char const* errorMessage = DszCLibCoreGetErrorMessage(errorNum);
 
-    if (message != NULL && messageSize > 0) {
-        strncpy(message, errMessage, messageSize);
-        result = strlen(message);
+    if ((pMessage != NULL) && (messageSize > 0)) {
+        strncpy(pMessage, errorMessage, messageSize);
+        pMessage[messageSize - 1] = '\0'; /* for safety */
+        result = strlen(pMessage);
     }
     else {
-        result = strlen(errMessage);
+        result = strlen(errorMessage);
     }
 
-    return (result);
-}
+    if (pCharsWritten != NULL)
+        *pCharsWritten = result;
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibLibraryInitialize(void)
-{
-    /* Just stub. */
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(void) DszCLibLibraryTerminate(void)
-{
     return;
 }
 
-DSZ_CLIB_API(char const*) DszCLibLibraryGetVersionString(void)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryInitialize(void)
 {
-    return (LB_VERSION_STRING);
+    /* no operation */
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionMajor(void)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryUninitialize(void)
 {
-    return (LB_VERSION_MAJOR);
+    /* no operation */
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionMinor(void)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionString(
+    char* pVersionString, size_t versionStringSize,
+    size_t* pCharsWritten)
 {
-    return (LB_VERSION_MINOR);
+    size_t result = 0;
+
+    if ((pVersionString != NULL) && (versionStringSize > 0)) {
+        strncpy(pVersionString, DSZ_LB_VERSION_STRING, versionStringSize);
+        pVersionString[versionStringSize - 1] = '\0'; /* for safety */
+        result = strlen(pVersionString);
+    }
+    else {
+        result = strlen(DSZ_LB_VERSION_STRING);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = result;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(size_t) DszCLibLibraryGetVersionPatch(void)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionMajor(
+    size_t* pVersionMajor)
 {
-    return (LB_VERSION_PATCH);
+    if (pVersionMajor != NULL)
+        *pVersionMajor = DSZ_LB_VERSION_MAJOR;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(char const*) DszCLibLibraryGetVersionExtra(void)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionMinor(
+    size_t* pVersionMinor)
 {
-    return (LB_VERSION_EXTRA);
+    if (pVersionMinor != NULL)
+        *pVersionMinor = DSZ_LB_VERSION_MINOR;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressCreate(
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionPatch(
+    size_t* pVersionPatch)
+{
+    if (pVersionPatch != NULL)
+        *pVersionPatch = DSZ_LB_VERSION_PATCH;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionExtra(
+    char* pVersionExtraString, size_t versionExtraStringSize,
+    size_t* pCharsWritten)
+{
+    size_t result = 0;
+
+    if ((pVersionExtraString != NULL) && (versionExtraStringSize > 0)) {
+        strncpy(pVersionExtraString, DSZ_LB_VERSION_EXTRA, versionExtraStringSize);
+        pVersionExtraString[versionExtraStringSize - 1] = '\0'; /* for safety */
+        result = strlen(pVersionExtraString);
+    }
+    else {
+        result = strlen(DSZ_LB_VERSION_EXTRA);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = result;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     int streetNum, char const* street,
     char const* city, char const* province,
     char const* country, char const* zipCode,
-    DszCLibAddress* newAddress
-)
+    DszCLibAddress* pAddress)
 {
-    if (newAddress == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
+    DszCLibCoreAddress* pCoreAddress = NULL;
 
-    CoreAddress* coreAddr = (CoreAddress*) malloc(sizeof (CoreAddress));
-    if (coreAddr == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_GENERAL_ERROR));
+    if (pAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
 
-    memset((void*) coreAddr, 0, sizeof (CoreAddress));
+    pCoreAddress = (DszCLibCoreAddress*) malloc(sizeof (DszCLibCoreAddress));
 
-    coreAddr->streetNum = streetNum;
-    strncpy(coreAddr->street, street, 40);
-    strncpy(coreAddr->city, city, 16);
-    strncpy(coreAddr->province, province, 8);
-    strncpy(coreAddr->country, country, 16);
-    strncpy(coreAddr->zipCode, zipCode, 8);
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    *newAddress = (DszCLibAddress) coreAddr;
+    memset((void*) pCoreAddress, 0, sizeof (pCoreAddress));
 
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+    pCoreAddress->streetNum = streetNum;
+    strncpy(pCoreAddress->street, street, 40);
+    strncpy(pCoreAddress->city, city, 16);
+    strncpy(pCoreAddress->province, province, 8);
+    strncpy(pCoreAddress->country, country, 16);
+    strncpy(pCoreAddress->zipCode, zipCode, 8);
+
+    *pAddress = (DszCLibAddress) pCoreAddress;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressDestroy(DszCLibAddress address)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressDestroy(
+    DszCLibAddress address)
 {
-    if (address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
 
-    CoreAddress* coreAddr = (CoreAddress*) address;
-    free(coreAddr);
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+    free(pCoreAddress);
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetStreetNumber(DszCLibAddress address, int* streetNum)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNumber(
+    DszCLibAddress address,
+    int* pStreetNum)
 {
-    if (address == NULL || streetNum == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
 
-    CoreAddress* coreAddr = (CoreAddress*) address;
-    *streetNum = coreAddr->streetNum;
+    if (pStreetNum == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
 
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    *pStreetNum = pCoreAddress->streetNum;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetStreet(DszCLibAddress address, char* street, size_t streetSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreet(
+    DszCLibAddress address,
+    char* pStreet, size_t streetSize,
+    size_t* pCharsWritten)
 {
-    if (address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CoreAddress* coreAddr = (CoreAddress*) address;
-    size_t numChars = strlen(coreAddr->street);
-
-    if (street != NULL && streetSize > 0) {
-        strncpy(street, coreAddr->street, streetSize);
-        numChars = strlen(street);
-    }
-
-    if (charWritten != NULL)
-        *charWritten = numChars;
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetCity(DszCLibAddress address, char* city, size_t citySize, size_t* charWritten)
-{
-    if (address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CoreAddress* coreAddr = (CoreAddress*) address;
-    size_t numChars = strlen(coreAddr->street);
-
-    if (city != NULL && citySize > 0) {
-        strncpy(city, coreAddr->city, citySize);
-        numChars = strlen(city);
-    }
-
-    if (charWritten != NULL)
-        *charWritten = numChars;
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetProvince(DszCLibAddress address, char* province, size_t provinceSize, size_t* charWritten)
-{
-    if (address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CoreAddress* coreAddr = (CoreAddress*) address;
-    size_t numChars = strlen(coreAddr->street);
-
-    if (province != NULL && provinceSize > 0) {
-        strncpy(province, coreAddr->province, provinceSize);
-        numChars = strlen(province);
-    }
-
-    if (charWritten != NULL)
-        *charWritten = numChars;
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetCountry(DszCLibAddress address, char* country, size_t countrySize, size_t* charWritten)
-{
-    if (address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CoreAddress* coreAddr = (CoreAddress*) address;
-    size_t numChars = strlen(coreAddr->street);
-
-    if (country != NULL && countrySize > 0) {
-        strncpy(country, coreAddr->country, countrySize);
-        numChars = strlen(country);
-    }
-
-    if (charWritten != NULL)
-        *charWritten = numChars;
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressGetZipCode(DszCLibAddress address, char* zipCode, size_t zipCodeSize, size_t* charWritten)
-{
-    if (address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CoreAddress* coreAddr = (CoreAddress*) address;
-    size_t numChars = strlen(coreAddr->street);
-
-    if (zipCode != NULL && zipCodeSize > 0) {
-        strncpy(zipCode, coreAddr->zipCode, zipCodeSize);
-        numChars = strlen(zipCode);
-    }
-
-    if (charWritten != NULL)
-        *charWritten = numChars;
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibAddressToString(DszCLibAddress address, char* str, size_t strSize, size_t* charWritten)
-{
-    if (address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CoreAddress* coreAddr = (CoreAddress*) address;
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
     size_t numChars = 0;
-    char buffer[120];
 
-    memset(buffer, 0, 120);
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    numChars = strlen(pCoreAddress->street);
+
+    if ((pStreet != NULL) && (streetSize > 0)) {
+        strncpy(pStreet, pCoreAddress->street, streetSize);
+        pStreet[streetSize - 1] = '\0';
+        numChars = strlen(pStreet);
+    }
+    else {
+        numChars = strlen(pCoreAddress->street);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCity(
+    DszCLibAddress address,
+    char* pCity, size_t citySize,
+    size_t* pCharsWritten)
+{
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
+    size_t numChars = 0;
+
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    numChars = strlen(pCoreAddress->city);
+
+    if ((pCity != NULL) && (citySize > 0)) {
+        strncpy(pCity, pCoreAddress->city, citySize);
+        pCity[citySize - 1] = '\0';
+        numChars = strlen(pCity);
+    }
+    else {
+        numChars = strlen(pCoreAddress->city);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetProvince(
+    DszCLibAddress address,
+    char* pProvince, size_t provinceSize,
+    size_t* pCharsWritten)
+{
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
+    size_t numChars = 0;
+
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    numChars = strlen(pCoreAddress->province);
+
+    if ((pProvince != NULL) && (provinceSize > 0)) {
+        strncpy(pProvince, pCoreAddress->province, provinceSize);
+        pProvince[provinceSize - 1] = '\0';
+        numChars = strlen(pProvince);
+    }
+    else {
+        numChars = strlen(pCoreAddress->province);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
+    DszCLibAddress address,
+    char* pCountry, size_t countrySize,
+    size_t* pCharsWritten)
+{
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
+    size_t numChars = 0;
+
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    if ((pCountry != NULL) && (countrySize > 0)) {
+        strncpy(pCountry, pCoreAddress->country, countrySize);
+        pCountry[countrySize - 1] = '\0';
+        numChars = strlen(pCountry);
+    }
+    else {
+        numChars = strlen(pCoreAddress->country);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetZipCode(
+    DszCLibAddress address,
+    char* pZipCode, size_t zipCodeSize,
+    size_t* pCharsWritten)
+{
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
+    size_t numChars = 0;
+
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    numChars = strlen(pCoreAddress->zipCode);
+
+    if ((pZipCode != NULL) && (zipCodeSize > 0)) {
+        strncpy(pZipCode, pCoreAddress->zipCode, zipCodeSize);
+        pZipCode[zipCodeSize - 1] = '\0';
+        numChars = strlen(pZipCode);
+    }
+    else {
+        numChars = strlen(pCoreAddress->zipCode);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
+    DszCLibAddress address,
+    char* pAddressString, size_t addressStringSize,
+    size_t* pCharsWritten)
+{
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
+    size_t numChars = 0;
+    size_t const BUFFER_SIZE = 120;
+    char buffer[BUFFER_SIZE];
+
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    memset(buffer, 0, BUFFER_SIZE);
     snprintf(
-        buffer, 120,
+        buffer, BUFFER_SIZE,
         "%d %s\n%s, %s\n%s %s",
-        coreAddr->streetNum, coreAddr->street,
-        coreAddr->city, coreAddr->province,
-        coreAddr->country, coreAddr->zipCode
+        pCoreAddress->streetNum, pCoreAddress->street,
+        pCoreAddress->city, pCoreAddress->province,
+        pCoreAddress->country, pCoreAddress->zipCode
     );
 
-    numChars = strlen(buffer);
-
-    if (str != NULL && strSize > 0) {
-        strncpy(str, buffer, strSize);
-        numChars = strlen(str);
+    if ((pAddressString != NULL) && (addressStringSize > 0)) {
+        strncpy(pAddressString, buffer, addressStringSize);
+        pAddressString[addressStringSize - 1] = '\0';
+        numChars = strlen(pAddressString);
+    }
+    else {
+        numChars = strlen(buffer);
     }
 
-    if (charWritten != NULL)
-        *charWritten = numChars;
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
 
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonCreate(
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
    char const* lastName, char const* firstName,
    int age, DszCLibAddress address,
-   DszCLibPerson* newPerson
-)
+   DszCLibPerson* pPerson)
 {
-    if (newPerson == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
+    DszCLibCorePerson* pCorePerson = NULL;
+    DszCLibErrorNum errorNum = DSZ_CLIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
 
-    if (address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
+    if (pPerson == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
 
-    CorePerson* corePerson = (CorePerson*) malloc(sizeof (CorePerson));
-    if (corePerson == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_GENERAL_ERROR));
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    memset((void*) corePerson, 0, sizeof (CorePerson));
+    pCorePerson = (DszCLibCorePerson*) malloc(sizeof (DszCLibCorePerson));
+    if (pCorePerson == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    CoreAddress* coreAddr = (CoreAddress*) address;
+    memset((void*) pCorePerson, 0, sizeof (DszCLibCorePerson));
 
-    strncpy(corePerson->lastName, lastName, 24);
-    strncpy(corePerson->firstName, firstName, 24);
-    corePerson->age = age;
-    /* make a copy of coreAddr... */
-    memcpy(&(corePerson->address), coreAddr, sizeof (CoreAddress));
+    strncpy(pCorePerson->lastName, lastName, 24);
+    strncpy(pCorePerson->firstName, firstName, 24);
+    pCorePerson->age = age;
 
-    *newPerson = (DszCLibPerson) corePerson;
+    /* make a copy of address */
+    errorNum = DszCLibAddressCreate(
+        pCoreAddress->streetNum, pCoreAddress->street,
+        pCoreAddress->city, pCoreAddress->province,
+        pCoreAddress->country, pCoreAddress->zipCode,
+        (DszCLibAddress*) &(pCorePerson->pAddress));
 
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonDestroy(DszCLibPerson person)
-{
-    if (person == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CorePerson* corePerson = (CorePerson*) person;
-    free(corePerson);
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetLastName(DszCLibPerson person, char* lastName, size_t lastNameSize, size_t* charWritten)
-{
-    if (person == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CorePerson* corePerson = (CorePerson*) person;
-    size_t numChars = strlen(corePerson->lastName);
-
-    if (lastName != NULL && lastNameSize > 0) {
-        strncpy(lastName, corePerson->lastName, lastNameSize);
-        numChars = strlen(lastName);
+    if (errorNum != 0) {
+        if (pCorePerson != NULL)
+            free(pCorePerson);
+        return (errorNum);
     }
 
-    if (charWritten != NULL)
-        *charWritten = numChars;
+    *pPerson = (DszCLibPerson) pCorePerson;
 
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetFirstName(DszCLibPerson person, char* firstName, size_t firstNameSize, size_t* charWritten)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonDestroy(
+    DszCLibPerson person)
 {
-    if (person == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
+    DszCLibCorePerson* pCorePerson = (DszCLibCorePerson*) person;
 
-    CorePerson* corePerson = (CorePerson*) person;
-    size_t numChars = strlen(corePerson->firstName);
+    if (pCorePerson == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    if (firstName != NULL && firstNameSize > 0) {
-        strncpy(firstName, corePerson->firstName, firstNameSize);
-        numChars = strlen(firstName);
-    }
+    DszCLibAddressDestroy((DszCLibAddress) pCorePerson->pAddress);
+    free(pCorePerson);
 
-    if (charWritten != NULL)
-        *charWritten = numChars;
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetAge(DszCLibPerson person, int* age)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetLastName(
+    DszCLibPerson person,
+    char* pLastName, size_t lastNameSize,
+    size_t* pCharsWritten)
 {
-    if (person == NULL || age == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CorePerson* corePerson = (CorePerson*) person;
-    *age = corePerson->age;
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonGetAddress(DszCLibPerson person, DszCLibAddress* address)
-{
-    if (person == NULL || address == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CorePerson* corePerson = (CorePerson*) person;
-    DszCLibAddressCreate(
-        corePerson->address.streetNum, corePerson->address.street,
-        corePerson->address.city, corePerson->address.province,
-        corePerson->address.country, corePerson->address.zipCode,
-        address
-    );
-
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
-}
-
-DSZ_CLIB_API(DszCLibErrNum) DszCLibPersonToString(DszCLibPerson person, char* str, size_t strSize, size_t* charWritten)
-{
-    if (person == NULL)
-        return (TO_CLIBERRNUM(COREERRNUM_EXTERNAL_ERROR));
-
-    CorePerson* corePerson = (CorePerson*) person;
-    CoreAddress* coreAddr = &(corePerson->address);
+    DszCLibCorePerson* pCorePerson = (DszCLibCorePerson*) person;
     size_t numChars = 0;
-    char buffer[184];
 
-    memset(buffer, 0, 184);
-    snprintf(
-        buffer, 184,
-        "%s, %s\n%d years old\n%d %s\n%s, %s\n%s %s",
-        corePerson->lastName, corePerson->firstName,
-        corePerson->age,
-        coreAddr->streetNum, coreAddr->street,
-        coreAddr->city, coreAddr->province,
-        coreAddr->country, coreAddr->zipCode
-    );
+    if (pCorePerson == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    numChars = strlen(buffer);
+    numChars = strlen(pCorePerson->lastName);
 
-    if (str != NULL && strSize > 0) {
-        strncpy(str, buffer, strSize);
-        numChars = strlen(str);
+    if ((pLastName != NULL) && (lastNameSize > 0)) {
+        strncpy(pLastName, pCorePerson->lastName, lastNameSize);
+        numChars = strlen(pLastName);
+    }
+    else {
+        numChars = strlen(pCorePerson->lastName);
     }
 
-    if (charWritten != NULL)
-        *charWritten = numChars;
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
 
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrNum) DszCLibGetNumber(DszCLibGetNumberCallbackFunction fnCallback)
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetFirstName(
+    DszCLibPerson person,
+    char* pFirstName, size_t firstNameSize,
+    size_t* pCharsWritten)
 {
-    int generatedNumber = (int) time(NULL);
-    if (fnCallback != NULL)
-        fnCallback(generatedNumber);
+    DszCLibCorePerson* pCorePerson = (DszCLibCorePerson*) person;
+    size_t numChars = 0;
 
-    return (TO_CLIBERRNUM(COREERRNUM_NO_ERROR));
+    if (pCorePerson == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    numChars = strlen(pCorePerson->firstName);
+
+    if ((pFirstName != NULL) && (firstNameSize > 0)) {
+        strncpy(pFirstName, pCorePerson->firstName, firstNameSize);
+        numChars = strlen(pFirstName);
+    }
+    else {
+        numChars = strlen(pCorePerson->firstName);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetAge(
+    DszCLibPerson person,
+    int* pAge)
+{
+    DszCLibCorePerson* pCorePerson = (DszCLibCorePerson*) person;
+
+    if (pAge == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
+
+    if (pCorePerson == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    *pAge = pCorePerson->age;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetAddress(
+    DszCLibPerson person,
+    DszCLibAddress* pAddress)
+{
+    DszCLibCorePerson* pCorePerson = (DszCLibCorePerson*) person;
+    DszCLibCoreAddress* pCoreAddress = NULL;
+    DszCLibErrorNum errorNum = DSZ_CLIBCORE_ERRORNUM_NO_ERROR;
+
+    if (pAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
+
+    if (pCorePerson == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    pCoreAddress = pCorePerson->pAddress;
+
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    errorNum = DszCLibAddressCreate(
+        pCoreAddress->streetNum, pCoreAddress->street,
+        pCoreAddress->city, pCoreAddress->province,
+        pCoreAddress->country, pCoreAddress->zipCode,
+        pAddress
+    );
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(errorNum));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonToString(
+    DszCLibPerson person,
+    char* pPersonString, size_t personStringSize,
+    size_t* pCharsWritten)
+{
+    DszCLibErrorNum errorNum = DSZ_CLIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibCorePerson* pCorePerson = (DszCLibCorePerson*) person;
+    size_t numChars = 0;
+    size_t const ADDRESS_STRING_SIZE = 120;
+    char addressString[ADDRESS_STRING_SIZE];
+    size_t const BUFFER_SIZE = 184;
+    char buffer[BUFFER_SIZE];
+
+    if (pCorePerson == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    memset(addressString, 0, ADDRESS_STRING_SIZE);
+    errorNum = DszCLibAddressToString(
+        (DszCLibAddress) pCorePerson->pAddress,
+        addressString, ADDRESS_STRING_SIZE,
+        NULL);
+
+    if (errorNum != DSZ_CLIBCORE_ERRORNUM_NO_ERROR) {
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(errorNum));
+    }
+
+    memset(buffer, 0, BUFFER_SIZE);
+    snprintf(
+        buffer, BUFFER_SIZE,
+        "%s, %s\n%d years old\n%s",
+        pCorePerson->lastName, pCorePerson->firstName,
+        pCorePerson->age,
+        addressString);
+
+    if ((pPersonString != NULL) && (personStringSize > 0)) {
+        strncpy(pPersonString, buffer, personStringSize);
+        pPersonString[personStringSize - 1] = '\0';
+        numChars = strlen(pPersonString);
+    }
+    else {
+        numChars = strlen(buffer);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibGeneratorCreate(
+    DszCLibGenerateIntFunction fnGenerateInt,
+    DszCLibGenerateStringFunction fnGenerateString,
+    DszCLibGenerator* pGenerator)
+{
+    DszCLibCoreGenerator* pCoreGenerator = NULL;
+
+    if (pGenerator == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
+
+    pCoreGenerator = (DszCLibCoreGenerator*) malloc(sizeof (DszCLibCoreGenerator));
+
+    if (pCoreGenerator == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    memset((void*) pCoreGenerator, 0, sizeof (pCoreGenerator));
+
+    pCoreGenerator->fnGenerateInt = (DszCLibCoreGenerateIntFunction) fnGenerateInt;
+    pCoreGenerator->fnGenerateString = (DszCLibCoreGenerateStringFunction) fnGenerateString;
+
+    *pGenerator = (DszCLibGenerator) pCoreGenerator;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibGeneratorDestroy(
+    DszCLibGenerator generator)
+{
+    DszCLibCoreGenerator* pCoreGenerator = (DszCLibCoreGenerator*) generator;
+
+    if (pCoreGenerator == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    free(pCoreGenerator);
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterCreate(
+    DszCLibGenerator generator,
+    DszCLibPrinter* pPrinter)
+{
+    DszCLibCorePrinter* pCorePrinter = NULL;
+    DszCLibCoreGenerator* pCoreGenerator = (DszCLibCoreGenerator*) generator;
+
+    if (pPrinter == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
+
+    if (pCoreGenerator == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+    
+    pCorePrinter = (DszCLibCorePrinter*) malloc(sizeof (DszCLibCorePrinter));
+    if (pCorePrinter == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    pCorePrinter->pGenerator = pCoreGenerator;
+
+    *pPrinter = (DszCLibPrinter) pCorePrinter;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterDestroy(
+    DszCLibPrinter printer)
+{
+    DszCLibCorePrinter* pCorePrinter = (DszCLibCorePrinter*) printer;
+
+    if (pCorePrinter == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    DszCLibGeneratorDestroy((DszCLibGenerator) pCorePrinter->pGenerator);
+    free(pCorePrinter);
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintInt(
+    DszCLibPrinter printer)
+{
+    DszCLibCorePrinter* pCorePrinter = (DszCLibCorePrinter*) printer;
+    DszCLibCoreGenerator* pCoreGenerator = NULL;
+    DszCLibCoreGenerateIntFunction fnCoreGenerateInt = NULL;
+    time_t data = time(NULL);
+    int generatedInt = 0;
+
+    if (pCorePrinter == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    pCoreGenerator = pCorePrinter->pGenerator;
+
+    if (pCoreGenerator == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    fnCoreGenerateInt = pCoreGenerator->fnGenerateInt;
+
+    if (fnCoreGenerateInt == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    fnCoreGenerateInt(data, &generatedInt);
+    fprintf(stdout, "The value of int is: %d\n", generatedInt);
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));    
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintString(
+    DszCLibPrinter printer)
+{
+    DszCLibCorePrinter* pCorePrinter = (DszCLibCorePrinter*) printer;
+    DszCLibCoreGenerator* pCoreGenerator = NULL;
+    DszCLibCoreGenerateStringFunction fnCoreGenerateString = NULL;
+    time_t data = time(NULL);
+    size_t const GENERATED_STRING_SIZE = 64;
+    char generatedString[GENERATED_STRING_SIZE];
+
+    if (pCorePrinter == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    pCoreGenerator = pCorePrinter->pGenerator;
+
+    if (pCoreGenerator == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    fnCoreGenerateString = pCoreGenerator->fnGenerateString;
+
+    if (fnCoreGenerateString == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    memset(generatedString, 0, GENERATED_STRING_SIZE);
+    fnCoreGenerateString(data, generatedString, GENERATED_STRING_SIZE, NULL);
+    generatedString[GENERATED_STRING_SIZE - 1] = '\0';
+    fprintf(stdout, "The value of string is: %s\n", generatedString);
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));    
 }
