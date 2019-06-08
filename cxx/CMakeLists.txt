@@ -5,9 +5,9 @@ set(LB_CXXLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_CXXLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 
 set(LB_CXXLIB_HEADER_FILES
-    "${LB_CXXLIB_HEADER_DIR}/cxxlib/cxxlib.hxx")
+    "${LB_CXXLIB_HEADER_DIR}/dotslashzero/cxxlib/cxxlib.hxx")
 set(LB_CXXLIB_SOURCE_FILES
-    "${LB_CXXLIB_SOURCE_DIR}/cxxlib.cxx")
+    "${LB_CXXLIB_SOURCE_DIR}/dotslashzero/cxxlib/cxxlib.cxx")
 
 if (UNIX)
     set(LB_CXXLIB_COMPILE_DEFINITIONS)
