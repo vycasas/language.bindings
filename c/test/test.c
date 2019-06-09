@@ -5,13 +5,19 @@
 #include <string.h>
 
 #if defined(_WIN32)
-#define snprintf sprintf_s
+    #define snprintf sprintf_s
+    #undef strncpy
+    #define strncpy(buffer, source, bufferSize) strncpy_s(buffer, bufferSize, source, _TRUNCATE)
 #endif /* defined(_WIN32) */
 
 static DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION GenerateInt(
-    int data, int* pInt)
+    int data, int* pInt,
+    void* pUserData)
 {
-    if (pInt == NULL) return (-1);
+    (void) pUserData;
+
+    if (pInt == NULL)
+        return ((DszCLibErrorNum) -1);
 
     *pInt = data * data;
 
@@ -20,11 +26,19 @@ static DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION GenerateInt(
 
 static DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION GenerateString(
     int data, char* pString, size_t stringSize,
-    size_t* pCharsWritten)
+    size_t* pCharsWritten,
+    void* pUserData)
 {
+#if defined(_MSC_VER)
+    #define BUFFER_SIZE 64
+#else /* defined(_MSC_VER) */
     size_t const BUFFER_SIZE = 64;
+#endif /* defined(_MSC_VER) */
+
     char buffer[BUFFER_SIZE];
     size_t numChars = 0;
+
+    (void) pUserData;
 
     memset(buffer, 0, BUFFER_SIZE);
     snprintf(buffer, BUFFER_SIZE, "%d", data);
@@ -41,21 +55,33 @@ static DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION GenerateString(
     if (pCharsWritten != NULL)
         *pCharsWritten = numChars;
 
+#if defined(_MSC_VER)
+    #undef BUFFER_SIZE
+#endif /* defined(_MSC_VER) */
+
     return (DSZ_CLIB_ERRORNUM_NO_ERROR);
 }
 
 int main(void)
 {
-    DszCLibErrorNum errorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+#if defined(_MSC_VER)
+    #define ERROR_MESSAGE_SIZE 40
+    #define VERSION_STRING_SIZE 16
+    #define ADDRESS_STRING_SIZE 256
+    #define PERSON_STRING_SIZE 512
+#else /* defined(_MSC_VER) */
     size_t const ERROR_MESSAGE_SIZE = 40;
-    char errorMessage[ERROR_MESSAGE_SIZE];
     size_t const VERSION_STRING_SIZE = 16;
+    size_t const ADDRESS_STRING_SIZE = 256;
+    size_t const PERSON_STRING_SIZE = 512;
+#endif /* defined(_MSC_VER) */
+
+    DszCLibErrorNum errorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    char errorMessage[ERROR_MESSAGE_SIZE];
     char versionString[VERSION_STRING_SIZE];
     DszCLibAddress address = DSZ_CLIB_ADDRESS_INVALID;
-    size_t const ADDRESS_STRING_SIZE = 256;
     char addressString[ADDRESS_STRING_SIZE];
     DszCLibPerson person = DSZ_CLIB_PERSON_INVALID;
-    size_t const PERSON_STRING_SIZE = 512;
     char personString[PERSON_STRING_SIZE];
     DszCLibGenerator generator = DSZ_CLIB_GENERATOR_INVALID; /* note that this will be owned by printer */
     DszCLibPrinter printer = DSZ_CLIB_PRINTER_INVALID;
@@ -69,7 +95,7 @@ int main(void)
 
     do {
         fprintf(stdout, "Creating a new address...\n");
-        
+
         errorNum = DszCLibAddressCreate(9898, "Corner St.", "Gotham", "CA", "Antartica", "4132", &address);
         if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
             break;
@@ -104,7 +130,7 @@ int main(void)
             &GenerateInt,
             &GenerateString,
             &generator);
-        
+
         if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
             break;
 
@@ -115,7 +141,7 @@ int main(void)
         errorNum = DszCLibPrinterCreate(
             generator,
             &printer);
-        
+
         if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
             break;
 
@@ -147,6 +173,13 @@ int main(void)
     }
 
     DszCLibLibraryUninitialize();
+
+#if defined(_MSC_VER)
+    #undef ERROR_MESSAGE_SIZE
+    #undef VERSION_STRING_SIZE
+    #undef ADDRESS_STRING_SIZE
+    #undef PERSON_STRING_SIZE
+#endif /* defined(_MSC_VER) */
 
     if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
         fprintf(stderr, "An error has occurred: %s\n", errorMessage);

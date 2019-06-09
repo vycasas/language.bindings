@@ -1,630 +1,537 @@
-#include <cxxlib/cxxlib.hxx>
+#include <dotslashzero/cxxlib/cxxlib.hxx>
 
-#include <chrono>
-#include <cstring>
-#include <ctime>
-#include <iostream>
-#include <memory>
+#include <algorithm>
+#include <functional>
 
-#if defined(_MSC_VER)
-    #define _CRT_SECURE_NO_WARNINGS 1
-    #pragma warning(disable:4996)
-#endif // defined(_MSC_VER)
+#define DSZ_CXXLIBCORE_API_CHECK(errorNum) \
+    if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) \
+        throw (DotSlashZero::CxxLib::Exception(errorNum));
 
-#define CXXLIB_API_CHECK(result) \
-    if (result != 0) \
-        throw (CXXLib::Exception(result));
-
-namespace CXXLibCore
+namespace DotSlashZero
 {
-    // These are classes/functions that are not part of API.
-    class Generator
+    namespace CxxLib
     {
-    public:
-        virtual ~Generator(void)
+        Exception::Exception(void) :
+            std::exception{},
+            m_message{ "" },
+            m_errorNum{DSZ_CLIB_ERRORNUM_NO_ERROR}
         { return; }
 
-        virtual int generateInt(int data) const = 0;
-        virtual std::string generateString(int data) const = 0;
-    }; // class Generator
-
-    class Printer
-    {
-    public:
-        Printer(std::unique_ptr<Generator> generator) : 
-            _generator(std::move(generator))
+        Exception::Exception(Exception const& src) :
+            std::exception{ src },
+            m_message{ src.m_message },
+            m_errorNum{ src.m_errorNum }
         { return; }
 
-        void printInt(void);
-        void printString(void);
-
-    private:
-        std::unique_ptr<Generator> _generator;
-    }; // class Printer
-
-    void Printer::printInt(void)
-    {
-		auto someInt = static_cast<int>(std::chrono::seconds(std::time(nullptr)).count());
-        std::cout << "The value of int is: " << _generator->generateInt(someInt) << std::endl;
-        return;
-    }
-
-    void Printer::printString(void)
-    {
-		auto someInt = static_cast<int>(std::chrono::seconds(std::time(nullptr)).count());
-        std::cout << "The value of string is: " << _generator->generateString(someInt) << std::endl;
-        return;
-    }
-
-} // namespace CXXLibCore
-
-// C interface for the Generator sample. Not necessary, but added for demonstration purposes.
-namespace CLib
-{
-    typedef void* CLibCoreGenerator;
-    typedef CLibErrNum (*CLibCoreGenerateIntFunction)(int data, int* result, void* userData);
-    typedef CLibErrNum (*CLibCoreGenerateStringFunction)(
-        int data,
-        char* result, size_t resultSize, size_t* charWritten,
-        void* userData
-    );
-    typedef CLibErrNum (*CLibCoreGeneratorDestroyFunction)(void* userData);
-    typedef void* CLibCorePrinter;
-
-    namespace CXXImplDetail
-    {
-        // For use with throwing exceptions within this namespace.
-        class CLibException final : public CXXLib::Exception
-        {
-        public:
-            CLibException(void) : CXXLib::Exception()
-            { return; }
-
-            CLibException(CLibErrNum errNum) : CXXLib::Exception(errNum)
-            { return; }
-        }; // class CLibException
-
-        class CLibGeneratorImpl final : public CXXLibCore::Generator
-        {
-        public:
-            CLibGeneratorImpl(
-                CLibCoreGenerateIntFunction generateIntImpl,
-                CLibCoreGenerateStringFunction generateStringImpl,
-                CLibCoreGeneratorDestroyFunction destroyImpl,
-                void* userData
-            );
-            virtual ~CLibGeneratorImpl(void);
-
-            virtual int generateInt(int data) const override;
-            virtual std::string generateString(int data) const override;
-        private:
-            CLibCoreGenerateIntFunction _generateIntImpl;
-            CLibCoreGenerateStringFunction _generateStringImpl;
-            CLibCoreGeneratorDestroyFunction _destroyImpl;
-            void* _userData;
-        }; // class CLibGeneratorImpl
-
-        CLibGeneratorImpl::CLibGeneratorImpl(
-            CLibCoreGenerateIntFunction generateIntImpl,
-            CLibCoreGenerateStringFunction generateStringImpl,
-            CLibCoreGeneratorDestroyFunction destroyImpl,
-            void* userData
-        ) :
-            _generateIntImpl(generateIntImpl),
-            _generateStringImpl(generateStringImpl),
-            _destroyImpl(destroyImpl),
-            _userData(userData)
+        Exception::Exception(std::exception const& src) :
+            std::exception{ src },
+            m_message{ src.what() },
+            m_errorNum{ 2 }
         { return; }
 
-        CLibGeneratorImpl::~CLibGeneratorImpl(void)
+        Exception::Exception(DszCLibErrorNum errorNum) :
+            m_errorNum{ errorNum }
         {
-            this->_destroyImpl(_userData);
+            std::string::size_type constexpr ERRORNUM_STRING_SIZE = 40;
+            std::string errorNumString{ ERRORNUM_STRING_SIZE, '\0' };
+
+            DszCLibErrorNumGetMessage(
+                m_errorNum,
+                errorNumString.data(), errorNumString.size(),
+                nullptr);
+            m_message = errorNumString.c_str();
+
             return;
         }
 
-        int CLibGeneratorImpl::generateInt(int data) const
+        std::string Exception::GetMessage(void) const noexcept
         {
-            try {
-                int result;
-                this->_generateIntImpl(data, &result, _userData); // note: evaluate result and handle appropriately.
-                return (result);
-            }
-            catch (...) {
-                throw (CLibException(2));
-            }
+            return (m_message);
         }
 
-        std::string CLibGeneratorImpl::generateString(int data) const
+        /*virtual*/
+        char const* Exception::what(void) const noexcept /*override*/
         {
-            try {
-                char buffer[1024];
-                this->_generateStringImpl(data, buffer, 1024, nullptr, _userData);
-                std::string result(buffer);
-                return (result);
+            return (GetMessage().c_str());
+        }
+
+        namespace Library
+        {
+            bool Initialize(void) noexcept
+            {
+                auto errorNum = DszCLibLibraryInitialize();
+
+                return (errorNum == DSZ_CLIB_ERRORNUM_NO_ERROR);
             }
-            catch (...) {
-                throw (CLibException(2));
+
+            void Uninitialize(void) noexcept
+            {
+                DszCLibLibraryUninitialize();
+
+                return;
+            }
+
+            std::string GetVersionString(void)
+            {
+                std::string::size_type constexpr VERSION_STRING_SIZE = 16;
+                std::string versionString(VERSION_STRING_SIZE, '\0');
+
+                DszCLibLibraryGetVersionString(
+                    versionString.data(), versionString.size(),
+                    nullptr);
+
+                return (versionString.c_str());
+            }
+
+            std::size_t GetVersionMajor(void)
+            {
+                std::size_t versionMajor = 0;
+
+                DszCLibLibraryGetVersionMajor(&versionMajor);
+
+                return (versionMajor);
+            }
+
+            std::size_t GetVersionMinor(void)
+            {
+                std::size_t versionMinor = 0;
+
+                DszCLibLibraryGetVersionMinor(&versionMinor);
+
+                return (versionMinor);
+            }
+
+            std::size_t GetVersionPatch(void)
+            {
+                std::size_t versionPatch = 0;
+
+                DszCLibLibraryGetVersionPatch(&versionPatch);
+
+                return (versionPatch);
+            }
+
+            std::string GetVersionExtra(void)
+            {
+                std::string::size_type constexpr VERSION_EXTRA_STRING_SIZE = 16;
+                std::string versionExtraString(VERSION_EXTRA_STRING_SIZE, '\0');
+
+                DszCLibLibraryGetVersionExtra(
+                    versionExtraString.data(), versionExtraString.size(),
+                    nullptr);
+
+                return (versionExtraString.c_str());
             }
         }
-    } // namespace CXXImplDetail
+        // namespace Library
 
-    CLibErrNum CLibCoreGeneratorCreate(
-        CLibCoreGenerateIntFunction intFunction,
-        CLibCoreGenerateStringFunction stringFunction,
-        CLibCoreGeneratorDestroyFunction destroyFunction,
-        void* userData,
-        CLibCoreGenerator* generator
-    )
-    {
-        if (generator == nullptr)
-            return (2);
+        Address::Address(void) :
+            m_impl{ DSZ_CLIB_ADDRESS_INVALID }
+        { return; }
 
-        try {
-            std::unique_ptr<CXXImplDetail::CLibGeneratorImpl> result(
-                new CXXImplDetail::CLibGeneratorImpl(intFunction, stringFunction, destroyFunction, userData)
-            );
-            *generator = static_cast<CLibCoreGenerator>(result.release());
-        }
-        catch (...) {
-            return (1);
-        }
+        Address::Address(
+            int streetNum, std::string const& street,
+            std::string const& city, std::string const& province,
+            std::string const& country, std::string const& zipCode) :
+            m_impl{ DSZ_CLIB_ADDRESS_INVALID }
+        {
+            auto errorNum = DszCLibAddressCreate(
+                streetNum, street.c_str(),
+                city.c_str(), province.c_str(),
+                country.c_str(), zipCode.c_str(),
+                &m_impl);
 
-        return (0);
-    }
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-    CLibErrNum CLibCoreGeneratorDestroy(CLibCoreGenerator generator)
-    {
-        if (generator == nullptr)
-            return (2);
-
-        try {
-            std::unique_ptr<CXXImplDetail::CLibGeneratorImpl> ownedPtr(
-                static_cast<CXXImplDetail::CLibGeneratorImpl*>(generator)
-            );
-        }
-        catch (...) {
-            return (1);
+            return;
         }
 
-        return (0);
-    }
+        Address::Address(Address const& address)
+        {
+            Destroy__();
 
-    CLibErrNum CLibCorePrinterCreate(CLibCoreGenerator generator, CLibCorePrinter* printer)
-    {
-        if (generator == nullptr || printer == nullptr)
-            return (2);
+            auto errorNum = DszCLibAddressCreate(
+                address.GetStreetNum(), address.GetStreet().c_str(),
+                address.GetCity().c_str(), address.GetProvince().c_str(),
+                address.GetCountry().c_str(), address.GetZipCode().c_str(),
+                &m_impl);
 
-        try {
-            std::unique_ptr<CXXLibCore::Generator> coreGenerator(
-                std::move(static_cast<CXXImplDetail::CLibGeneratorImpl*>(generator))
-            );
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-            std::unique_ptr<CXXLibCore::Printer> corePrinter(
-                new CXXLibCore::Printer(std::move(coreGenerator))
-            );
-
-            *printer = static_cast<CLibCorePrinter>(corePrinter.release());
-        }
-        catch (...) {
-            return (1);
+            return;
         }
 
-        return (0);
-    }
+        Address::~Address(void) noexcept
+        {
+            Destroy__();
 
-    CLibErrNum CLibCorePrinterDestroy(CLibCorePrinter printer)
-    {
-        if (printer == nullptr)
-            return (2);
-
-        try {
-            std::unique_ptr<CXXLibCore::Printer> ownedPtr(
-                static_cast<CXXLibCore::Printer*>(printer)
-            );
-        }
-        catch (...) {
-            return (1);
+            return;
         }
 
-        return (0);
-    }
+        Address& Address::operator=(Address const& address)
+        {
+            Destroy__();
 
-    CLibErrNum CLibCorePrinterPrintInt(CLibCorePrinter printer)
-    {
-        if (printer == nullptr)
-            return (2);
+            auto errorNum = DszCLibAddressCreate(
+                address.GetStreetNum(), address.GetStreet().c_str(),
+                address.GetCity().c_str(), address.GetProvince().c_str(),
+                address.GetCountry().c_str(), address.GetZipCode().c_str(),
+                &m_impl);
 
-        try {
-            CXXLibCore::Printer* corePrinter = static_cast<CXXLibCore::Printer*>(printer);
-            corePrinter->printInt();
-        }
-        catch (...) {
-            return (1);
-        }
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-        return (0);
-    }
-
-    CLibErrNum CLibCorePrinterPrintString(CLibCorePrinter printer)
-    {
-        if (printer == nullptr)
-            return (2);
-
-        try {
-            CXXLibCore::Printer* corePrinter = static_cast<CXXLibCore::Printer*>(printer);
-            corePrinter->printString();
-        }
-        catch (...) {
-            return (1);
+            return (*this);
         }
 
-        return (0);
-    }
+        int Address::GetStreetNum(void) const
+        {
+            int streetNum = 0;
 
-} // namespace CLib
+            auto errorNum = DszCLibAddressGetStreetNumber(m_impl, &streetNum);
 
-namespace CXXLib
-{
-    void Library::initialize(void)
-    {
-        auto c_api_call_result = CLibLibraryInitialize();
-        CXXLIB_API_CHECK(c_api_call_result);
-        return;
-    }
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-    void Library::terminate(void)
-    {
-        CLibLibraryTerminate();
-        return;
-    }
-
-    std::string Library::getVersionString(void)
-    {
-        return (std::string(CLibLibraryGetVersionString()));
-    }
-
-    size_t Library::getVersionMajor(void)
-    {
-        return (CLibLibraryGetVersionMajor());
-    }
-
-    size_t Library::getVersionMinor(void)
-    {
-        return (CLibLibraryGetVersionMinor());
-    }
-
-    Address::Address(
-        int streetNum, const std::string& street,
-        const std::string& city, const std::string& province,
-        const std::string& country, const std::string& zipCode
-    ) : _impl{nullptr}
-    {
-        auto c_api_call_result = CLibAddressCreate(
-            streetNum, street.data(),
-            city.data(), province.data(),
-            country.data(), zipCode.data(),
-            &_impl
-        );
-        CXXLIB_API_CHECK(c_api_call_result);
-        return;
-    }
-
-    Address::Address(const Address& address)
-    {
-        auto c_api_call_result = CLibAddressCreate(
-            address.getStreetNum(), address.getStreet().data(),
-            address.getCity().data(), address.getProvince().data(),
-            address.getCountry().data(), address.getZipCode().data(),
-            &_impl
-        );
-        CXXLIB_API_CHECK(c_api_call_result);
-        return;
-    }
-
-    Address::~Address(void) noexcept
-    {
-        CLibAddressDestroy(_impl);
-        return;
-    }
-
-    Address& Address::operator=(const Address& address)
-    {
-        if (_impl != nullptr) {
-            CLibAddressDestroy(_impl);
-            _impl = nullptr;
+            return (streetNum);
         }
 
-        auto c_api_call_result = CLibAddressCreate(
-            address.getStreetNum(), address.getStreet().data(),
-            address.getCity().data(), address.getProvince().data(),
-            address.getCountry().data(), address.getZipCode().data(),
-            &_impl
-        );
-        CXXLIB_API_CHECK(c_api_call_result);
-        return (*this);
-    }
+        std::string Address::GetStreet(void) const
+        {
+            std::string::size_type constexpr STREET_SIZE = 40;
+            std::string street(STREET_SIZE, '\0');
 
-    int Address::getStreetNum(void) const
-    {
-        int result = -1;
-        auto c_api_call_result = CLibAddressGetStreetNumber(_impl, &result);
-        CXXLIB_API_CHECK(c_api_call_result);
+            auto errorNum = DszCLibAddressGetStreet(m_impl, street.data(), street.size(), nullptr);
 
-        return (result);
-    }
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-    std::string Address::getStreet(void) const
-    {
-        std::array<char, 40> buffer;
-        buffer.fill('\0');
+            return (street.c_str());
+        }
 
-        auto c_api_call_result = CLibAddressGetStreet(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
+        std::string Address::GetCity(void) const
+        {
+            std::string::size_type constexpr CITY_SIZE = 16;
+            std::string city(CITY_SIZE, '\0');
 
-        return (std::string(buffer.data()));
-    }
+            auto errorNum = DszCLibAddressGetCity(m_impl, city.data(), city.size(), nullptr);
 
-    std::string Address::getCity(void) const
-    {
-        std::array<char, 16> buffer;
-        buffer.fill('\0');
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-        auto c_api_call_result = CLibAddressGetCity(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
+            return (city.c_str());
+        }
 
-        return (std::string(buffer.data()));
-    }
+        std::string Address::GetProvince(void) const
+        {
+            std::string::size_type constexpr PROVINCE_SIZE = 8;
+            std::string province(PROVINCE_SIZE, '\0');
 
-    std::string Address::getProvince(void) const
-    {
-        std::array<char, 8> buffer;
-        buffer.fill('\0');
+            auto errorNum = DszCLibAddressGetProvince(m_impl, province.data(), province.size(), nullptr);
 
-        auto c_api_call_result = CLibAddressGetProvince(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-        return (std::string(buffer.data()));
-    }
+            return (province.c_str());
+        }
 
-    std::string Address::getCountry(void) const
-    {
-        std::array<char, 16> buffer;
-        buffer.fill('\0');
+        std::string Address::GetCountry(void) const
+        {
+            std::string::size_type constexpr COUNTRY_SIZE = 16;
+            std::string country(COUNTRY_SIZE, '\0');
 
-        auto c_api_call_result = CLibAddressGetCountry(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
+            auto errorNum = DszCLibAddressGetCountry(m_impl, country.data(), country.size(), nullptr);
 
-        return (std::string(buffer.data()));
-    }
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-    std::string Address::getZipCode(void) const
-    {
-        std::array<char, 8> buffer;
-        buffer.fill('\0');
+            return (country.c_str());
+        }
 
-        auto c_api_call_result = CLibAddressGetZipCode(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
+        std::string Address::GetZipCode(void) const
+        {
+            std::string::size_type constexpr ZIP_CODE_SIZE = 8;
+            std::string zipCode(ZIP_CODE_SIZE, '\0');
 
-        return (std::string(buffer.data()));
-    }
+            auto errorNum = DszCLibAddressGetCountry(m_impl, zipCode.data(), zipCode.size(), nullptr);
 
-    std::string Address::toString(void) const
-    {
-        std::array<char, 256> buffer;
-        buffer.fill('\0');
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-        auto c_api_call_result = CLibAddressToString(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
+            return (zipCode.c_str());
+        }
 
-        return (std::string(buffer.data()));
-    }
+        std::string Address::ToString(void) const
+        {
+            std::string::size_type constexpr ADDRESS_STRING_SIZE = 256;
+            std::string addressString(ADDRESS_STRING_SIZE, '\0');
 
-    Person::Person(
-            const std::string& lastName,
-            const std::string& firstName,
+            auto errorNum = DszCLibAddressToString(m_impl, addressString.data(), addressString.size(), nullptr);
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return (addressString.c_str());
+        }
+
+        void Address::Destroy__() noexcept
+        {
+            if (m_impl != DSZ_CLIB_ADDRESS_INVALID) {
+                DszCLibAddressDestroy(m_impl);
+                m_impl = DSZ_CLIB_ADDRESS_INVALID;
+            }
+
+            return;
+        }
+
+        Person::Person(
+            std::string const& lastName,
+            std::string const& firstName,
             int age,
-            const Address& address
-    ) : _impl{nullptr}
-    {
-        // Remember: address._impl is copied.
-        auto c_api_call_result = CLibPersonCreate(
-            lastName.data(),
-            firstName.data(),
-            age,
-            address._impl,
-            &_impl
-        );
-        CXXLIB_API_CHECK(c_api_call_result);
-        return;
-    }
+            Address const& address) :
+            m_impl{ DSZ_CLIB_PERSON_INVALID }
+        {
+            // Remember: address.m_impl is copied.
+            auto errorNum = DszCLibPersonCreate(
+                lastName.c_str(),
+                firstName.c_str(),
+                age,
+                address.m_impl,
+                &m_impl);
 
-    Person::Person(const Person& person)
-    {
-        auto c_api_call_result = CLibPersonCreate(
-            person.getLastName().data(),
-            person.getFirstName().data(),
-            person.getAge(),
-            person.getAddress()._impl,
-            &_impl
-        );
-        CXXLIB_API_CHECK(c_api_call_result);
-        return;
-    }
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-    Person::~Person(void) noexcept
-    {
-        CLibPersonDestroy(_impl);
-        return;
-    }
-
-    Person& Person::operator=(const Person& person)
-    {
-        if (_impl != nullptr) {
-            CLibPersonDestroy(_impl);
-            _impl = nullptr;
+            return;
         }
-        auto c_api_call_result = CLibPersonCreate(
-            person.getLastName().data(),
-            person.getFirstName().data(),
-            person.getAge(),
-            person.getAddress()._impl,
-            &_impl
-        );
-        CXXLIB_API_CHECK(c_api_call_result);
-        return (*this);
-    }
 
-    std::string Person::getLastName(void) const
-    {
-        std::array<char, 24> buffer;
-        buffer.fill('\0');
+        Person::Person(Person const& person)
+        {
+            Destroy__();
 
-        auto c_api_call_result = CLibPersonGetLastName(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
+            auto errorNum = DszCLibPersonCreate(
+                person.GetLastName().c_str(),
+                person.GetFirstName().c_str(),
+                person.GetAge(),
+                person.GetAddress().m_impl,
+                &m_impl);
 
-        return (std::string(buffer.data()));
-    }
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-    std::string Person::getFirstName(void) const
-    {
-        std::array<char, 24> buffer;
-        buffer.fill('\0');
-
-        auto c_api_call_result = CLibPersonGetFirstName(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
-
-        return (std::string(buffer.data()));
-    }
-
-    int Person::getAge(void) const
-    {
-        int result = -1;
-        auto c_api_call_result = CLibPersonGetAge(_impl, &result);
-        CXXLIB_API_CHECK(c_api_call_result);
-
-        return (result);
-    }
-
-    Address Person::getAddress(void) const
-    {
-        // we need to make sure that we don't take ownership of this Person's Address impl...
-        Address address;
-        auto c_api_call_result = CLibPersonGetAddress(_impl, &(address._impl));
-        CXXLIB_API_CHECK(c_api_call_result);
-
-        Address result(address); // make a copy
-        address._impl = nullptr; // remove reference
-        return (result);
-    }
-
-    std::string Person::toString(void) const
-    {
-        std::array<char, 512> buffer;
-        buffer.fill('\0');
-
-        auto c_api_call_result = CLibPersonToString(_impl, buffer.data(), buffer.size(), nullptr);
-        CXXLIB_API_CHECK(c_api_call_result);
-
-        return (std::string(buffer.data()));
-    }
-
-    GeneratorBase::GeneratorBase(void)
-    { return; }
-
-    GeneratorBase::~GeneratorBase(void)
-    { return; }
-
-    CLibErrNum GeneratorBase::IntFunction(int data, int* result, void* userData)
-    {
-        if (result == nullptr || userData == nullptr)
-            return (2);
-
-        auto generatorPtr = reinterpret_cast<GeneratorBase*>(userData);
-        *result = generatorPtr->generateInt(data);
-        return (0);
-    }
-
-    CLibErrNum GeneratorBase::StringFunction(
-        int data,
-        char* result, size_t resultSize, size_t* charWritten,
-        void* userData
-    )
-    {
-        // Optionally, we can allow result to be nullptr...
-        if (result == nullptr || resultSize == 0 || userData == nullptr)
-            return (2);
-
-        auto generatorPtr = reinterpret_cast<GeneratorBase*>(userData);
-        auto implResult = generatorPtr->generateString(data);
-        std::strncpy(result, implResult.data(), resultSize);
-
-        if (charWritten != nullptr)
-            *charWritten = std::strlen(result);
-
-        return (0);
-    }
-
-    CLibErrNum GeneratorBase::DestroyFunction(void* userData)
-    {
-        if (userData == nullptr)
-            return (2);
-
-        try {
-            std::unique_ptr<GeneratorBase> ownedPtr(
-                static_cast<GeneratorBase*>(userData)
-            );
+            return;
         }
-        catch (...) {
-            return (1);
+
+        Person::~Person(void) noexcept
+        {
+            Destroy__();
+
+            return;
         }
-        return (0);
-    }
 
-    Printer::Printer(std::unique_ptr<GeneratorBase> generator)
-    {
-        CLib::CLibCoreGenerator coreGenerator = nullptr;
-        auto* generatorPtr = generator.release();
-        auto c_api_call_result = CLib::CLibCoreGeneratorCreate(
-            &GeneratorBase::IntFunction,
-            &GeneratorBase::StringFunction,
-            &GeneratorBase::DestroyFunction,
-            generatorPtr,
-            &coreGenerator
-        );
-        if (c_api_call_result != 0) {
-            generator.reset(generatorPtr);
+        Person& Person::operator=(Person const& person)
+        {
+            Destroy__();
+
+            auto errorNum = DszCLibPersonCreate(
+                person.GetLastName().c_str(),
+                person.GetFirstName().c_str(),
+                person.GetAge(),
+                person.GetAddress().m_impl,
+                &m_impl);
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return (*this);
         }
-        CXXLIB_API_CHECK(c_api_call_result);
-        c_api_call_result = CLib::CLibCorePrinterCreate(coreGenerator, &_impl);
-        CXXLIB_API_CHECK(c_api_call_result);
-        return;
-    }
 
-    Printer::~Printer(void)
-    {
-        CLib::CLibCorePrinterDestroy(_impl);
-        return;
-    }
+        std::string Person::GetLastName(void) const
+        {
+            std::string::size_type const LAST_NAME_SIZE = 24;
+            std::string lastName(LAST_NAME_SIZE, '\0');
 
-    void Printer::printInt(void)
-    {
-        auto c_api_call_result = CLib::CLibCorePrinterPrintInt(_impl);
-        CXXLIB_API_CHECK(c_api_call_result);
-        return;
-    }
+            auto errorNum = DszCLibPersonGetLastName(
+                m_impl,
+                lastName.data(), lastName.size(),
+                nullptr);
 
-    void Printer::printString(void)
-    {
-        auto c_api_call_result = CLib::CLibCorePrinterPrintString(_impl);
-        CXXLIB_API_CHECK(c_api_call_result);
-        return;
-    }
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
-    void Printer::createInstance(std::unique_ptr<GeneratorBase>&& generator)
-    {
-        std::unique_ptr<Printer> instance(new Printer(std::move(generator)));
-        _impl = instance->_impl;
-        instance.release();
-        return;
+            return (lastName.c_str());
+        }
+
+        std::string Person::GetFirstName(void) const
+        {
+            std::string::size_type const FIRST_NAME_SIZE = 24;
+            std::string firstName(FIRST_NAME_SIZE, '\0');
+
+            auto errorNum = DszCLibPersonGetFirstName(
+                m_impl,
+                firstName.data(), firstName.size(),
+                nullptr);
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return (firstName.c_str());
+        }
+
+        int Person::GetAge(void) const
+        {
+            int age = 0;
+
+            auto errorNum = DszCLibPersonGetAge(m_impl, &age);
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return (age);
+        }
+
+        Address Person::GetAddress(void) const
+        {
+            Address address;
+
+            auto errorNum = DszCLibPersonGetAddress(m_impl, &(address.m_impl));
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return (address);
+        }
+
+        std::string Person::ToString(void) const
+        {
+            std::string::size_type PERSON_STRING_SIZE = 512;
+            std::string personString(PERSON_STRING_SIZE, '\0');
+
+            auto errorNum = DszCLibPersonToString(
+                m_impl,
+                personString.data(), personString.size(),
+                nullptr);
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return (personString.c_str());
+        }
+
+        void Person::Destroy__() noexcept
+        {
+            if (m_impl != DSZ_CLIB_PERSON_INVALID) {
+                DszCLibPersonDestroy(m_impl);
+                m_impl = DSZ_CLIB_PERSON_INVALID;
+            }
+
+            return;
+        }
+
+        Printer::Printer(IGenerator* pGenerator) :
+            m_impl{ DSZ_CLIB_PRINTER_INVALID },
+            m_pGenerator{ pGenerator },
+            m_generatorImpl{ DSZ_CLIB_GENERATOR_INVALID }
+        {
+            CreateGeneratorInstance__();
+
+            auto errorNum = DszCLibPrinterCreate(m_generatorImpl, &m_impl);
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return;
+        }
+
+        Printer::~Printer(void)
+        {
+            if (m_impl != DSZ_CLIB_PRINTER_INVALID) {
+                DszCLibPrinterDestroy(m_impl);
+                m_impl = DSZ_CLIB_PRINTER_INVALID;
+            }
+
+            return;
+        }
+
+        void Printer::PrintInt(void) const
+        {
+            auto errorNum = DszCLibPrinterPrintIntWithUserData(
+                m_impl,
+                const_cast<void*>(reinterpret_cast<void const*>(this)));
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return;
+        }
+
+        void Printer::PrintString(void) const
+        {
+            auto errorNum = DszCLibPrinterPrintStringWithUserData(
+                m_impl,
+                const_cast<void*>(reinterpret_cast<void const*>(this)));
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return;
+        }
+
+        void Printer::CreateGeneratorInstance__()
+        {
+            if (m_generatorImpl != DSZ_CLIB_GENERATOR_INVALID)
+                return;
+
+            auto errorNum = DszCLibGeneratorCreate(
+                (DszCLibGenerateIntFunction) &(Printer::GenerateIntRedirect__),
+                (DszCLibGenerateStringFunction) &(Printer::GenerateStringRedirect__),
+                &m_generatorImpl);
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return;
+        }
+
+        /*static*/
+        void Printer::GenerateIntRedirect__(
+            int data,
+            int* pInt,
+            void* pUserData)
+        {
+            if (pUserData == nullptr)
+                return;
+
+            if (pInt == nullptr)
+                return;
+
+            auto pPrinter = reinterpret_cast<Printer*>(pUserData);
+            auto& pGenerator = pPrinter->m_pGenerator; // note: this must be a reference to an std::unique_ptr! dangerous... watch out!
+
+            if (!pGenerator)
+                return;
+
+            *pInt = pGenerator->GenerateInt(data);
+
+            return;
+        }
+
+        /*static*/
+        void Printer::GenerateStringRedirect__(
+            int data,
+            char* pString, std::size_t stringSize,
+            std::size_t* pCharsWritten,
+            void* pUserData)
+        {
+            if (pUserData == nullptr)
+                return;
+
+            auto pPrinter = reinterpret_cast<Printer*>(pUserData);
+            auto& pGenerator = pPrinter->m_pGenerator; // note: this must be a reference to an std::unique_ptr! dangerous... watch out!
+
+            if (!pGenerator)
+                return;
+
+            auto generatedString = pGenerator->GenerateString(data);
+
+            std::size_t numChars = 0;
+
+            if ((pString != nullptr) && (stringSize > 0)) {
+                std::fill_n(pString, stringSize, '\0');
+                auto const COPY_COUNT = (std::min)(stringSize, generatedString.size());
+                std::copy_n(generatedString.cbegin(), COPY_COUNT, pString);
+                pString[stringSize - 1] = '\0';
+                numChars = COPY_COUNT;
+            }
+            else {
+                numChars = generatedString.size();
+            }
+
+            if (pCharsWritten != nullptr)
+                *pCharsWritten = numChars;
+
+            return;
+        }
     }
-} // namespace CXXLib
+    // namespace CXXLib
+}
+// namespace DotSlashZero

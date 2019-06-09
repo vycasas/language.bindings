@@ -1,192 +1,170 @@
 #pragma once
 
-#include <clib/clib.h>
+#include <dotslashzero/clib/clib.h>
 
-#include <array>
 #include <exception>
 #include <memory>
 #include <string>
 
-#define CXXLIB_API __attribute__ ((visibility ("default")))
+#define DSZ_CXXLIB_API __attribute__ ((visibility("default")))
 #if defined(_MSC_VER)
-    #undef CXXLIB_API
-    #define CXXLIB_API __declspec(dllexport)
-    // noexcept is not supported in MSVC 12.0
-    #pragma warning(disable:4251)
-    #define noexcept
+    #undef DSZ_CXXLIB_API
+    #define DSZ_CXXLIB_API __declspec(dllexport)
 #endif // defined(_MSC_VER)
 
-namespace CXXLib
+namespace DotSlashZero
 {
-    class Exception : public std::exception
+    namespace CxxLib
     {
-    public:
-        Exception(void) :
-            std::exception(),
-            _message(""),
-            _impl(0)
-        { return; }
+        class Exception final :
+            public std::exception
+        {
+        public:
+            DSZ_CXXLIB_API Exception(void);
 
-        Exception(const Exception& src) :
-            std::exception(src),
-            _message(src._message),
-            _impl(src._impl)
-        { return; }
+            DSZ_CXXLIB_API Exception(Exception const& src);
 
-        Exception(const std::exception& src) :
-            std::exception(src),
-            _message(src.what()),
-            _impl(2)
-        { return; }
+            DSZ_CXXLIB_API Exception(std::exception const& src);
 
-        std::string getMessage(void) const
-		{
-			return (_message);
-		}
+            DSZ_CXXLIB_API std::string GetMessage(void) const noexcept;
 
-        virtual const char* what(void) const noexcept override
-		{
-			return (getMessage().data());
-		}
+            DSZ_CXXLIB_API virtual char const* what(void) const noexcept override;
 
-    protected:
-        Exception(CLibErrNum errNum) : _impl{ errNum }
-		{
-			std::array<char, 40> buffer;
-			buffer.fill('\0');
-			CLibErrNumGetMessage(_impl, buffer.data(), buffer.size());
+        private:
+            Exception(DszCLibErrorNum errorNum);
 
-			_message = std::string(buffer.data());
-			return;
-		}
+            std::string m_message;
+            DszCLibErrorNum m_errorNum;
 
-        std::string _message;
-        CLibErrNum _impl;
+            friend class Address;
+            friend class Person;
+            friend class Printer;
+        };
+        // class Exception
 
-        friend struct Library;
-        friend class Address;
-        friend class Person;
-        friend class Printer;
-    }; // class Exception
+        namespace Library
+        {
+            DSZ_CXXLIB_API bool Initialize(void) noexcept;
+            DSZ_CXXLIB_API void Uninitialize(void) noexcept;
 
-    struct CXXLIB_API Library final
-    {
-        static void initialize(void);
-        static void terminate(void);
+            DSZ_CXXLIB_API std::string GetVersionString(void);
+            DSZ_CXXLIB_API std::size_t GetVersionMajor(void);
+            DSZ_CXXLIB_API std::size_t GetVersionMinor(void);
+            DSZ_CXXLIB_API std::size_t GetVersionPatch(void);
+            DSZ_CXXLIB_API std::string GetVersionExtra(void);
+        }
+        // namespace Library
 
-        static std::string getVersionString(void);
-        static size_t getVersionMajor(void);
-        static size_t getVersionMinor(void);
+        class Address final
+        {
+        public:
+            DSZ_CXXLIB_API Address(
+                int streetNum, std::string const& street,
+                std::string const& city, std::string const& province,
+                std::string const& country, std::string const& zipCode);
 
-        Library(void) = delete;
-        ~Library(void) = delete;
-        Library(const Library&) = delete;
-        Library(const Library&&) = delete;
-        Library& operator=(const Library&) = delete;
-        Library& operator=(const Library&&) = delete;
-    }; // struct Library
+            DSZ_CXXLIB_API Address(Address const& address);
 
-    class CXXLIB_API Address final
-    {
-    public:
-        Address(
-            int streetNum, const std::string& street,
-            const std::string& city, const std::string& province,
-            const std::string& country, const std::string& zipCode
-        );
-        Address(const Address& address);
+            DSZ_CXXLIB_API ~Address(void) noexcept;
 
-        ~Address(void) noexcept;
+            DSZ_CXXLIB_API Address& operator=(Address const& address);
 
-        Address& operator=(const Address& address);
+            DSZ_CXXLIB_API int GetStreetNum(void) const;
+            DSZ_CXXLIB_API std::string GetStreet(void) const;
+            DSZ_CXXLIB_API std::string GetCity(void) const;
+            DSZ_CXXLIB_API std::string GetProvince(void) const;
+            DSZ_CXXLIB_API std::string GetCountry(void) const;
+            DSZ_CXXLIB_API std::string GetZipCode(void) const;
 
-        int getStreetNum(void) const;
-        std::string getStreet(void) const;
-        std::string getCity(void) const;
-        std::string getProvince(void) const;
-        std::string getCountry(void) const;
-        std::string getZipCode(void) const;
+            DSZ_CXXLIB_API std::string ToString(void) const;
 
-        std::string toString(void) const;
+        private:
+            Address(void);
+            void Destroy__() noexcept;
 
-    private:
-        Address(void) : _impl{nullptr} { return; }
-        CLibAddress _impl;
+            DszCLibAddress m_impl;
 
-        friend class Person;
-    }; // class Address
+            friend class Person;
+        };
+        // class Address
 
-    class CXXLIB_API Person final
-    {
-    public:
-        ///
-        /// Note: The address is copied and need not to be persisted after Person is created.
-        ///
-        Person(
-            const std::string& lastName,
-            const std::string& firstName,
-            int age,
-            const Address& address
-        );
-        Person(const Person& person);
+        class Person final
+        {
+        public:
+            // Note: The address is copied and need not to be persisted after Person is created.
+            DSZ_CXXLIB_API Person(
+                std::string const& lastName,
+                std::string const& firstName,
+                int age,
+                Address const& address);
 
-        ~Person(void) noexcept;
+            DSZ_CXXLIB_API Person(Person const& person);
 
-        Person& operator=(const Person& person);
+            DSZ_CXXLIB_API ~Person(void) noexcept;
 
-        std::string getLastName(void) const;
-        std::string getFirstName(void) const;
-        int getAge(void) const;
-        Address getAddress(void) const;
+            DSZ_CXXLIB_API Person& operator=(Person const& person);
 
-        std::string toString(void) const;
+            DSZ_CXXLIB_API std::string GetLastName(void) const;
+            DSZ_CXXLIB_API std::string GetFirstName(void) const;
+            DSZ_CXXLIB_API int GetAge(void) const;
+            DSZ_CXXLIB_API Address GetAddress(void) const;
 
-    private:
-        CLibPerson _impl;
-    }; // class Person
+            DSZ_CXXLIB_API std::string ToString(void) const;
 
-    class CXXLIB_API GeneratorBase
-    {
-    public:
-        GeneratorBase(void);
-        virtual ~GeneratorBase(void) = 0;
+        private:
+            void Destroy__() noexcept;
 
-        virtual int generateInt(int data) const = 0;
-        virtual std::string generateString(int data) const = 0;
+            DszCLibPerson m_impl;
+        };
+        // class Person
 
-        static CLibErrNum IntFunction(int data, int* result, void* userData);
-        static CLibErrNum StringFunction(
-            int data,
-            char* result, size_t resultSize, size_t* charWritten,
-            void* userData
-        );
-        static CLibErrNum DestroyFunction(void* userData);
-    }; // class GeneratorBase
+        class IGenerator
+        {
+        public:
+            DSZ_CXXLIB_API IGenerator(void) = default;
+            DSZ_CXXLIB_API virtual ~IGenerator(void) noexcept = default;
 
-    class CXXLIB_API Printer
-    {
-    public:
-        Printer(std::unique_ptr<GeneratorBase> generator);
-        Printer(const Printer&) = delete;
-        Printer(const Printer&&) = delete;
+            DSZ_CXXLIB_API virtual int GenerateInt(int data) const = 0;
+            DSZ_CXXLIB_API virtual std::string GenerateString(int data) const = 0;
+        };
+        // class IGenerator
 
-        virtual ~Printer(void);
+        class Printer final
+        {
+        public:
+            // Printer will take ownership of IGenerator instance.
+            DSZ_CXXLIB_API Printer(IGenerator* pGenerator);
 
-        Printer& operator=(const Printer&) = delete;
-        Printer& operator=(const Printer&&) = delete;
+            Printer(Printer const&) = delete;
 
-        void printInt(void);
-        void printString(void);
+            DSZ_CXXLIB_API virtual ~Printer(void) noexcept;
 
-    protected:
-        // These members are added to work around with a C++/CLI compile issue.
-        // See C++/CLI solution for details.
-        Printer(void) : _impl(nullptr) { return; }
-        void createInstance(std::unique_ptr<GeneratorBase>&& generator);
+            Printer& operator=(Printer const&) = delete;
 
-    private:
-        typedef void* CLibPrinter;
-        CLibPrinter _impl;
-    }; // class Printer
-} // namespace CXXLib
+            DSZ_CXXLIB_API void PrintInt(void) const;
+            DSZ_CXXLIB_API void PrintString(void) const;
 
+        private:
+            void CreateGeneratorInstance__();
+
+            // redirect functions for C interop
+            static void GenerateIntRedirect__(
+                int data,
+                int* pInt,
+                void* pUserData);
+
+            static void GenerateStringRedirect__(
+                int data,
+                char* pString, std::size_t stringSize,
+                std::size_t* pCharsWritten,
+                void* pUserData);
+
+            DszCLibPrinter m_impl;
+            std::unique_ptr<IGenerator> m_pGenerator;
+            DszCLibGenerator m_generatorImpl;
+        };
+        // class Printer
+    }
+    // namespace CxxLib
+}
+// namespace DotSlashZero
