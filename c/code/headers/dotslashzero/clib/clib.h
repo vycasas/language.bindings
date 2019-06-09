@@ -138,12 +138,12 @@ typedef DSZ_CLIB_MODULE_VISIBILITY DszCLibErrorNum (DSZ_CLIB_CALLING_CONVENTION 
 #else /* defined(_MSC_VER) */
 typedef DszCLibErrorNum (*DszCLibGenerateIntFunction)(
     int data,
-    int* pInt
+    int* pInt,
     void* pUserData);
 typedef DszCLibErrorNum (*DszCLibGenerateStringFunction)(
     int data,
     char* pString, size_t stringSize,
-    size_t* pCharsWritten
+    size_t* pCharsWritten,
     void* pUserData);
 #endif /* defined(_MSC_VER) */
 

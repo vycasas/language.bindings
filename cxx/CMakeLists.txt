@@ -14,7 +14,12 @@ source_group(sources\\dotslashzero\\cxxlib ${LB_CXXLIB_SOURCE_FILES})
 
 if (UNIX)
     set(LB_CXXLIB_COMPILE_DEFINITIONS)
-    set(LB_CXXLIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
+    set(LB_CXXLIB_COMPILE_OPTIONS
+        -W -Wall -Wextra -Werror
+        -pedantic -pedantic-errors
+        -fvisibility=hidden
+        -fpic -fPIC
+        -fexceptions -frtti)
     set(LB_CXXLIB_LINK_OPTIONS)
 elseif (MSVC)
     set(LB_CXXLIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
