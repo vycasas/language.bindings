@@ -30,6 +30,8 @@ namespace DotSlashZero
         { return; }
 
         Exception::Exception(DszCLibErrorNum errorNum) :
+            std::exception{},
+            m_message{ "" },
             m_errorNum{ errorNum }
         {
             std::string::size_type constexpr ERRORNUM_STRING_SIZE = 40;
@@ -44,15 +46,16 @@ namespace DotSlashZero
             return;
         }
 
+        DSZ_CXXLIB_API Exception& Exception::operator=(Exception const& src)
+        {
+            m_errorNum = src.m_errorNum;
+            m_message = src.m_message;
+            return (*this);
+        }
+
         std::string Exception::GetMessage(void) const noexcept
         {
             return (m_message);
-        }
-
-        /*virtual*/
-        char const* Exception::what(void) const noexcept /*override*/
-        {
-            return (GetMessage().c_str());
         }
 
         namespace Library
@@ -425,7 +428,7 @@ namespace DotSlashZero
             return;
         }
 
-        Printer::~Printer(void)
+        Printer::~Printer(void) noexcept
         {
             if (m_impl != DSZ_CLIB_PRINTER_INVALID) {
                 DszCLibPrinterDestroy(m_impl);

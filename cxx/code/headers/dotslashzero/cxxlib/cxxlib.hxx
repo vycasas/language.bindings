@@ -12,6 +12,12 @@
     #define DSZ_CXXLIB_API __declspec(dllexport)
 #endif // defined(_MSC_VER)
 
+// In production code, it will always be ideal to inline the definitions of C++ class functions especially if they use
+// C++ standard library template classes. ABI is always a challenge with C++ so it is recommend to use a simple ABI in
+// the C interface, then let C++ APIs just consume the C APIs. This way the consumer code will be the one compiling C++
+// classes using their compilers (guarantees ABI compatibility). This method will also prevent implementation details
+// from being revealed because the C++ APIs will simply act as a forwarder calls to the C APIs.
+
 namespace DotSlashZero
 {
     namespace CxxLib
@@ -26,9 +32,12 @@ namespace DotSlashZero
 
             DSZ_CXXLIB_API Exception(std::exception const& src);
 
+            DSZ_CXXLIB_API Exception& operator=(Exception const& src);
+
             DSZ_CXXLIB_API std::string GetMessage(void) const noexcept;
 
-            DSZ_CXXLIB_API virtual char const* what(void) const noexcept override;
+            DSZ_CXXLIB_API char const* what(void) const noexcept override
+            { return (m_message.c_str()); } // TODO: check if this is safe
 
         private:
             Exception(DszCLibErrorNum errorNum);

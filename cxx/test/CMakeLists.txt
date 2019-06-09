@@ -8,7 +8,11 @@ set(LB_CXXLIB_TEST_SOURCE_FILES "${LB_CXXLIB_TEST_SOURCE_DIR}/test.cxx")
 
 if (UNIX)
     set(LB_CXXLIB_TEST_COMPILE_DEFINITIONS)
-    set(LB_CXXLIB_TEST_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpie -fPIE)
+    set(LB_CXXLIB_TEST_COMPILE_OPTIONS
+        -W -Wall -Wextra -Werror
+        -pedantic -pedantic-errors
+        -fpie -fPIE
+        -fexceptions -frtti)
     set(LB_CXXLIB_TEST_LINK_OPTIONS)
 elseif (MSVC)
     set(LB_CXXLIB_TEST_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
