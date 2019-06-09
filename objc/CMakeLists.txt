@@ -8,10 +8,11 @@ endif ()
 
 find_library(FOUNDATION Foundation)
 
-set(OBJCLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(OBJCLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(OBJCLIB_HEADER_FILES "${OBJCLIB_SOURCE_DIR}/OLApi.h")
-set(OBJCLIB_SOURCE_FILES "${OBJCLIB_SOURCE_DIR}/OLApi.mm")
+
+set(OBJCLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
+set(OBJCLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
+set(OBJCLIB_HEADER_FILES "${OBJCLIB_SOURCE_DIR}/dotslashzero/objclib/ObjCLib.h")
+set(OBJCLIB_SOURCE_FILES "${OBJCLIB_SOURCE_DIR}/dotslashzero/objclib/ObjCLib.mm")
 
 set(OBJCLIB_COMPILE_DEFINITIONS)
 set(OBJCLIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fobjc-arc -fpic -fPIC)
@@ -38,6 +39,13 @@ target_link_libraries(objclib
     PUBLIC cxxlib ${FOUNDATION} objc c++ c)
 
 # TODO: use FRAMEWORK to create ObjCLib.framework
+
+# Info.plist configuration
+set_target_properties(
+    objclib PROPERTIES
+    MACOSX_FRAMEWORK_BUNDLE_VERSION "${LB_VERSION_MAJOR}.${LB_VERSION_MINOR}.${LB_VERSION_PATCH}"
+    MACOSX_FRAMEWORK_IDENTIFIER "net.dotslashzero.ObjCLib"
+    MACOSX_FRAMEWORK_SHORT_VERSION_STRING)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")
 
