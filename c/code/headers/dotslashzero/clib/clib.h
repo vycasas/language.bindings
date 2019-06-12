@@ -101,7 +101,8 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
     char const* lastName,
     char const* firstName,
-    int age, DszCLibAddress address,
+    int age,
+    DszCLibAddress address,
     DszCLibPerson* pPerson);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonDestroy(
     DszCLibPerson person);

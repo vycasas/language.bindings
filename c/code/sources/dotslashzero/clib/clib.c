@@ -341,32 +341,6 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetProvince(
     return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
-    DszCLibAddress address,
-    char* pCountry, size_t countrySize,
-    size_t* pCharsWritten)
-{
-    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
-    size_t numChars = 0;
-
-    if (pCoreAddress == NULL)
-        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
-
-    if ((pCountry != NULL) && (countrySize > 0)) {
-        strncpy(pCountry, pCoreAddress->country, countrySize);
-        pCountry[countrySize - 1] = '\0';
-        numChars = strlen(pCountry);
-    }
-    else {
-        numChars = strlen(pCoreAddress->country);
-    }
-
-    if (pCharsWritten != NULL)
-        *pCharsWritten = numChars;
-
-    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
-}
-
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetZipCode(
     DszCLibAddress address,
     char* pZipCode, size_t zipCodeSize,
@@ -387,6 +361,32 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetZipCode(
     }
     else {
         numChars = strlen(pCoreAddress->zipCode);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
+    DszCLibAddress address,
+    char* pCountry, size_t countrySize,
+    size_t* pCharsWritten)
+{
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
+    size_t numChars = 0;
+
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    if ((pCountry != NULL) && (countrySize > 0)) {
+        strncpy(pCountry, pCoreAddress->country, countrySize);
+        pCountry[countrySize - 1] = '\0';
+        numChars = strlen(pCountry);
+    }
+    else {
+        numChars = strlen(pCoreAddress->country);
     }
 
     if (pCharsWritten != NULL)
