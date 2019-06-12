@@ -23,27 +23,15 @@ namespace DotSlashZero
     namespace CxxLib
     {
         class Exception final :
-            public std::exception
+            public std::runtime_error
         {
         public:
             DSZ_CXXLIB_API Exception(void);
 
-            DSZ_CXXLIB_API Exception(Exception const& src);
-
-            DSZ_CXXLIB_API Exception(std::exception const& src);
-
-            DSZ_CXXLIB_API Exception& operator=(Exception const& src);
-
             DSZ_CXXLIB_API std::string GetMessage(void) const noexcept;
-
-            DSZ_CXXLIB_API char const* what(void) const noexcept override
-            { return (m_message.c_str()); } // TODO: check if this is safe
 
         private:
             Exception(DszCLibErrorNum errorNum);
-
-            std::string m_message;
-            DszCLibErrorNum m_errorNum;
 
             friend class Address;
             friend class Person;
@@ -68,9 +56,12 @@ namespace DotSlashZero
         {
         public:
             DSZ_CXXLIB_API Address(
-                int streetNum, std::string const& street,
-                std::string const& city, std::string const& province,
-                std::string const& country, std::string const& zipCode);
+                int streetNum,
+                std::string const& street,
+                std::string const& city,
+                std::string const& province,
+                std::string const& zipCode,
+                std::string const& country);
 
             DSZ_CXXLIB_API Address(Address const& address);
 
@@ -82,8 +73,8 @@ namespace DotSlashZero
             DSZ_CXXLIB_API std::string GetStreet(void) const;
             DSZ_CXXLIB_API std::string GetCity(void) const;
             DSZ_CXXLIB_API std::string GetProvince(void) const;
-            DSZ_CXXLIB_API std::string GetCountry(void) const;
             DSZ_CXXLIB_API std::string GetZipCode(void) const;
+            DSZ_CXXLIB_API std::string GetCountry(void) const;
 
             DSZ_CXXLIB_API std::string ToString(void) const;
 
