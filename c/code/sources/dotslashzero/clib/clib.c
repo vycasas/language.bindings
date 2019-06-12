@@ -231,7 +231,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressDestroy(
     return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNumber(
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNum(
     DszCLibAddress address,
     int* pStreetNum)
 {
