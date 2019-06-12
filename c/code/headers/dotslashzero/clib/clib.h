@@ -99,11 +99,11 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
 ** Note: DszCLibPersonCreate makes a copy of address argument, so it does not need to be persisted.
 */
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
-   char const* lastName,
-   char const* firstName,
-   int age,
-   DszCLibAddress address,
-   DszCLibPerson* pPerson);
+    char const* lastName,
+    char const* firstName,
+    int age,
+    DszCLibAddress address,
+    DszCLibPerson* pPerson);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonDestroy(
     DszCLibPerson person);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetLastName(
