@@ -67,7 +67,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     DszCLibAddress* pAddress);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressDestroy(
     DszCLibAddress address);
-DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNumber(
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNum(
     DszCLibAddress address,
     int* pStreetNum);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreet(
