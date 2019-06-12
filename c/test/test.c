@@ -95,8 +95,8 @@ int main(void)
 
     do {
         fprintf(stdout, "Creating a new address...\n");
-
-        errorNum = DszCLibAddressCreate(9898, "Corner St.", "Gotham", "CA", "Antartica", "4132", &address);
+        
+        errorNum = DszCLibAddressCreate(9898, "Corner St.", "Gotham", "CA", "4132", "Antartica", &address);
         if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
             break;
 
