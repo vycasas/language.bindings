@@ -11,51 +11,34 @@ namespace DotSlashZero
 {
     namespace CxxLib
     {
+        namespace Core
+        {
+            std::string ErrorNumToStdString(DszCLibErrorNum errorNum)
+            {
+                std::string::size_type constexpr ERRORNUM_STRING_SIZE = 40;
+                std::string errorNumString{ ERRORNUM_STRING_SIZE, '\0' };
+
+                DszCLibErrorNumGetMessage(
+                    errorNum,
+                    errorNumString.data(), errorNumString.size(),
+                    nullptr);
+
+                return (errorNumString.c_str());
+            }
+        }
+        // namespace Core
+
         Exception::Exception(void) :
-            std::exception{},
-            m_message{ "" },
-            m_errorNum{DSZ_CLIB_ERRORNUM_NO_ERROR}
-        { return; }
-
-        Exception::Exception(Exception const& src) :
-            std::exception{ src },
-            m_message{ src.m_message },
-            m_errorNum{ src.m_errorNum }
-        { return; }
-
-        Exception::Exception(std::exception const& src) :
-            std::exception{ src },
-            m_message{ src.what() },
-            m_errorNum{ 2 }
+            std::runtime_error{""}
         { return; }
 
         Exception::Exception(DszCLibErrorNum errorNum) :
-            std::exception{},
-            m_message{ "" },
-            m_errorNum{ errorNum }
-        {
-            std::string::size_type constexpr ERRORNUM_STRING_SIZE = 40;
-            std::string errorNumString{ ERRORNUM_STRING_SIZE, '\0' };
-
-            DszCLibErrorNumGetMessage(
-                m_errorNum,
-                errorNumString.data(), errorNumString.size(),
-                nullptr);
-            m_message = errorNumString.c_str();
-
-            return;
-        }
-
-        DSZ_CXXLIB_API Exception& Exception::operator=(Exception const& src)
-        {
-            m_errorNum = src.m_errorNum;
-            m_message = src.m_message;
-            return (*this);
-        }
+            std::runtime_error{ Core::ErrorNumToStdString(errorNum) }
+        { return; }
 
         std::string Exception::GetMessage(void) const noexcept
         {
-            return (m_message);
+            return (what());
         }
 
         namespace Library
@@ -132,15 +115,21 @@ namespace DotSlashZero
         { return; }
 
         Address::Address(
-            int streetNum, std::string const& street,
-            std::string const& city, std::string const& province,
-            std::string const& country, std::string const& zipCode) :
+            int streetNum,
+            std::string const& street,
+            std::string const& city,
+            std::string const& province,
+            std::string const& zipCode,
+            std::string const& country) :
             m_impl{ DSZ_CLIB_ADDRESS_INVALID }
         {
             auto errorNum = DszCLibAddressCreate(
-                streetNum, street.c_str(),
-                city.c_str(), province.c_str(),
-                country.c_str(), zipCode.c_str(),
+                streetNum,
+                street.c_str(),
+                city.c_str(),
+                province.c_str(),
+                zipCode.c_str(),
+                country.c_str(),
                 &m_impl);
 
             DSZ_CXXLIBCORE_API_CHECK(errorNum);
@@ -153,9 +142,12 @@ namespace DotSlashZero
             Destroy__();
 
             auto errorNum = DszCLibAddressCreate(
-                address.GetStreetNum(), address.GetStreet().c_str(),
-                address.GetCity().c_str(), address.GetProvince().c_str(),
-                address.GetCountry().c_str(), address.GetZipCode().c_str(),
+                address.GetStreetNum(),
+                address.GetStreet().c_str(),
+                address.GetCity().c_str(),
+                address.GetProvince().c_str(),
+                address.GetZipCode().c_str(),
+                address.GetCountry().c_str(),
                 &m_impl);
 
             DSZ_CXXLIBCORE_API_CHECK(errorNum);
@@ -175,9 +167,12 @@ namespace DotSlashZero
             Destroy__();
 
             auto errorNum = DszCLibAddressCreate(
-                address.GetStreetNum(), address.GetStreet().c_str(),
-                address.GetCity().c_str(), address.GetProvince().c_str(),
-                address.GetCountry().c_str(), address.GetZipCode().c_str(),
+                address.GetStreetNum(),
+                address.GetStreet().c_str(),
+                address.GetCity().c_str(),
+                address.GetProvince().c_str(),
+                address.GetZipCode().c_str(),
+                address.GetCountry().c_str(),
                 &m_impl);
 
             DSZ_CXXLIBCORE_API_CHECK(errorNum);
@@ -189,7 +184,7 @@ namespace DotSlashZero
         {
             int streetNum = 0;
 
-            auto errorNum = DszCLibAddressGetStreetNumber(m_impl, &streetNum);
+            auto errorNum = DszCLibAddressGetStreetNum(m_impl, &streetNum);
 
             DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
@@ -232,18 +227,6 @@ namespace DotSlashZero
             return (province.c_str());
         }
 
-        std::string Address::GetCountry(void) const
-        {
-            std::string::size_type constexpr COUNTRY_SIZE = 16;
-            std::string country(COUNTRY_SIZE, '\0');
-
-            auto errorNum = DszCLibAddressGetCountry(m_impl, country.data(), country.size(), nullptr);
-
-            DSZ_CXXLIBCORE_API_CHECK(errorNum);
-
-            return (country.c_str());
-        }
-
         std::string Address::GetZipCode(void) const
         {
             std::string::size_type constexpr ZIP_CODE_SIZE = 8;
@@ -254,6 +237,18 @@ namespace DotSlashZero
             DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
             return (zipCode.c_str());
+        }
+
+        std::string Address::GetCountry(void) const
+        {
+            std::string::size_type constexpr COUNTRY_SIZE = 16;
+            std::string country(COUNTRY_SIZE, '\0');
+
+            auto errorNum = DszCLibAddressGetCountry(m_impl, country.data(), country.size(), nullptr);
+
+            DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+            return (country.c_str());
         }
 
         std::string Address::ToString(void) const
