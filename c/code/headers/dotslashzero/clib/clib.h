@@ -30,22 +30,20 @@ typedef struct DszCLibGenerator_* DszCLibGenerator;
 typedef struct DszCLibPrinter_* DszCLibPrinter;
 
 /* Default values */
-size_t const DSZ_CLIB_ERRORNUM_NO_ERROR = 0;
-DszCLibAddress const DSZ_CLIB_ADDRESS_INVALID = NULL;
-DszCLibPerson const DSZ_CLIB_PERSON_INVALID = NULL;
-DszCLibGenerator const DSZ_CLIB_GENERATOR_INVALID = NULL;
-DszCLibPrinter const DSZ_CLIB_PRINTER_INVALID = NULL;
+static size_t const DSZ_CLIB_ERRORNUM_NO_ERROR = 0;
+static DszCLibAddress const DSZ_CLIB_ADDRESS_INVALID = NULL;
+static DszCLibPerson const DSZ_CLIB_PERSON_INVALID = NULL;
+static DszCLibGenerator const DSZ_CLIB_GENERATOR_INVALID = NULL;
+static DszCLibPrinter const DSZ_CLIB_PRINTER_INVALID = NULL;
 
 DSZ_CLIB_API(void) DszCLibErrorNumGetMessage(
     DszCLibErrorNum errnum,
     char* pMessage, size_t messageSize,
     size_t* pCharsWritten);
 
-/* Library initialization routines */
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryInitialize(void);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryUninitialize(void);
 
-/* Library version information */
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionString(
     char* pVersionString, size_t versionStringSize,
     size_t* pCharsWritten);
@@ -103,7 +101,8 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
    char const* lastName,
    char const* firstName,
-   int age, DszCLibAddress address,
+   int age,
+   DszCLibAddress address,
    DszCLibPerson* pPerson);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonDestroy(
     DszCLibPerson person);
@@ -128,16 +127,24 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonToString(
 
 #if defined(_MSC_VER)
 typedef DSZ_CLIB_MODULE_VISIBILITY DszCLibErrorNum (DSZ_CLIB_CALLING_CONVENTION *DszCLibGenerateIntFunction)(
-    int data, int* pInt);
+    int data,
+    int* pInt,
+    void* pUserData);
 typedef DSZ_CLIB_MODULE_VISIBILITY DszCLibErrorNum (DSZ_CLIB_CALLING_CONVENTION *DszCLibGenerateStringFunction)(
-    int data, char* pString, size_t stringSize,
-    size_t* pCharsWritten);
+    int data,
+    char* pString, size_t stringSize,
+    size_t* pCharsWritten,
+    void* pUserData);
 #else /* defined(_MSC_VER) */
 typedef DszCLibErrorNum (*DszCLibGenerateIntFunction)(
-    int data, int* pInt);
+    int data,
+    int* pInt,
+    void* pUserData);
 typedef DszCLibErrorNum (*DszCLibGenerateStringFunction)(
-    int data, char* pString, size_t stringSize,
-    size_t* pCharsWritten);
+    int data,
+    char* pString, size_t stringSize,
+    size_t* pCharsWritten,
+    void* pUserData);
 #endif /* defined(_MSC_VER) */
 
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibGeneratorCreate(
@@ -157,5 +164,11 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterDestroy(
     DszCLibPrinter printer);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintInt(
     DszCLibPrinter printer);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintIntWithUserData(
+    DszCLibPrinter printer,
+    void* pUserData);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintString(
     DszCLibPrinter printer);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintStringWithUserData(
+    DszCLibPrinter printer,
+    void* pUserData);
