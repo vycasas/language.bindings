@@ -62,12 +62,12 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     char const* street,
     char const* city,
     char const* province,
-    char const* country,
     char const* zipCode,
+    char const* country,
     DszCLibAddress* pAddress);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressDestroy(
     DszCLibAddress address);
-DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNumber(
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNum(
     DszCLibAddress address,
     int* pStreetNum);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreet(
@@ -82,13 +82,13 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetProvince(
     DszCLibAddress address,
     char* pProvince, size_t provinceSize,
     size_t* pCharsWritten);
-DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
-    DszCLibAddress address,
-    char* pCountry, size_t countrySize,
-    size_t* pCharsWritten);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetZipCode(
     DszCLibAddress address,
     char* pZipCode, size_t zipCodeSize,
+    size_t* pCharsWritten);
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
+    DszCLibAddress address,
+    char* pCountry, size_t countrySize,
     size_t* pCharsWritten);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
     DszCLibAddress address,
@@ -101,8 +101,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
     char const* lastName,
     char const* firstName,
-    int age,
-    DszCLibAddress address,
+    int age, DszCLibAddress address,
     DszCLibPerson* pPerson);
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonDestroy(
     DszCLibPerson person);
