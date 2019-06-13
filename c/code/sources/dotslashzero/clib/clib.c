@@ -8,7 +8,7 @@
 #include <time.h>
 
 #if defined(__cplusplus)
-#error Please use pure C compiler for this file.
+    #error Please use pure C compiler for this file.
 #endif /* defined(__cplusplus) */
 
 #define DSZ_CLIBCORE_INLINE inline
