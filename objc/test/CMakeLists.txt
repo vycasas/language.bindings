@@ -6,34 +6,48 @@ if (NOT APPLE)
     return ()
 endif ()
 
+if (NOT LB_BUILD_OBJC)
+    message(FATAL_ERROR "Cannot build test project without building the actual library to test.")
+    return ()
+endif ()
+
 find_library(FOUNDATION Foundation)
 
-set(OBJCLIB_TEST_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(OBJCLIB_TEST_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(OBJCLIB_TEST_HEADER_FILES)
-set(OBJCLIB_TEST_SOURCE_FILES "${OBJCLIB_TEST_SOURCE_DIR}/test.m")
+set(LB_OBJCLIB_TEST_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(LB_OBJCLIB_TEST_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(LB_OBJCLIB_TEST_HEADER_FILES)
+set(LB_OBJCLIB_TEST_SOURCE_FILES "${LB_OBJCLIB_TEST_SOURCE_DIR}/test.m")
 
-set(OBJCLIB_TEST_COMPILE_DEFINITIONS)
-set(OBJCLIB_TEST_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fobjc-arc -fpie -fPIE)
-set(OBJCLIB_TEST_LINK_OPTIONS)
+set(LB_OBJCLIB_TEST_COMPILE_DEFINITIONS)
+set(LB_OBJCLIB_TEST_COMPILE_OPTIONS
+    -ObjC
+    -W -Wall -Wextra -Werror
+    -pedantic -pedantic-errors
+    -fobjc-arc -fobjc-arc-exceptions
+    -fpie -fPIE)
+set(LB_OBJCLIB_TEST_LINK_OPTIONS)
 
 add_executable(
     objclib_test
-    ${OBJCLIB_TEST_HEADER_FILES}
-    ${OBJCLIB_TEST_SOURCE_FILES})
+    ${LB_OBJCLIB_TEST_HEADER_FILES}
+    ${LB_OBJCLIB_TEST_SOURCE_FILES})
 
 target_compile_definitions(
     objclib_test
-    PRIVATE ${OBJCLIB_TEST_COMPILE_DEFINITIONS})
+    PRIVATE ${LB_OBJCLIB_TEST_COMPILE_DEFINITIONS})
 target_compile_options(
     objclib_test
-    PRIVATE ${OBJCLIB_TEST_COMPILE_OPTIONS})
+    PRIVATE ${LB_OBJCLIB_TEST_COMPILE_OPTIONS})
 target_include_directories(
     objclib_test
-    PRIVATE ${OBJCLIB_TEST_HEADER_DIR})
+    PRIVATE ${LB_OBJCLIB_TEST_HEADER_DIR})
 target_link_libraries(
     objclib_test
-    PRIVATE objclib)
+    PRIVATE $<TARGET_BUNDLE_DIR:objclib> ${FOUNDATION})
 target_link_options(
     objclib_test
-    PRIVATE ${OBJCLIB_TEST_LINK_OPTIONS})
+    PRIVATE ${LB_OBJCLIB_TEST_LINK_OPTIONS})
+
+add_dependencies(objclib_test objclib)
+# dependency is necessary because objclib target is not linked directly via CMake target system
+
