@@ -199,8 +199,8 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     char const* street,
     char const* city,
     char const* province,
-    char const* country,
     char const* zipCode,
+    char const* country,
     DszCLibAddress* pAddress)
 {
     DszCLibCoreAddress* pCoreAddress = NULL;
@@ -219,8 +219,8 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     strncpy(pCoreAddress->street, street, 40);
     strncpy(pCoreAddress->city, city, 16);
     strncpy(pCoreAddress->province, province, 8);
-    strncpy(pCoreAddress->country, country, 16);
     strncpy(pCoreAddress->zipCode, zipCode, 8);
+    strncpy(pCoreAddress->country, country, 16);
 
     *pAddress = (DszCLibAddress) pCoreAddress;
 
@@ -240,7 +240,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressDestroy(
     return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNumber(
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreetNum(
     DszCLibAddress address,
     int* pStreetNum)
 {
@@ -341,32 +341,6 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetProvince(
     return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
-DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
-    DszCLibAddress address,
-    char* pCountry, size_t countrySize,
-    size_t* pCharsWritten)
-{
-    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
-    size_t numChars = 0;
-
-    if (pCoreAddress == NULL)
-        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
-
-    if ((pCountry != NULL) && (countrySize > 0)) {
-        strncpy(pCountry, pCoreAddress->country, countrySize);
-        pCountry[countrySize - 1] = '\0';
-        numChars = strlen(pCountry);
-    }
-    else {
-        numChars = strlen(pCoreAddress->country);
-    }
-
-    if (pCharsWritten != NULL)
-        *pCharsWritten = numChars;
-
-    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
-}
-
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetZipCode(
     DszCLibAddress address,
     char* pZipCode, size_t zipCodeSize,
@@ -387,6 +361,32 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetZipCode(
     }
     else {
         numChars = strlen(pCoreAddress->zipCode);
+    }
+
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
+
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+}
+
+DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
+    DszCLibAddress address,
+    char* pCountry, size_t countrySize,
+    size_t* pCharsWritten)
+{
+    DszCLibCoreAddress* pCoreAddress = (DszCLibCoreAddress*) address;
+    size_t numChars = 0;
+
+    if (pCoreAddress == NULL)
+        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+
+    if ((pCountry != NULL) && (countrySize > 0)) {
+        strncpy(pCountry, pCoreAddress->country, countrySize);
+        pCountry[countrySize - 1] = '\0';
+        numChars = strlen(pCountry);
+    }
+    else {
+        numChars = strlen(pCoreAddress->country);
     }
 
     if (pCharsWritten != NULL)
@@ -418,9 +418,12 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
     snprintf(
         buffer, BUFFER_SIZE,
         "%d %s\n%s, %s\n%s %s",
-        pCoreAddress->streetNum, pCoreAddress->street,
-        pCoreAddress->city, pCoreAddress->province,
-        pCoreAddress->country, pCoreAddress->zipCode);
+        pCoreAddress->streetNum,
+        pCoreAddress->street,
+        pCoreAddress->city,
+        pCoreAddress->province,
+        pCoreAddress->zipCode,
+        pCoreAddress->country);
 
     if ((pAddressString != NULL) && (addressStringSize > 0)) {
         strncpy(pAddressString, buffer, addressStringSize);
@@ -470,9 +473,12 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
 
     /* make a copy of address */
     errorNum = DszCLibAddressCreate(
-        pCoreAddress->streetNum, pCoreAddress->street,
-        pCoreAddress->city, pCoreAddress->province,
-        pCoreAddress->country, pCoreAddress->zipCode,
+        pCoreAddress->streetNum,
+        pCoreAddress->street,
+        pCoreAddress->city,
+        pCoreAddress->province,
+        pCoreAddress->zipCode,
+        pCoreAddress->country,
         (DszCLibAddress*) &(pCorePerson->pAddress));
 
     if (errorNum != 0) {
@@ -591,9 +597,12 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetAddress(
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
     errorNum = DszCLibAddressCreate(
-        pCoreAddress->streetNum, pCoreAddress->street,
-        pCoreAddress->city, pCoreAddress->province,
-        pCoreAddress->country, pCoreAddress->zipCode,
+        pCoreAddress->streetNum,
+        pCoreAddress->street,
+        pCoreAddress->city,
+        pCoreAddress->province,
+        pCoreAddress->zipCode,
+        pCoreAddress->country,
         pAddress);
 
     return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(errorNum));
