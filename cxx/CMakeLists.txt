@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(cxxlib CXX)
 
+if (NOT LB_BUILD_C)
+    message(FATAL_ERROR "C++ wrapper requires building C library.")
+    return ()
+endif ()
+
 set(LB_CXXLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_CXXLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 
