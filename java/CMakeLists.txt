@@ -1,54 +1,63 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(javalib CXX)
 
+if (NOT LB_BUILD_C)
+    message(FATAL_ERROR "Project javalib requires building clib first.")
+    return ()
+endif ()
+
 find_package(Java)
 find_package(JNI)
 
-set(JAVALIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/jni")
-set(JAVALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/jni")
+set(LB_JAVALIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib")
+set(LB_JAVALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib")
 
-set(JAVALIB_HEADER_FILES
-    "${JAVALIB_HEADER_DIR}/api_java.hxx")
-set(JAVALIB_SOURCE_FILES
-    "${JAVALIB_SOURCE_DIR}/api_java.cxx")
+set(LB_JAVALIB_HEADER_FILES
+    "${LB_JAVALIB_HEADER_DIR}/dotslashzero/javalib/javalib.h")
+set(LB_JAVALIB_SOURCE_FILES
+    "${LB_JAVALIB_SOURCE_DIR}/dotslashzero/javalib/javalib.c")
 
+source_group(headers\\dotslashzero\\javalib ${LB_JAVALIB_HEADER_FILES})
+source_group(sources\\dotslashzero\\javalib ${LB_JAVALIB_SOURCE_FILES})
+    
 if (UNIX)
-    set(JAVALIB_COMPILE_DEFINITIONS)
-    set(JAVALIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
-    set(JAVALIB_LINK_OPTIONS)
+    set(LB_JAVALIB_COMPILE_DEFINITIONS)
+    set(LB_JAVALIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
+    set(LB_JAVALIB_LINK_OPTIONS)
 elseif (MSVC)
-    set(JAVALIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
-    set(JAVALIB_COMPILE_OPTIONS /W4 /WX /EHsc /GR /openmp-)
-    set(JAVALIB_LINK_OPTIONS /WX)
+    set(LB_JAVALIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
+    set(LB_JAVALIB_COMPILE_OPTIONS /W4 /WX /EHsc /GR /openmp- /TC)
+    set(LB_JAVALIB_LINK_OPTIONS /WX)
 endif ()
 
 add_library(
     javalib SHARED
-    ${JAVALIB_HEADER_FILES}
-    ${JAVALIB_SOURCE_FILES})
+    ${LB_JAVALIB_HEADER_FILES}
+    ${LB_JAVALIB_SOURCE_FILES})
 
 target_compile_definitions(
     javalib
-    PRIVATE ${JAVALIB_COMPILE_DEFINITIONS})
+    PRIVATE ${LB_JAVALIB_COMPILE_DEFINITIONS})
 target_compile_options(
     javalib
-    PRIVATE ${JAVALIB_COMPILE_OPTIONS})
+    PRIVATE ${LB_JAVALIB_COMPILE_OPTIONS})
 target_include_directories(
     javalib
-    PRIVATE ${JAVALIB_HEADER_DIR} ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
+    PRIVATE ${LB_JAVALIB_HEADER_DIR} ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
 target_link_options(
     javalib
-    PRIVATE ${JAVALIB_LINK_OPTIONS})
+    PRIVATE ${LB_JAVALIB_LINK_OPTIONS})
 target_link_libraries(
     javalib
     PRIVATE cxxlib)
 
 # Build the JAR wrappers for Java projects to consume
-file(GLOB JAVA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/net/dotslashzero/javalib/*.java")
+file(GLOB JAVA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/code/jar/net/dotslashzero/javalib/*.java")
 add_custom_target(
     javalib_jar ALL
     COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_CURRENT_BINARY_DIR} -verbose -deprecation -Werror
         -cp ${CMAKE_CURRENT_SOURCE_DIR} ${JAVA_SOURCES}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/code/jar"
     SOURCES ${JAVA_SOURCES}
     DEPENDS ${JAVA_SOURCES}
     VERBATIM

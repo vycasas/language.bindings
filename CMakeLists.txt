@@ -72,10 +72,6 @@ if (LB_BUILD_CXX)
 endif ()
 
 if (LB_BUILD_JAVA)
-    if (NOT LB_BUILD_CXX)
-        message(FATAL_ERROR "Java wrapper requires building C library and C++ wrapper.")
-        return ()
-    endif ()
     add_subdirectory(${CMAKE_SOURCE_DIR}/java)
 endif ()
 
