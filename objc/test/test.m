@@ -1,16 +1,23 @@
-#import <OLApi.h> // TODO: create a Framework and use #import <ObjCLib/ObjCLib.h>
+#import <ObjCLib/ObjCLib.h>
 
 #import <Foundation/Foundation.h>
 
-@interface MyGenerator : OLGenerator
-- (id) init;
+#if defined(__cplusplus)
+    #error Please use pure C compiler for this file.
+#endif /* defined(__cplusplus) */ 
+
+@interface MyGenerator : NSObject<OLGenerator>
+
+- (instancetype) init;
 - (void) dealloc;
 - (int) generateIntWithData:(int)data;
 - (NSString*) generateStringWithData:(int)data;
-@end
+
+@end /* interface MyGenerator */
 
 @implementation MyGenerator
-- (id) init
+
+- (instancetype) init
 {
     self = [super init];
     return (self);
@@ -30,13 +37,13 @@
 {
     return ([NSString stringWithFormat:@"%d", data]);
 }
-@end
+
+@end /* implementation MyGenerator */
 
 int main(void)
 {
     @try {
-        // there seems to be an implicit call to this...
-        // [OLLibrary initialize];
+        /* note: OLLibrary is implicitly initialized */
 
         NSLog(@"Library initialized... version %@\n", [OLLibrary getVersionString]);
 
@@ -46,9 +53,8 @@ int main(void)
             street:@"Corner St."
             city:@"Gotham"
             province:@"CA"
-            country:@"Antartica"
             zipCode:@"4132"
-        ];
+            country:@"Antartica"];
         NSLog(@"New address created!");
         NSLog(@"\nAddress:\n%@", [address toString]);
 
@@ -57,8 +63,7 @@ int main(void)
             initWithLastName:@"Wayne"
             firstName:@"Bruce"
             age:25
-            address:address
-        ];
+            address:address];
         NSLog(@"New person created!");
         NSLog(@"\nPerson:\n%@", [person toString]);
 
@@ -71,10 +76,10 @@ int main(void)
         [printer printInt];
         [printer printString];
 
-        [OLLibrary terminate];
+        [OLLibrary uninitialize];
     }
     @catch (OLException* e) {
-        NSLog(@"OLException: %@", [e getMessage]);
+        NSLog(@"OLException: %@ %@", [e name], [e reason]);
     }
     @catch (NSException* e) {
         NSLog(@"NSException: %@ %@", [e name], [e reason]);
