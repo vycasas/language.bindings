@@ -68,10 +68,6 @@ if (LB_BUILD_C)
 endif ()
 
 if (LB_BUILD_CXX)
-    if (NOT LB_BUILD_C)
-        message(FATAL_ERROR "C++ wrapper requires building C library.")
-        return ()
-    endif ()
     add_subdirectory(${CMAKE_SOURCE_DIR}/cxx)
 endif ()
 
