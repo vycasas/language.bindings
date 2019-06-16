@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined(__cplusplus)
+    #error Please use pure C compiler for this file.
+#endif /* defined(__cplusplus) */
+
 #if defined(_WIN32)
     #define snprintf sprintf_s
     #undef strncpy
