@@ -14,7 +14,7 @@ namespace DotSlashZero::CxxLib
         std::string ErrorNumToStdString(DszCLibErrorNum errorNum)
         {
             std::string::size_type constexpr ERRORNUM_STRING_SIZE = 40;
-            std::string errorNumString{ ERRORNUM_STRING_SIZE, '\0' };
+            std::string errorNumString(ERRORNUM_STRING_SIZE, '\0');
 
             DszCLibErrorNumGetMessage(
                 errorNum,
