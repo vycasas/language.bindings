@@ -2,14 +2,14 @@
 
 #include <dotslashzero/clib/clib.h>
 
-#include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #define DSZ_CXXLIB_API __attribute__ ((visibility("default")))
 #if defined(_MSC_VER)
-    #undef DSZ_CXXLIB_API
-    #define DSZ_CXXLIB_API __declspec(dllexport)
+#undef DSZ_CXXLIB_API
+#define DSZ_CXXLIB_API __declspec(dllexport)
 #endif // defined(_MSC_VER)
 
 // In production code, it will always be ideal to inline the definitions of C++ class functions especially if they use
