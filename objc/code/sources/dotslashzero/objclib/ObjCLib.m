@@ -5,7 +5,7 @@
 #include <string.h>
 
 #if defined(__cplusplus)
-    #error Please use pure C compiler for this file.
+#error Please use pure C compiler for this file.
 #endif /* defined(__cplusplus) */ 
 
 #define DSZ_OBJCLIBCORE_API_CHECK(errorNum) \
@@ -78,12 +78,12 @@ static void OLCorePrinterGenerateStringRedirect(
     int data,
     char* pString, size_t stringSize,
     size_t* pCharsWritten,
-    void* pUserData
-)
+    void* pUserData)
 {
     OLPrinter* olPrinter = nil;
     id<OLGenerator> olGenerator = nil;
     NSString* nsGeneratedString = nil;
+    char const* cGeneratedString = NULL;
     size_t numChars = 0;
 
     if (pUserData == NULL)
@@ -100,16 +100,14 @@ static void OLCorePrinterGenerateStringRedirect(
     if (nsGeneratedString == nil)
         return;
 
-    if ((pString != NULL) && (stringSize > 0)) {
-        char const* utf8String = [nsGeneratedString UTF8String];
-        size_t utf8StringSize = strlen(utf8String);
+    cGeneratedString = [nsGeneratedString UTF8String];
+    numChars = strlen(cGeneratedString);
 
-        numChars = (stringSize < utf8StringSize) ? stringSize : utf8StringSize;
+    if ((pString != NULL) && (stringSize > 0)) {
+        numChars = (stringSize < numChars) ? stringSize : numChars;
         strncpy(pString, utf8String, numChars);
         pString[stringSize - 1] = '\0';
-    }
-    else {
-        numChars = (size_t )[nsGeneratedString lengthOfBytesUsingEncoding: NSUTF8StringEncoding];
+        numChars = strlen(pString);
     }
 
     if (pCharsWritten != NULL)
