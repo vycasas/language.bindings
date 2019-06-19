@@ -225,7 +225,12 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     if (pCoreAddress == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    memset((void*) pCoreAddress, 0, sizeof (pCoreAddress));
+    pCoreAddress->StreetNum = 0;
+    memset(pCoreAddress->Street, 0, DSZ_CLIBCORE_ADDRESS_STREET_SIZE);
+    memset(pCoreAddress->City, 0, DSZ_CLIBCORE_ADDRESS_CITY_SIZE);
+    memset(pCoreAddress->Province, 0, DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE);
+    memset(pCoreAddress->ZipCode, 0, DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE);
+    memset(pCoreAddress->Country, 0, DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE);
 
     pCoreAddress->StreetNum = streetNum;
 
@@ -436,7 +441,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
         pCoreAddress->Province,
         pCoreAddress->ZipCode,
         pCoreAddress->Country);
-    
+
     numChars = strlen(coreAddressString);
 
     if ((pAddressString != NULL) && (addressStringSize > 0)) {
@@ -480,11 +485,11 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
     numChars = strlen(lastName);
     numChars = (DSZ_CLIBCORE_PERSON_LASTNAME_SIZE < numChars) ? DSZ_CLIBCORE_PERSON_LASTNAME_SIZE : numChars;
     strncpy(pCorePerson->LastName, lastName, numChars);
-    
+
     numChars = strlen(firstName);
     numChars = (DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE < numChars) ? DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE : numChars;
     strncpy(pCorePerson->FirstName, firstName, numChars);
-    
+
     pCorePerson->Age = age;
 
     /* make a copy of address */
@@ -720,7 +725,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterCreate(
 
     if (pCoreGenerator == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
-    
+
     pCorePrinter = (DszCLibCorePrinterPtr) malloc(sizeof (DszCLibCorePrinter));
     if (pCorePrinter == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
@@ -778,7 +783,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintIntWithUserData(
     fnCoreGenerateInt((int) data, &generatedInt, pUserData);
     fprintf(stdout, "The value of int is: %d\n", generatedInt);
 
-    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));    
+    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
 }
 
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintString(
