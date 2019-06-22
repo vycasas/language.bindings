@@ -104,8 +104,7 @@ static void OLCorePrinterGenerateStringRedirect(
     numChars = strlen(cGeneratedString);
 
     if ((pString != NULL) && (stringSize > 0)) {
-        numChars = (stringSize < numChars) ? stringSize : numChars;
-        strncpy(pString, utf8String, numChars);
+        strncpy(pString, cGeneratedString, stringSize);
         pString[stringSize - 1] = '\0';
         numChars = strlen(pString);
     }
