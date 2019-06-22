@@ -116,8 +116,7 @@ DSZ_CLIB_API(void) DszCLibErrorNumGetMessage(
     size_t numChars = strlen(errorMessage);
 
     if ((pMessage != NULL) && (messageSize > 0)) {
-        numChars = (messageSize < numChars) ? messageSize : numChars;
-        strncpy(pMessage, errorMessage, numChars);
+        strncpy(pMessage, errorMessage, messageSize);
         pMessage[messageSize - 1] = '\0';
         numChars = strlen(pMessage);
     }
@@ -147,9 +146,8 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionString(
     size_t numChars = strlen(DSZ_LB_VERSION_STRING);
 
     if ((pVersionString != NULL) && (versionStringSize > 0)) {
-        numChars = (versionStringSize < numChars) ? versionStringSize : numChars;
-        strncpy(pVersionString, DSZ_LB_VERSION_STRING, numChars);
-        pVersionString[versionStringSize - 1] = '\0'; /* for safety */
+        strncpy(pVersionString, DSZ_LB_VERSION_STRING, versionStringSize);
+        pVersionString[versionStringSize - 1] = '\0';
         numChars = strlen(pVersionString);
     }
 
@@ -193,8 +191,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibLibraryGetVersionExtra(
     size_t numChars = strlen(DSZ_LB_VERSION_EXTRA);
 
     if ((pVersionExtraString != NULL) && (versionExtraStringSize > 0)) {
-        numChars = (versionExtraStringSize < numChars) ? versionExtraStringSize : numChars;
-        strncpy(pVersionExtraString, DSZ_LB_VERSION_EXTRA, numChars);
+        strncpy(pVersionExtraString, DSZ_LB_VERSION_EXTRA, versionExtraStringSize);
         pVersionExtraString[versionExtraStringSize - 1] = '\0'; /* for safety */
         numChars = strlen(pVersionExtraString);
     }
@@ -215,7 +212,6 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     DszCLibAddress* pAddress)
 {
     DszCLibCoreAddressPtr pCoreAddress = NULL;
-    size_t numChars = 0;
 
     if (pAddress == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
@@ -225,34 +221,22 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     if (pCoreAddress == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    pCoreAddress->StreetNum = 0;
-    memset(pCoreAddress->Street, 0, DSZ_CLIBCORE_ADDRESS_STREET_SIZE);
-    memset(pCoreAddress->City, 0, DSZ_CLIBCORE_ADDRESS_CITY_SIZE);
-    memset(pCoreAddress->Province, 0, DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE);
-    memset(pCoreAddress->ZipCode, 0, DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE);
-    memset(pCoreAddress->Country, 0, DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE);
-
     pCoreAddress->StreetNum = streetNum;
 
-    numChars = strlen(street);
-    numChars = (DSZ_CLIBCORE_ADDRESS_STREET_SIZE < numChars) ? DSZ_CLIBCORE_ADDRESS_STREET_SIZE : numChars;
-    strncpy(pCoreAddress->Street, street, numChars);
+    strncpy(pCoreAddress->Street, street, DSZ_CLIBCORE_ADDRESS_STREET_SIZE);
+    pCoreAddress->Street[DSZ_CLIBCORE_ADDRESS_STREET_SIZE - 1] = '\0';
 
-    numChars = strlen(city);
-    numChars = (DSZ_CLIBCORE_ADDRESS_CITY_SIZE < numChars) ? DSZ_CLIBCORE_ADDRESS_CITY_SIZE : numChars;
-    strncpy(pCoreAddress->City, city, numChars);
+    strncpy(pCoreAddress->City, city, DSZ_CLIBCORE_ADDRESS_CITY_SIZE);
+    pCoreAddress->City[DSZ_CLIBCORE_ADDRESS_CITY_SIZE - 1] = '\0';
 
-    numChars = strlen(province);
-    numChars = (DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE < numChars) ? DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE : numChars;
-    strncpy(pCoreAddress->Province, province, numChars);
+    strncpy(pCoreAddress->Province, province, DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE);
+    pCoreAddress->Province[DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE - 1] = '\0';
 
-    numChars = strlen(zipCode);
-    numChars = (DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE < numChars) ? DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE : numChars;
-    strncpy(pCoreAddress->ZipCode, zipCode, numChars);
+    strncpy(pCoreAddress->ZipCode, zipCode, DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE);
+    pCoreAddress->ZipCode[DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE - 1] = '\0';
 
-    numChars = strlen(country);
-    numChars = (DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE < numChars) ? DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE : numChars;
-    strncpy(pCoreAddress->Country, country, numChars);
+    strncpy(pCoreAddress->Country, country, DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE);
+    pCoreAddress->Country[DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE - 1] = '\0';
 
     *pAddress = (DszCLibAddress) pCoreAddress; /* DszCLibAddress is an opaque pointer to DszCLibCoreAddress */
 
@@ -303,8 +287,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetStreet(
     numChars = strlen(pCoreAddress->Street);
 
     if ((pStreet != NULL) && (streetSize > 0)) {
-        numChars = (streetSize < numChars) ? streetSize : numChars;
-        strncpy(pStreet, pCoreAddress->Street, numChars);
+        strncpy(pStreet, pCoreAddress->Street, streetSize);
         pStreet[streetSize - 1] = '\0';
         numChars = strlen(pStreet);
     }
@@ -329,8 +312,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCity(
     numChars = strlen(pCoreAddress->City);
 
     if ((pCity != NULL) && (citySize > 0)) {
-        numChars = (citySize < numChars) ? citySize : numChars;
-        strncpy(pCity, pCoreAddress->City, numChars);
+        strncpy(pCity, pCoreAddress->City, citySize);
         pCity[citySize - 1] = '\0';
         numChars = strlen(pCity);
     }
@@ -355,8 +337,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetProvince(
     numChars = strlen(pCoreAddress->Province);
 
     if ((pProvince != NULL) && (provinceSize > 0)) {
-        numChars = (provinceSize < numChars) ? provinceSize : numChars;
-        strncpy(pProvince, pCoreAddress->Province, numChars);
+        strncpy(pProvince, pCoreAddress->Province, provinceSize);
         pProvince[provinceSize - 1] = '\0';
         numChars = strlen(pProvince);
     }
@@ -381,8 +362,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetZipCode(
     numChars = strlen(pCoreAddress->ZipCode);
 
     if ((pZipCode != NULL) && (zipCodeSize > 0)) {
-        numChars = (zipCodeSize < numChars) ? zipCodeSize : numChars;
-        strncpy(pZipCode, pCoreAddress->ZipCode, numChars);
+        strncpy(pZipCode, pCoreAddress->ZipCode, zipCodeSize);
         pZipCode[zipCodeSize - 1] = '\0';
         numChars = strlen(pZipCode);
     }
@@ -407,7 +387,6 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressGetCountry(
     numChars = strlen(pCoreAddress->Country);
 
     if ((pCountry != NULL) && (countrySize > 0)) {
-        numChars = (countrySize < numChars) ? countrySize : numChars;
         strncpy(pCountry, pCoreAddress->Country, countrySize);
         pCountry[countrySize - 1] = '\0';
         numChars = strlen(pCountry);
@@ -445,8 +424,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
     numChars = strlen(coreAddressString);
 
     if ((pAddressString != NULL) && (addressStringSize > 0)) {
-        numChars = (addressStringSize < numChars) ? addressStringSize : numChars;
-        strncpy(pAddressString, coreAddressString, numChars);
+        strncpy(pAddressString, coreAddressString, addressStringSize);
         pAddressString[addressStringSize - 1] = '\0';
         numChars = strlen(pAddressString);
     }
@@ -468,7 +446,6 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
     DszCLibErrorNum errorNum = DSZ_CLIBCORE_ERRORNUM_NO_ERROR;
     DszCLibCoreAddressPtr pCoreAddress = (DszCLibCoreAddressPtr) address;
     DszCLibCoreAddressPtr pCorePersonAddress = NULL;
-    size_t numChars = 0;
 
     if (pPerson == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_EXTERNAL_ERROR));
@@ -480,15 +457,11 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
     if (pCorePerson == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    memset((void*) pCorePerson, 0, sizeof (DszCLibCorePerson));
+    strncpy(pCorePerson->LastName, lastName, DSZ_CLIBCORE_PERSON_LASTNAME_SIZE);
+    pCorePerson->LastName[DSZ_CLIBCORE_PERSON_LASTNAME_SIZE - 1] = '\0';
 
-    numChars = strlen(lastName);
-    numChars = (DSZ_CLIBCORE_PERSON_LASTNAME_SIZE < numChars) ? DSZ_CLIBCORE_PERSON_LASTNAME_SIZE : numChars;
-    strncpy(pCorePerson->LastName, lastName, numChars);
-
-    numChars = strlen(firstName);
-    numChars = (DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE < numChars) ? DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE : numChars;
-    strncpy(pCorePerson->FirstName, firstName, numChars);
+    strncpy(pCorePerson->FirstName, firstName, DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE);
+    pCorePerson->FirstName[DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE - 1] = '\0';
 
     pCorePerson->Age = age;
 
@@ -543,8 +516,8 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetLastName(
     numChars = strlen(pCorePerson->LastName);
 
     if ((pLastName != NULL) && (lastNameSize > 0)) {
-        numChars = (lastNameSize < numChars) ? lastNameSize : numChars;
         strncpy(pLastName, pCorePerson->LastName, lastNameSize);
+        pLastName[lastNameSize - 1] = '\0';
         numChars = strlen(pLastName);
     }
 
@@ -568,8 +541,8 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonGetFirstName(
     numChars = strlen(pCorePerson->FirstName);
 
     if ((pFirstName != NULL) && (firstNameSize > 0)) {
-        numChars = (firstNameSize < numChars) ? firstNameSize : numChars;
         strncpy(pFirstName, pCorePerson->FirstName, firstNameSize);
+        pFirstName[firstNameSize - 1] = '\0';
         numChars = strlen(pFirstName);
     }
 
@@ -663,8 +636,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonToString(
     numChars = strlen(corePersonString);
 
     if ((pPersonString != NULL) && (personStringSize > 0)) {
-        numChars = (personStringSize < numChars) ? personStringSize : numChars;
-        strncpy(pPersonString, corePersonString, numChars);
+        strncpy(pPersonString, corePersonString, personStringSize);
         pPersonString[personStringSize - 1] = '\0';
         numChars = strlen(pPersonString);
     }
