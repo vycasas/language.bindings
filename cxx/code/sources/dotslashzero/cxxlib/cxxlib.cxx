@@ -409,12 +409,18 @@ namespace DotSlashZero::CxxLib
 
     Printer::Printer(IGenerator* pGenerator) :
         m_impl{ DSZ_CLIB_PRINTER_INVALID },
-        m_pGenerator{ pGenerator },
-        m_generatorImpl{ DSZ_CLIB_GENERATOR_INVALID }
+        m_pGenerator{ pGenerator }
     {
-        CreateGeneratorInstance__();
+        DszCLibGenerator generatorImpl = DSZ_CLIB_GENERATOR_INVALID;
 
-        auto errorNum = DszCLibPrinterCreate(m_generatorImpl, &m_impl);
+        auto errorNum = DszCLibGeneratorCreate(
+            (DszCLibGenerateIntFunction)& (Printer::GenerateIntRedirect__),
+            (DszCLibGenerateStringFunction)& (Printer::GenerateStringRedirect__),
+            &generatorImpl);
+
+        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+
+        errorNum = DszCLibPrinterCreate(generatorImpl, &m_impl); // note: this takes ownership of generatorImpl, so don't destroy the instance
 
         DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
@@ -447,21 +453,6 @@ namespace DotSlashZero::CxxLib
         auto errorNum = DszCLibPrinterPrintStringWithUserData(
             m_impl,
             const_cast<void*>(reinterpret_cast<void const*>(this)));
-
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
-
-        return;
-    }
-
-    void Printer::CreateGeneratorInstance__()
-    {
-        if (m_generatorImpl != DSZ_CLIB_GENERATOR_INVALID)
-            return;
-
-        auto errorNum = DszCLibGeneratorCreate(
-            (DszCLibGenerateIntFunction) &(Printer::GenerateIntRedirect__),
-            (DszCLibGenerateStringFunction) &(Printer::GenerateStringRedirect__),
-            &m_generatorImpl);
 
         DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
