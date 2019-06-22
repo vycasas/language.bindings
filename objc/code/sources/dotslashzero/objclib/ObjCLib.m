@@ -35,12 +35,9 @@
 {
     DszCLibPrinter m_impl;
     id<OLGenerator> m_generator;
-    DszCLibGenerator m_generatorImpl;
-    /* m_generatorImpl will be holding the redirect functions passed to the C library */
 }
 
 - (id<OLGenerator>) getGenerator;
-- (void) createGeneratorImplInstance;
 
 @end /* interface OLPrinter */
 
@@ -535,6 +532,7 @@ static void OLCorePrinterGenerateStringRedirect(
 - (instancetype) initWithGenerator: (id<OLGenerator>) generator
 {
     DszCLibErrorNum errorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibGenerator cGenerator = DSZ_CLIB_GENERATOR_INVALID;
 
     self = [super init];
     if (self == nil)
@@ -542,11 +540,17 @@ static void OLCorePrinterGenerateStringRedirect(
 
     m_generator = generator;
 
-    [self createGeneratorImplInstance];
+    errorNum = DszCLibGeneratorCreate(
+        (DszCLibGenerateIntFunction) &OLCorePrinterGenerateIntRedirect,
+        (DszCLibGenerateStringFunction) &OLCorePrinterGenerateStringRedirect,
+        &cGenerator);
+
+    DSZ_OBJCLIBCORE_API_CHECK(errorNum);
 
     errorNum = DszCLibPrinterCreate(
-        m_generatorImpl,
+        cGenerator,
         &m_impl);
+    /* DszCLibPrinterCreate will take ownership of cGenerator */
 
     DSZ_OBJCLIBCORE_API_CHECK(errorNum);
 
@@ -589,17 +593,4 @@ static void OLCorePrinterGenerateStringRedirect(
     return (m_generator);
 }
 
-- (void) createGeneratorImplInstance
-{
-    DszCLibErrorNum errorNum;
-
-    errorNum = DszCLibGeneratorCreate(
-        (DszCLibGenerateIntFunction) &OLCorePrinterGenerateIntRedirect,
-        (DszCLibGenerateStringFunction) &OLCorePrinterGenerateStringRedirect,
-        &m_generatorImpl);
-
-    DSZ_OBJCLIBCORE_API_CHECK(errorNum);
-
-    return;
-}
 @end /* implementation OLPrinter */
