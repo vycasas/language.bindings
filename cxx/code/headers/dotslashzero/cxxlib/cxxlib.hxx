@@ -143,8 +143,6 @@ namespace DotSlashZero::CxxLib
         DSZ_CXXLIB_API void PrintString(void) const;
 
     private:
-        void CreateGeneratorInstance__();
-
         // redirect functions for C interop
         static void GenerateIntRedirect__(
             int data,
@@ -159,7 +157,6 @@ namespace DotSlashZero::CxxLib
 
         DszCLibPrinter m_impl;
         std::unique_ptr<IGenerator> m_pGenerator;
-        DszCLibGenerator m_generatorImpl;
     };
     // class Printer
 }
