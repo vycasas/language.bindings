@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <string_view>
 
 #define DSZ_CXXLIBCORE_API_CHECK(errorNum) \
     if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) \
@@ -460,43 +461,43 @@ namespace DotSlashZero::CxxLib
     }
 
     /*static*/
-    void Printer::GenerateIntRedirect__(
+    DszCLibErrorNum Printer::GenerateIntRedirect__(
         int data,
         int* pInt,
         void* pUserData)
     {
         if (pUserData == nullptr)
-            return;
+            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
         if (pInt == nullptr)
-            return;
+            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
         auto pPrinter = reinterpret_cast<Printer*>(pUserData);
         auto& pGenerator = pPrinter->m_pGenerator; // note: this must be a reference to an std::unique_ptr! dangerous... watch out!
 
         if (!pGenerator)
-            return;
+            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
         *pInt = pGenerator->GenerateInt(data);
 
-        return;
+        return (DSZ_CLIB_ERRORNUM_NO_ERROR);
     }
 
     /*static*/
-    void Printer::GenerateStringRedirect__(
+    DszCLibErrorNum Printer::GenerateStringRedirect__(
         int data,
         char* pString, std::size_t stringSize,
         std::size_t* pCharsWritten,
         void* pUserData)
     {
         if (pUserData == nullptr)
-            return;
+            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
         auto pPrinter = reinterpret_cast<Printer*>(pUserData);
         auto& pGenerator = pPrinter->m_pGenerator; // note: this must be a reference to an std::unique_ptr! dangerous... watch out!
 
         if (!pGenerator)
-            return;
+            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
         auto generatedString = pGenerator->GenerateString(data);
 
@@ -507,7 +508,7 @@ namespace DotSlashZero::CxxLib
             auto const COPY_COUNT = (std::min)(stringSize, generatedString.size());
             std::copy_n(generatedString.cbegin(), COPY_COUNT, pString);
             pString[stringSize - 1] = '\0';
-            numChars = COPY_COUNT;
+            numChars = std::string_view(pString).size();
         }
         else {
             numChars = generatedString.size();
@@ -516,7 +517,7 @@ namespace DotSlashZero::CxxLib
         if (pCharsWritten != nullptr)
             *pCharsWritten = numChars;
 
-        return;
+        return (DSZ_CLIB_ERRORNUM_NO_ERROR);
     }
 }
 // namespace DotSlashZero::CXXLib
