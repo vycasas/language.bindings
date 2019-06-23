@@ -6,7 +6,7 @@
 
 #if defined(__cplusplus)
 #error Please use pure C compiler for this file.
-#endif /* defined(__cplusplus) */ 
+#endif /* defined(__cplusplus) */
 
 #define DSZ_OBJCLIBCORE_API_CHECK(errorNum) \
     if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) \
@@ -46,7 +46,7 @@
 /* -------- */
 /* internal helper functions that bridges C and Objective-C types */
 
-static void OLCorePrinterGenerateIntRedirect(
+static DszCLibErrorNum OLCorePrinterGenerateIntRedirect(
     int data,
     int* pInt,
     void* pUserData)
@@ -55,23 +55,23 @@ static void OLCorePrinterGenerateIntRedirect(
     id<OLGenerator> olGenerator = nil;
 
     if (pUserData == NULL)
-        return;
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
     if (pInt == NULL)
-        return;
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
     olPrinter = (__bridge OLPrinter*) pUserData; /* __bridge = no transfer of ownership */
     olGenerator = [olPrinter getGenerator];
 
     if (olGenerator == nil)
-        return;
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
     *pInt = [olGenerator generateIntWithData: data];
 
-    return;
+    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
 }
 
-static void OLCorePrinterGenerateStringRedirect(
+static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
     int data,
     char* pString, size_t stringSize,
     size_t* pCharsWritten,
@@ -84,18 +84,18 @@ static void OLCorePrinterGenerateStringRedirect(
     size_t numChars = 0;
 
     if (pUserData == NULL)
-        return;
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
     olPrinter = (__bridge OLPrinter*) pUserData; /* __bridge = no transfer of ownership */
     olGenerator = [olPrinter getGenerator];
 
     if (olGenerator == nil)
-        return;
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
     nsGeneratedString = [olGenerator generateStringWithData: data];
 
     if (nsGeneratedString == nil)
-        return;
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
     cGeneratedString = [nsGeneratedString UTF8String];
     numChars = strlen(cGeneratedString);
@@ -109,7 +109,7 @@ static void OLCorePrinterGenerateStringRedirect(
     if (pCharsWritten != NULL)
         *pCharsWritten = numChars;
 
-    return;
+    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
 }
 
 /* -------- */
@@ -179,7 +179,7 @@ static void OLCorePrinterGenerateStringRedirect(
 
     errorNum = DszCLibLibraryGetVersionMajor(&versionMajor);
 
-    DSZ_OBJCLIBCORE_API_CHECK(errorNum);    
+    DSZ_OBJCLIBCORE_API_CHECK(errorNum);
 
     return ((NSUInteger) versionMajor);
 }
@@ -191,7 +191,7 @@ static void OLCorePrinterGenerateStringRedirect(
 
     errorNum = DszCLibLibraryGetVersionMinor(&versionMinor);
 
-    DSZ_OBJCLIBCORE_API_CHECK(errorNum);    
+    DSZ_OBJCLIBCORE_API_CHECK(errorNum);
 
     return ((NSUInteger) versionMinor);
 }
@@ -203,7 +203,7 @@ static void OLCorePrinterGenerateStringRedirect(
 
     errorNum = DszCLibLibraryGetVersionPatch(&versionPatch);
 
-    DSZ_OBJCLIBCORE_API_CHECK(errorNum);    
+    DSZ_OBJCLIBCORE_API_CHECK(errorNum);
 
     return ((NSUInteger) versionPatch);
 }
