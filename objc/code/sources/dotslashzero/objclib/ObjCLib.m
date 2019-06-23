@@ -51,7 +51,6 @@ static DszCLibErrorNum OLCorePrinterGenerateIntRedirect(
     int* pInt,
     void* pUserData)
 {
-    OLPrinter* olPrinter = nil;
     id<OLGenerator> olGenerator = nil;
 
     if (pUserData == NULL)
@@ -60,8 +59,7 @@ static DszCLibErrorNum OLCorePrinterGenerateIntRedirect(
     if (pInt == NULL)
         return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
-    olPrinter = (__bridge OLPrinter*) pUserData; /* __bridge = no transfer of ownership */
-    olGenerator = [olPrinter getGenerator];
+    olGenerator = (__bridge id<OLGenerator>) pUserData; /* __bridge = no transfer of ownership */
 
     if (olGenerator == nil)
         return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
@@ -77,7 +75,6 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
     size_t* pCharsWritten,
     void* pUserData)
 {
-    OLPrinter* olPrinter = nil;
     id<OLGenerator> olGenerator = nil;
     NSString* nsGeneratedString = nil;
     char const* cGeneratedString = NULL;
@@ -86,8 +83,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
     if (pUserData == NULL)
         return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
-    olPrinter = (__bridge OLPrinter*) pUserData; /* __bridge = no transfer of ownership */
-    olGenerator = [olPrinter getGenerator];
+    olGenerator = (__bridge id<OLGenerator>) pUserData; /* __bridge = no transfer of ownership */
 
     if (olGenerator == nil)
         return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
@@ -569,8 +565,9 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 - (void) printInt
 {
     DszCLibErrorNum errorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    id<OLGenerator> generator = [self getGenerator];
 
-    errorNum = DszCLibPrinterPrintIntWithUserData(m_impl, (__bridge void*) self);
+    errorNum = DszCLibPrinterPrintIntWithUserData(m_impl, (__bridge void*) generator);
 
     DSZ_OBJCLIBCORE_API_CHECK(errorNum);
 
@@ -580,8 +577,9 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 - (void) printString
 {
     DszCLibErrorNum errorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    id<OLGenerator> generator = [self getGenerator];
 
-    errorNum = DszCLibPrinterPrintStringWithUserData(m_impl, (__bridge void*) self);
+    errorNum = DszCLibPrinterPrintStringWithUserData(m_impl, (__bridge void*) generator);
 
     DSZ_OBJCLIBCORE_API_CHECK(errorNum);
 
