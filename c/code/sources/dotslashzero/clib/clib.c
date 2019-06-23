@@ -2,6 +2,7 @@
 
 #include <dotslashzero/lb_common/version.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -733,6 +734,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintIntWithUserData(
     DszCLibPrinter printer,
     void* pUserData)
 {
+    DszCLibErrorNum errorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
     DszCLibCorePrinterPtr pCorePrinter = (DszCLibCorePrinterPtr) printer;
     DszCLibCoreGeneratorPtr pCoreGenerator = NULL;
     DszCLibCoreGenerateIntFunction fnCoreGenerateInt = NULL;
@@ -752,7 +754,11 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintIntWithUserData(
     if (fnCoreGenerateInt == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    fnCoreGenerateInt((int) data, &generatedInt, pUserData);
+    errorNum = fnCoreGenerateInt((int) data, &generatedInt, pUserData);
+
+    if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        return (errorNum);
+
     fprintf(stdout, "The value of int is: %d\n", generatedInt);
 
     return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
@@ -770,6 +776,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintStringWithUserData(
 {
     size_t const GENERATED_STRING_SIZE_EXTRA = 8; /* for buffer safety */
 
+    DszCLibErrorNum errorNum = DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR);
     DszCLibCorePrinterPtr pCorePrinter = (DszCLibCorePrinterPtr) printer;
     DszCLibCoreGeneratorPtr pCoreGenerator = NULL;
     DszCLibCoreGenerateStringFunction fnCoreGenerateString = NULL;
@@ -790,26 +797,39 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterPrintStringWithUserData(
     if (fnCoreGenerateString == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    fnCoreGenerateString(data, NULL, 0, &generatedStringSize, pUserData);
+    /* note: the "do {...} while (false);"" usage here is a way to mimic RAII in pure C */
+    do {
+        errorNum = fnCoreGenerateString(data, NULL, 0, &generatedStringSize, pUserData);
 
-    if (generatedStringSize == 0)
-        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+        if (generatedStringSize == 0) {
+            errorNum = DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR);
+            break;
+        }
 
-    generatedStringSize += GENERATED_STRING_SIZE_EXTRA; /* for buffer safety */
+        generatedStringSize += GENERATED_STRING_SIZE_EXTRA; /* for buffer safety */
 
-    pGeneratedString = (char*) malloc((sizeof (char)) * (generatedStringSize));
+        pGeneratedString = (char*) malloc((sizeof (char)) * (generatedStringSize));
 
-    if (pGeneratedString == NULL)
-        return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
+        if (pGeneratedString == NULL) {
+            errorNum = DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR);
+            break;
+        }
 
-    memset(pGeneratedString, 0, generatedStringSize);
+        memset(pGeneratedString, 0, generatedStringSize);
 
-    fnCoreGenerateString((int) data, pGeneratedString, generatedStringSize, NULL, pUserData);
-    pGeneratedString[generatedStringSize - 1] = '\0';
+        errorNum = fnCoreGenerateString((int) data, pGeneratedString, generatedStringSize, NULL, pUserData);
 
-    fprintf(stdout, "The value of string is: %s\n", pGeneratedString);
+        if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            break;
 
-    free(pGeneratedString);
+        pGeneratedString[generatedStringSize - 1] = '\0';
 
-    return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_NO_ERROR));
+        fprintf(stdout, "The value of string is: %s\n", pGeneratedString);
+    }
+    while (false);
+
+    if (pGeneratedString != NULL)
+        free(pGeneratedString);
+
+    return (errorNum);
 }
