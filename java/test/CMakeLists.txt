@@ -9,8 +9,7 @@ if (UNIX)
             -cp ${CMAKE_BINARY_DIR}:$<TARGET_FILE_DIR:javalib>/JavaLib.jar ${TEST_JAVA_SOURCES}
         SOURCES ${TEST_JAVA_SOURCES}
         DEPENDS ${TEST_JAVA_SOURCES}
-        VERBATIM
-    )
+        VERBATIM)
 elseif (WIN32)
     add_custom_target(
         javalib_test ALL
@@ -18,7 +17,6 @@ elseif (WIN32)
             -cp "${CMAKE_BINARY_DIR};$<TARGET_FILE_DIR:javalib>/JavaLib.jar" ${TEST_JAVA_SOURCES}
         DEPENDS ${TEST_JAVA_SOURCES}
         SOURCES ${TEST_JAVA_SOURCES}
-        VERBATIM
-    )
+        VERBATIM)
 endif ()
 add_dependencies(javalib_test javalib_jar)
