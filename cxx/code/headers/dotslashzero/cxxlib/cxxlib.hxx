@@ -144,12 +144,12 @@ namespace DotSlashZero::CxxLib
 
     private:
         // redirect functions for C interop
-        static void GenerateIntRedirect__(
+        static DszCLibErrorNum GenerateIntRedirect__(
             int data,
             int* pInt,
             void* pUserData);
 
-        static void GenerateStringRedirect__(
+        static DszCLibErrorNum GenerateStringRedirect__(
             int data,
             char* pString, std::size_t stringSize,
             std::size_t* pCharsWritten,
