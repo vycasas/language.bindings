@@ -1,1091 +1,1569 @@
-// Compile with C++ compiler
+#include <dotslashzero/javalib/javalib.h>
 
-#include "api_java.hxx"
+#include <dotslashzero/clib/clib.h>
 
-#include <algorithm>
-#include <codecvt>
-#include <cstdint>
-#include <locale>
-#include <memory>
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
-#include <api.hxx>
+#if defined(__cplusplus)
+#error Please use pure C compiler for this file.
+#endif /* defined(__cplusplus) */
 
-// helper macros
-#define GET_CORE_CLASS_PTR(impl, T) \
-    reinterpret_cast<T*>(static_cast<std::uintptr_t>(impl))
+#define DSZ_JAVALIBCORE_INLINE inline
 
-#define GET_CORE_EXCEPTION_PTR(impl) GET_CORE_CLASS_PTR(impl, CXXLib::Exception)
-#define GET_CORE_ADDRESS_PTR(impl) GET_CORE_CLASS_PTR(impl, CXXLib::Address)
-#define GET_CORE_PERSON_PTR(impl) GET_CORE_CLASS_PTR(impl, CXXLib::Person)
-#define GET_CORE_PRINTER_PTR(impl) GET_CORE_CLASS_PTR(impl, CXXLib::Printer)
-
-#define BEGIN_EX_GUARD(jenv) \
-    try {
-#define END_EX_GUARD(jenv) \
-    } \
-    catch (CXXLib::Exception& e) { \
-        jthrowable jniEx = JavaLibCore::MakeJNIException(jenv, e); \
-        if (jniEx == nullptr) \
-            return (2); \
-        jenv->Throw(jniEx); \
-    } \
-    catch (std::exception& e) { \
-        jthrowable jniEx = JavaLibCore::MakeJNIException(jenv, CXXLib::Exception(e)); \
-        if (jniEx == nullptr) \
-            return (2); \
-        jenv->Throw(jniEx); \
-    }
-
-namespace JavaLibCore
-{
-	namespace Utils
-	{
-		inline std::u16string ConvertToU16string(std::string const& str)
-		{
 #if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable:4996)
-#endif // defined(_MSC_VER)
-			std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> strConverter; // note: deprecated since C++17 warnings are being suppressed for this
-			auto wstrString = strConverter.from_bytes(str.c_str());
-			std::u16string result(wstrString.size(), u'\0');
-			for (std::size_t i = 0; i < wstrString.size(); i++)
-			{
-				result[i] = static_cast<char16_t>(wstrString[i]);
-			}
-			return (result);
+#undef strncpy
+#define strncpy(buffer, source, bufferSize) strncpy_s(buffer, bufferSize, source, _TRUNCATE)
+#undef DSZ_JAVALIBCORE_INLINE
+#define DSZ_JAVALIBCORE_INLINE __inline
+#endif /* defined(_MSC_VER) */
+
+#define DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum) ((jlong) errorNum)
+
+typedef jlong DszJavaLibCoreErrorNum;
+static DszJavaLibCoreErrorNum const DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR               = 0x00000000;
+static DszJavaLibCoreErrorNum const DSZ_JAVALIBCORE_ERRORNUM_CLIB_ERROR             = 0x00010000;
+static DszJavaLibCoreErrorNum const DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR = 0x00020000;
+static DszJavaLibCoreErrorNum const DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR      = 0x00040000;
+
 #if defined(_MSC_VER)
-#pragma warning(pop)
-#endif // defined(_MSC_VER)
-		}
-	} // namespace Utils
+#define DSZ_JAVALIBCORE_ERRORNUM_MESSAGE_SIZE 16
+#define DSZ_JAVALIBCORE_LIBRARY_VERSION_STRING_SIZE 16
+#define DSZ_JAVALIBCORE_LIBRARY_VERSION_EXTRA_SIZE 16
+#define DSZ_JAVALIBCORE_ADDRESS_STREET_SIZE 40
+#define DSZ_JAVALIBCORE_ADDRESS_CITY_SIZE 16
+#define DSZ_JAVALIBCORE_ADDRESS_PROVINCE_SIZE 16
+#define DSZ_JAVALIBCORE_ADDRESS_ZIPCODE_SIZE 8
+#define DSZ_JAVALIBCORE_ADDRESS_COUNTRY_SIZE 16
+#define DSZ_JAVALIBCORE_ADDRESS_STRING_SIZE 128
+#define DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE 24
+#define DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE 24
+#define DSZ_JAVALIBCORE_PERSON_STRING_SIZE 256
+#else /* defined(_MSC_VER) */
+static size_t const DSZ_JAVALIBCORE_ERRORNUM_MESSAGE_SIZE = 16;
+static size_t const DSZ_JAVALIBCORE_LIBRARY_VERSION_STRING_SIZE = 16;
+static size_t const DSZ_JAVALIBCORE_LIBRARY_VERSION_EXTRA_SIZE = 16;
+static size_t const DSZ_JAVALIBCORE_ADDRESS_STREET_SIZE = 40;
+static size_t const DSZ_JAVALIBCORE_ADDRESS_CITY_SIZE = 16;
+static size_t const DSZ_JAVALIBCORE_ADDRESS_PROVINCE_SIZE = 16;
+static size_t const DSZ_JAVALIBCORE_ADDRESS_ZIPCODE_SIZE = 8;
+static size_t const DSZ_JAVALIBCORE_ADDRESS_COUNTRY_SIZE = 16;
+static size_t const DSZ_JAVALIBCORE_ADDRESS_STRING_SIZE = 128;
+static size_t const DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE = 24;
+static size_t const DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE = 24;
+static size_t const DSZ_JAVALIBCORE_PERSON_STRING_SIZE = 256;
+#endif /* defined(_MSC_VER) */
 
-    jthrowable MakeJNIException(JNIEnv* jenv, const CXXLib::Exception& e)
-    {
-        jclass javaLibExceptionClass = jenv->FindClass("net/dotslashzero/javalib/JavaLibException");
+/* ------- */
+/* internal core types */
 
-        if (javaLibExceptionClass == nullptr)
-            return (nullptr);
+typedef struct DszJavaLibCorePrinterUserData_
+{
+    JNIEnv* JavaEnv;
+    jobject Generator;
+}
+DszJavaLibCorePrinterUserData;
 
-        jmethodID constructorID = jenv->GetMethodID(javaLibExceptionClass, "<init>", "(J)V");
+typedef DszJavaLibCorePrinterUserData* DszJavaLibCorePrinterUserDataPtr;
 
-        if (constructorID == nullptr)
-            return (nullptr);
+/* ------- */
 
-        std::unique_ptr<CXXLib::Exception> coreExPtr(new CXXLib::Exception(e));
+/* ------- */
+/* internal core functions */
 
-        jthrowable result = static_cast<jthrowable>(
-            jenv->NewObject(
-                javaLibExceptionClass,
-                constructorID,
-                reinterpret_cast<jlong>(coreExPtr.get())
-            )
-        );
+static DSZ_JAVALIBCORE_INLINE bool DszJavaLibCoreIsCLibError(
+    DszJavaLibCoreErrorNum errorNum)
+{
+    DszJavaLibCoreErrorNum test = (errorNum & DSZ_JAVALIBCORE_ERRORNUM_CLIB_ERROR);
+    return (test != 0);
+}
 
-        if (result != nullptr)
-            coreExPtr.release();
+static DSZ_JAVALIBCORE_INLINE DszJavaLibCoreErrorNum DszJavaLibCoreConvertCLibErrorNum(
+    DszCLibErrorNum cLibErrorNum)
+{
+    return ((DszJavaLibCoreErrorNum) (DSZ_JAVALIBCORE_ERRORNUM_CLIB_ERROR | cLibErrorNum));
+}
 
-        return (result);
+static DSZ_JAVALIBCORE_INLINE DszCLibErrorNum DszJavaLibCoreConvertJavaLibCoreErrorNum(
+    DszJavaLibCoreErrorNum javaLibCoreErrorNum)
+{
+    return ((DszCLibErrorNum) (javaLibCoreErrorNum ^ DSZ_JAVALIBCORE_ERRORNUM_CLIB_ERROR));
+}
+
+static DSZ_JAVALIBCORE_INLINE char const* DszJavaLibCoreGetErrorMessage(
+    DszJavaLibCoreErrorNum errorNum)
+{
+    if (errorNum == DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR) {
+        return ("No error.");
+    }
+    if (errorNum == DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR) {
+        return ("Internal JNI error.");
+    }
+    if (errorNum == DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR) {
+        return ("JNI error.");
+    }
+    return ("Unknown error.");
+}
+
+static DszJavaLibCoreErrorNum DszJavaLibCoreNativeTypeSetAddress(
+    JNIEnv* pEnv,
+    jobject nativeType,
+    uintptr_t value)
+{
+    JNIEnv pEnvActual = NULL;
+    jclass nativeTypeClass = NULL; /* net.dotslashzero.javalib.Core.NativeType */
+    jmethodID nativeTypeSetAddressId = NULL;
+
+    assert(pEnv != NULL);
+    assert(nativeType != NULL);
+
+    pEnvActual = *pEnv;
+
+    if (pEnvActual == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    nativeTypeClass = pEnvActual->FindClass(pEnv, "net/dotslashzero/javalib/Core$NativeType");
+    if (nativeTypeClass == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    nativeTypeSetAddressId = pEnvActual->GetMethodID(pEnv, nativeTypeClass, "setAddress", "(J)V");
+
+    if (nativeTypeSetAddressId == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    pEnvActual->CallVoidMethod(pEnv, nativeType, nativeTypeSetAddressId, (jlong) value);
+
+    return (DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR);
+}
+
+static DszJavaLibCoreErrorNum DszJavaLibCoreWrappedStringSetString(
+    JNIEnv* pEnv,
+    jobject wrappedString,
+    char const* value)
+{
+    JNIEnv pEnvActual = NULL;
+    jclass wrappedStringClass = NULL; /* net.dotslashzero.javalib.Core.WrappedString */
+    jmethodID wrappedStringSetStringId = NULL;
+    jstring stringValue = NULL;
+
+    assert(pEnv != NULL);
+    assert(wrappedString != NULL);
+
+    pEnvActual = *pEnv;
+
+    if (pEnvActual == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    wrappedStringClass = pEnvActual->FindClass(pEnv, "net/dotslashzero/javalib/Core$WrappedString");
+
+    if (wrappedStringClass == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    wrappedStringSetStringId = pEnvActual->GetMethodID(pEnv, wrappedStringClass, "setString", "(Ljava/lang/String;)V");
+
+    if (wrappedStringSetStringId == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    stringValue = pEnvActual->NewStringUTF(pEnv, value);
+
+    pEnvActual->CallVoidMethod(pEnv, wrappedString, wrappedStringSetStringId, stringValue);
+
+    pEnvActual->DeleteLocalRef(pEnv, stringValue);
+
+    return (DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR);
+}
+
+static DszJavaLibCoreErrorNum DszJavaLibCoreWrappedLongSetLong(
+    JNIEnv* pEnv,
+    jobject wrappedLong,
+    long value)
+{
+    JNIEnv pEnvActual = NULL;
+    jclass wrappedLongClass = NULL; /* net.dotslashzero.javalib.Core.WrappedLong */
+    jmethodID wrappedLongSetLongId = NULL;
+
+    assert(pEnv != NULL);
+    assert(wrappedLong != NULL);
+
+    pEnvActual = *pEnv;
+
+    if (pEnvActual == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    wrappedLongClass = pEnvActual->FindClass(pEnv, "net/dotslashzero/javalib/Core$WrappedLong");
+
+    if (wrappedLongClass == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    wrappedLongSetLongId = pEnvActual->GetMethodID(pEnv, wrappedLongClass, "setLong", "(J)V");
+
+    if (wrappedLongSetLongId == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    pEnvActual->CallVoidMethod(pEnv, wrappedLong, wrappedLongSetLongId, (jlong) value);
+
+    return (DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR);
+}
+
+static DszJavaLibCoreErrorNum DszJavaLibCoreWrappedIntegerSetInt(
+    JNIEnv* pEnv,
+    jobject wrappedInteger,
+    int value)
+{
+    JNIEnv pEnvActual = NULL;
+    jclass wrappedIntegerClass = NULL; /* net.dotslashzero.javalib.Core.WrappedInteger */
+    jmethodID wrappedIntegerSetIntId = NULL;
+
+    assert(pEnv != NULL);
+    assert(wrappedInteger != NULL);
+
+    pEnvActual = *pEnv;
+
+    if (pEnvActual == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    wrappedIntegerClass = pEnvActual->FindClass(pEnv, "net/dotslashzero/javalib/Core$WrappedInteger");
+
+    if (wrappedIntegerClass == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    wrappedIntegerSetIntId = pEnvActual->GetMethodID(pEnv, wrappedIntegerClass, "setInt", "(J)V");
+
+    if (wrappedIntegerSetIntId == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    pEnvActual->CallVoidMethod(pEnv, wrappedInteger, wrappedIntegerSetIntId, (jint) value);
+
+    return (DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR);
+}
+
+static DszJavaLibCoreErrorNum DszJavaLibCoreCopyJStringToCString(
+    JNIEnv* pEnv,
+    jstring jString,
+    char* pCString,
+    size_t cStringSize,
+    size_t* pCharsWritten)
+{
+    JNIEnv pEnvActual = NULL;
+    char const* pJString = NULL;
+    jsize jStringSize = 0;
+    size_t numChars = 0;
+
+    assert(pEnv != NULL);
+    assert(jString != NULL);
+
+    pEnvActual = *pEnv;
+
+    if (pEnvActual == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    jStringSize = pEnvActual->GetStringUTFLength(pEnv, jString);
+
+    if (jStringSize == 0)
+        return (DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR);
+
+    pJString = pEnvActual->GetStringUTFChars(pEnv, jString, NULL);
+
+    if (pJString == NULL)
+        return (DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_INTERNAL_ERROR);
+
+    numChars = (size_t) jStringSize;
+
+    if ((pCString != NULL) && (cStringSize > 0)) {
+        strncpy(pCString, pJString, cStringSize);
+        pCString[cStringSize - 1] = '\0';
+        numChars = strlen(pCString);
     }
 
-    class JavaLibException final : public CXXLib::Exception
-    {
-    public:
-        JavaLibException(void) : CXXLib::Exception()
-        { return; }
+    pEnvActual->ReleaseStringUTFChars(pEnv, jString, pJString);
 
-        JavaLibException(CLibErrNum errNum) : CXXLib::Exception(errNum)
-        { return; }
-    }; // class Exception
+    if (pCharsWritten != NULL)
+        *pCharsWritten = numChars;
 
-    class JavaLibGeneratorImpl final : public CXXLib::GeneratorBase
-    {
-    public:
-        JavaLibGeneratorImpl(JNIEnv* jenv, jobject impl);
+    return (DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR);
+}
 
-        virtual ~JavaLibGeneratorImpl(void) override;
+static DszCLibErrorNum DszJavaLibCorePrinterGenerateIntRedirect(
+    int data,
+    int* pInt,
+    void* pUserData)
+{
+    /* note: do not assert here because this function will be passed to the C library */
+    DszJavaLibCorePrinterUserDataPtr pPrinterUserData = (DszJavaLibCorePrinterUserDataPtr) pUserData;
+    JNIEnv* pEnv = NULL;
+    jobject generator = NULL;
+    JNIEnv pEnvActual = NULL;
+    jclass iGeneratorInterface = NULL;
+    jmethodID iGeneratorGenerateIntId = NULL;
+    jint generatedInt = 0;
 
-        virtual int generateInt(int data) const override;
-        virtual std::string generateString(int data) const override;
+    if (pPrinterUserData == NULL)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
 
-        JNIEnv* _jenv;
-        jobject _impl;
-    }; // class JavaLibGeneratorImpl
+    pEnv = pPrinterUserData->JavaEnv;
+    generator = pPrinterUserData->Generator;
 
-    JavaLibGeneratorImpl::JavaLibGeneratorImpl(JNIEnv* jenv, jobject impl) :
-        _jenv(jenv)
-    {
-        // Inform JVM to make this object as "do not garbage collect!"
-        _impl = _jenv->NewGlobalRef(impl);
-        return;
+    if ((pEnv == NULL) || (generator == NULL))
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    if (pInt == NULL)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    pEnvActual = *pEnv;
+
+    iGeneratorInterface = pEnvActual->FindClass(
+        pEnv,
+        "net/dotslashzero/javalib/IGenerator");
+
+    if (iGeneratorInterface == NULL)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    iGeneratorGenerateIntId = pEnvActual->GetMethodID(
+        pEnv,
+        iGeneratorInterface,
+        "generateInt",
+        "(I)I");
+
+    if (iGeneratorGenerateIntId == NULL)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    generatedInt = pEnvActual->CallIntMethod(
+        pEnv,
+        generator,
+        iGeneratorGenerateIntId,
+        (jint) data);
+
+    *pInt = (int) generatedInt;
+
+    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+}
+
+static DszCLibErrorNum DszJavaLibCorePrinterGenerateStringRedirect(
+    int data,
+    char* pString, size_t stringSize,
+    size_t* pCharsWritten,
+    void* pUserData)
+{
+    /* note: do not assert here because this function will be passed to the C library */
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszJavaLibCorePrinterUserDataPtr pPrinterUserData = (DszJavaLibCorePrinterUserDataPtr) pUserData;
+    JNIEnv* pEnv = NULL;
+    jobject generator = NULL;
+    JNIEnv pEnvActual = NULL;
+    jclass iGeneratorInterface = NULL;
+    jmethodID iGeneratorGenerateStringId = NULL;
+    jstring generatedString = NULL;
+
+    if (pPrinterUserData == NULL)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    pEnv = pPrinterUserData->JavaEnv;
+    generator = pPrinterUserData->Generator;
+
+    if ((pEnv == NULL) || (generator == NULL))
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    pEnvActual = *pEnv;
+
+    iGeneratorInterface = pEnvActual->FindClass(
+        pEnv,
+        "net/dotslashzero/javalib/IGenerator");
+
+    if (iGeneratorInterface == NULL)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    iGeneratorGenerateStringId = pEnvActual->GetMethodID(
+        pEnv,
+        iGeneratorInterface,
+        "generateString",
+        "(I)Ljava/lang/String;");
+
+    if (iGeneratorGenerateStringId == NULL)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    /* note: the casting to jstring below may not work in C++ */
+    generatedString = (jstring) pEnvActual->CallObjectMethod(
+        pEnv,
+        generator,
+        iGeneratorGenerateStringId,
+        (jint) data);
+
+    if (generatedString == NULL)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    errorNum = DszJavaLibCoreCopyJStringToCString(
+        pEnv,
+        generatedString,
+        pString,
+        stringSize,
+        pCharsWritten);
+
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+}
+
+/* ------- */
+
+/* ------- */
+/* JNIEXPORT functions */
+
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetErrorMessage(
+    JNIEnv* pEnv,
+    jclass javaLibExceptionClass,
+    jlong errorNum,
+    jobject errorMessageWrappedString)
+{
+    char errorNumString[DSZ_JAVALIBCORE_ERRORNUM_MESSAGE_SIZE];
+    char const* pErrorMessage = NULL;
+
+    (void) javaLibExceptionClass;
+
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (errorMessageWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    if (DszJavaLibCoreIsCLibError(errorNum)) {
+        DszCLibErrorNum cLibErrorNum = DszJavaLibCoreConvertJavaLibCoreErrorNum(errorNum);
+        DszCLibErrorNumGetMessage(
+            cLibErrorNum,
+            errorNumString, DSZ_JAVALIBCORE_ERRORNUM_MESSAGE_SIZE,
+            NULL);
+
+        errorNumString[DSZ_JAVALIBCORE_ERRORNUM_MESSAGE_SIZE - 1] = '\0';
+
+        pErrorMessage = errorNumString;
+    }
+    else {
+        pErrorMessage = DszJavaLibCoreGetErrorMessage(errorNum);
     }
 
-    JavaLibGeneratorImpl::~JavaLibGeneratorImpl(void)
-    {
-        // Inform JVM that this object can be cleaned by garbage collector.
-        _jenv->DeleteGlobalRef(_impl);
-        return;
+    DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        errorMessageWrappedString,
+        pErrorMessage);
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
+}
+
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeInitialize(
+    JNIEnv* pEnv,
+    jclass libraryClass)
+{
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+
+    (void) pEnv;
+    (void) libraryClass;
+
+    cLibErrorNum = DszCLibLibraryInitialize();
+
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        DszJavaLibCoreErrorNum errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
     }
 
-    int JavaLibGeneratorImpl::generateInt(int data) const
-    {
-        if (_jenv == nullptr || _impl == nullptr) {
-            throw (JavaLibException(2));
-        }
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
+}
 
-        jclass igeneratorClass /* net.dotslashzero.javalib.IGenerator */ =
-            _jenv->FindClass("net/dotslashzero/javalib/IGenerator");
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeUninitialize(
+    JNIEnv* pEnv,
+    jclass libraryClass)
+{
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-        if (igeneratorClass == nullptr) {
-            throw (JavaLibException(2));
-        }
+    (void) pEnv;
+    (void) libraryClass;
 
-        jmethodID generateIntID = _jenv->GetMethodID(igeneratorClass, "generateInt", "(I)I");
+    cLibErrorNum = DszCLibLibraryUninitialize();
 
-        if (generateIntID == nullptr) {
-            throw (JavaLibException(2));
-        }
-
-        jint result = _jenv->CallIntMethod(_impl, generateIntID, static_cast<jint>(data));
-
-        if (_jenv->ExceptionCheck() == JNI_TRUE) {
-            _jenv->ExceptionClear();
-            throw (JavaLibException(2));
-        }
-
-        return (static_cast<int>(result));
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        DszJavaLibCoreErrorNum errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
     }
 
-    std::string JavaLibGeneratorImpl::generateString(int data) const
-    {
-        if (_jenv == nullptr || _impl == nullptr) {
-            throw (JavaLibException(2));
-        }
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
+}
 
-        jclass igeneratorClass /* net.dotslashzero.javalib.IGenerator */ =
-            _jenv->FindClass("net/dotslashzero/javalib/IGenerator");
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionString(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionStringWrappedString)
+{
+    char versionString[DSZ_JAVALIBCORE_LIBRARY_VERSION_STRING_SIZE];
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-        if (igeneratorClass == nullptr) {
-            throw (JavaLibException(2));
-        }
+    (void) libraryClass;
 
-        jmethodID generateStringID = _jenv->GetMethodID(igeneratorClass, "generateString", "(I)Ljava/lang/String;");
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (versionStringWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-        if (generateStringID == nullptr) {
-            throw (JavaLibException(2));
-        }
+    memset(versionString, 0, DSZ_JAVALIBCORE_LIBRARY_VERSION_STRING_SIZE);
 
-        jstring result = static_cast<jstring>(
-            _jenv->CallObjectMethod(_impl, generateStringID, static_cast<jint>(data))
-         );
+    cLibErrorNum = DszCLibLibraryGetVersionString(
+        versionString, DSZ_JAVALIBCORE_LIBRARY_VERSION_STRING_SIZE,
+        NULL);
 
-        if (_jenv->ExceptionCheck() == JNI_TRUE) {
-            _jenv->ExceptionClear();
-            throw (JavaLibException(2));
-        }
-
-        if (result == nullptr)
-            return ("");
-
-        jboolean isStringCopy = JNI_FALSE;
-        const char* resultBuffer = _jenv->GetStringUTFChars(result, &isStringCopy);
-
-        std::string cxxResult(resultBuffer);
-
-        if (isStringCopy) {
-            _jenv->ReleaseStringUTFChars(result, resultBuffer);
-        }
-
-        return (cxxResult);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
     }
-} // namespace JavaLibCore
 
-/*
- * Class:     net_dotslashzero_javalib_JavaLibException
- * Method:    nativeDestroyException
- * Signature: (J)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeDestroyException(
-    JNIEnv*, jclass, jlong exceptionImpl
-)
-{
-    auto* exceptionPtr = GET_CORE_EXCEPTION_PTR(exceptionImpl);
+    versionString[DSZ_JAVALIBCORE_LIBRARY_VERSION_STRING_SIZE - 1] = '\0';
 
-    if (exceptionPtr == nullptr)
-        return (-1);
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        versionStringWrappedString,
+        versionString);
 
-    delete (exceptionPtr);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_JavaLibException
- * Method:    nativeGetMessage
- * Signature: (J[C)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetMessage(
-    JNIEnv* jenv, jclass, jlong exceptionImpl, jcharArray message
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMajor(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionMajorWrappedLong)
 {
-    BEGIN_EX_GUARD(jenv);
-    auto* exceptionPtr = GET_CORE_EXCEPTION_PTR(exceptionImpl);
+    size_t versionMajor = 0;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    if (exceptionPtr == nullptr)
-        return (-1);
+    (void) libraryClass;
 
-    auto exMessage = exceptionPtr->getMessage();
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (versionMajorWrappedLong == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    // put contents of exMessage to message...
-    // note: part of this function's pre-condition is that message is at least 512 in size.
-    // also: jchar's type is unsigned 16 bit type
+    cLibErrorNum = DszCLibLibraryGetVersionMajor(&versionMajor);
 
-	auto u16ExMessage = JavaLibCore::Utils::ConvertToU16string(exMessage);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    jenv->SetCharArrayRegion(
-        message, 0, static_cast<jsize>(u16ExMessage.size()), reinterpret_cast<const jchar*>(u16ExMessage.data())
-    );
-	
-    END_EX_GUARD(jenv);
+    errorNum = DszJavaLibCoreWrappedLongSetLong(
+        pEnv,
+        versionMajorWrappedLong,
+        (long) versionMajor);
 
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Library
- * Method:    nativeGetVersionString
- * Signature: (Lnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionString(
-    JNIEnv* jenv, jclass, jobject versionString
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMinor(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionMinorWrappedLong)
 {
-    BEGIN_EX_GUARD(jenv);
+    size_t versionMinor = 0;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    std::string coreVersionString = CXXLib::Library::getVersionString();
+    (void) libraryClass;
 
-    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (versionMinorWrappedLong == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    if (WrappedStringClass == nullptr)
-        return (1);
+    cLibErrorNum = DszCLibLibraryGetVersionMinor(&versionMinor);
 
-    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (setStringID == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreWrappedLongSetLong(
+        pEnv,
+        versionMinorWrappedLong,
+        (long) versionMinor);
 
-    jstring versionStringValue = jenv->NewStringUTF(coreVersionString.data());
-
-    jenv->CallVoidMethod(versionString, setStringID, versionStringValue);
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Library
- * Method:    nativeGetVersionMajor
- * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)I
- */
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMajor(
-    JNIEnv* jenv, jclass, jobject versionMajor
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionPatch(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionPatchWrappedLong)
 {
-    BEGIN_EX_GUARD(jenv);
+    size_t versionPatch = 0;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    size_t coreVersionMajor = CXXLib::Library::getVersionMajor();
+    (void) libraryClass;
 
-    jclass WrappedLongClass /* net.dotslashzero.javalib.Core.WrappedLong */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedLong");
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (versionPatchWrappedLong == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    if (WrappedLongClass == nullptr)
-        return (1);
+    cLibErrorNum = DszCLibLibraryGetVersionPatch(&versionPatch);
 
-    jmethodID setLongID = jenv->GetMethodID(WrappedLongClass, "setLong", "(J)V");
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (setLongID == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreWrappedLongSetLong(
+        pEnv,
+        versionPatchWrappedLong,
+        (long) versionPatch);
 
-    jenv->CallVoidMethod(versionMajor, setLongID, static_cast<jlong>(coreVersionMajor));
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Library
- * Method:    nativeGetVersionMinor
- * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)I
- */
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMinor(
-    JNIEnv* jenv, jclass, jobject versionMinor
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionExtra(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionExtraWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    char versionExtraString[DSZ_JAVALIBCORE_LIBRARY_VERSION_EXTRA_SIZE];
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    size_t coreVersionMinor = CXXLib::Library::getVersionMinor();
+    (void) libraryClass;
 
-    jclass WrappedLongClass /* net.dotslashzero.javalib.Core.WrappedLong */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedLong");
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (versionExtraWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    if (WrappedLongClass == nullptr)
-        return (1);
+    memset(versionExtraString, 0, DSZ_JAVALIBCORE_LIBRARY_VERSION_EXTRA_SIZE);
 
-    jmethodID setLongID = jenv->GetMethodID(WrappedLongClass, "setLong", "(J)V");
+    cLibErrorNum = DszCLibLibraryGetVersionExtra(
+        versionExtraString, DSZ_JAVALIBCORE_LIBRARY_VERSION_EXTRA_SIZE,
+        NULL);
 
-    if (setLongID == nullptr)
-        return (1);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    jenv->CallVoidMethod(versionMinor, setLongID, static_cast<jlong>(coreVersionMinor));
+    versionExtraString[DSZ_JAVALIBCORE_LIBRARY_VERSION_EXTRA_SIZE - 1] = '\0';
 
-    END_EX_GUARD(jenv);
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        versionExtraWrappedString,
+        versionExtraString);
 
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeCreateAddress
- * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lnet/dotslashzero/javalib/Core/AddressType;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeCreateAddress(
-    JNIEnv* jenv, jclass,
-    jint streetNum, jstring street,
-    jstring city, jstring province,
-    jstring country, jstring zipCode,
-    jobject addressImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeCreateAddress(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jint streetNum,
+    jstring street,
+    jstring city,
+    jstring province,
+    jstring zipCode,
+    jstring country,
+    jobject addressAddressType)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibAddress address = DSZ_CLIB_ADDRESS_INVALID;
+    int cStreetNum = (int) streetNum;
+    char cStreet[DSZ_JAVALIBCORE_ADDRESS_STREET_SIZE];
+    char cCity[DSZ_JAVALIBCORE_ADDRESS_CITY_SIZE];
+    char cProvince[DSZ_JAVALIBCORE_ADDRESS_PROVINCE_SIZE];
+    char cZipCode[DSZ_JAVALIBCORE_ADDRESS_ZIPCODE_SIZE];
+    char cCountry[DSZ_JAVALIBCORE_ADDRESS_COUNTRY_SIZE];
 
-    // Before we create an actual Address, let us evaluate the parameters first so we don't need to do clean up if
-    // something fails.
+    (void) addressClass;
 
-    // streetNum
-    int coreStreetNum = static_cast<int>(streetNum);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (street == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (city == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (province == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (zipCode == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (country == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (addressAddressType == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    const char* jstringCstr = nullptr;
-    jboolean isStringCopy = JNI_FALSE;
+    memset(cStreet, 0, DSZ_JAVALIBCORE_ADDRESS_STREET_SIZE);
+    errorNum = DszJavaLibCoreCopyJStringToCString(
+        pEnv,
+        street,
+        cStreet, DSZ_JAVALIBCORE_ADDRESS_STREET_SIZE,
+        NULL);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return(DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 
-    // street
-    jstringCstr = jenv->GetStringUTFChars(street, &isStringCopy);
+    memset(cCity, 0, DSZ_JAVALIBCORE_ADDRESS_CITY_SIZE);
+    errorNum = DszJavaLibCoreCopyJStringToCString(
+        pEnv,
+        city,
+        cCity, DSZ_JAVALIBCORE_ADDRESS_CITY_SIZE,
+        NULL);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 
-    if (jstringCstr == nullptr)
-        return (2);
+    memset(cProvince, 0, DSZ_JAVALIBCORE_ADDRESS_PROVINCE_SIZE);
+    errorNum = DszJavaLibCoreCopyJStringToCString(
+        pEnv,
+        province,
+        cProvince, DSZ_JAVALIBCORE_ADDRESS_PROVINCE_SIZE,
+        NULL);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 
-    std::string coreStreet(jstringCstr);
+    memset(cZipCode, 0, DSZ_JAVALIBCORE_ADDRESS_ZIPCODE_SIZE);
+    errorNum = DszJavaLibCoreCopyJStringToCString(
+        pEnv,
+        zipCode,
+        cZipCode, DSZ_JAVALIBCORE_ADDRESS_ZIPCODE_SIZE,
+        NULL);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 
-    if (isStringCopy == JNI_TRUE)
-        jenv->ReleaseStringUTFChars(street, jstringCstr);
+    memset(cCountry, 0, DSZ_JAVALIBCORE_ADDRESS_COUNTRY_SIZE);
+    errorNum = DszJavaLibCoreCopyJStringToCString(
+        pEnv,
+        country,
+        cCountry, DSZ_JAVALIBCORE_ADDRESS_COUNTRY_SIZE,
+        NULL);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 
-    // city
-    jstringCstr = jenv->GetStringUTFChars(city, &isStringCopy);
+    cLibErrorNum = DszCLibAddressCreate(
+        cStreetNum,
+        cStreet,
+        cCity,
+        cProvince,
+        cZipCode,
+        cCountry,
+        &address);
 
-    if (jstringCstr == nullptr)
-        return (2);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
 
-    std::string coreCity(jstringCstr);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 
-    if (isStringCopy == JNI_TRUE)
-        jenv->ReleaseStringUTFChars(city, jstringCstr);
+    errorNum = DszJavaLibCoreNativeTypeSetAddress(
+        pEnv,
+        addressAddressType,
+        (uintptr_t) address);
 
-    // province
-    jstringCstr = jenv->GetStringUTFChars(province, &isStringCopy);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        DszCLibAddressDestroy(address); /* this is important! */
 
-    if (jstringCstr == nullptr)
-        return (2);
-
-    std::string coreProvince(jstringCstr);
-
-    if (isStringCopy == JNI_TRUE)
-        jenv->ReleaseStringUTFChars(province, jstringCstr);
-
-    // country
-    jstringCstr = jenv->GetStringUTFChars(country, &isStringCopy);
-
-    if (jstringCstr == nullptr)
-        return (2);
-
-    std::string coreCountry(jstringCstr);
-
-    if (isStringCopy == JNI_TRUE)
-        jenv->ReleaseStringUTFChars(country, jstringCstr);
-
-    // zipCode
-    jstringCstr = jenv->GetStringUTFChars(zipCode, &isStringCopy);
-
-    if (jstringCstr == nullptr)
-        return (2);
-
-    std::string coreZipCode(jstringCstr);
-
-    if (isStringCopy == JNI_TRUE)
-        jenv->ReleaseStringUTFChars(zipCode, jstringCstr);
-
-    // We want to use a smart pointer in case something happens when we try to invoke methods on addressImpl
-    std::unique_ptr<CXXLib::Address> coreAddressPtr(
-        new CXXLib::Address(
-            coreStreetNum, coreStreet,
-            coreCity, coreProvince,
-            coreCountry, coreZipCode
-        )
-    );
-
-    // call addressImpl.setAddress(long impl); - long is actually a jlong in native type
-
-    jclass coreAddressTypeClass /* net.dotslashzero.javalib.Core.AddressType */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$AddressType");
-
-    if (coreAddressTypeClass == nullptr)
-        return (1);
-
-    jmethodID setAddressID = jenv->GetMethodID(coreAddressTypeClass, "setAddress", "(J)V");
-
-    if (setAddressID == nullptr)
-        return (1);
-
-    jlong impl = reinterpret_cast<jlong>(coreAddressPtr.get());
-
-    jenv->CallVoidMethod(addressImpl, setAddressID, impl);
-
-    // it is important that we release here in case CallVoidMethod fails...
-    coreAddressPtr.release();
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeDestroyAddress
- * Signature: (J)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeDestroyAddress(
-    JNIEnv*, jclass, jlong addressImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeDestroyAddress(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl)
 {
-    auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    if (addressPtr == nullptr)
-        return (-1);
+    (void) addressClass;
 
-    delete (addressPtr);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    return (0);
+    if ((address == NULL) || (address == DSZ_CLIB_ADDRESS_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    cLibErrorNum = DszCLibAddressDestroy(address);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        DszJavaLibCoreErrorNum errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
 }
 
-
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeGetStreetNum
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedInteger;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreetNum(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject streetNum
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreetNum(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject streetNumWrappedInteger)
 {
-    BEGIN_EX_GUARD(jenv);
-    auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    int streetNum = 0;
 
-    if (addressPtr == nullptr)
-        return (-1);
+    (void) addressClass;
 
-    int coreStreetNum = addressPtr->getStreetNum();
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((address == NULL) || (address == DSZ_CLIB_ADDRESS_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (streetNumWrappedInteger == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    jclass WrappedIntegerClass /* net.dotslashzero.javalib.Core.WrappedInteger */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedInteger");
+    cLibErrorNum = DszCLibAddressGetStreetNum(address, &streetNum);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedIntegerClass == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreWrappedIntegerSetInt(
+        pEnv,
+        streetNumWrappedInteger,
+        streetNum);
 
-    jmethodID setIntID = jenv->GetMethodID(WrappedIntegerClass, "setInt", "(I)V");
-
-    if (setIntID == nullptr)
-        return (1);
-
-    jenv->CallVoidMethod(streetNum, setIntID, static_cast<jint>(coreStreetNum));
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeGetStreet
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreet(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject street
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreet(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject streetWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    char street[DSZ_JAVALIBCORE_ADDRESS_STREET_SIZE];
 
-    auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
+    (void) addressClass;
 
-    if (addressPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((address == NULL) || (address == DSZ_CLIB_ADDRESS_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (streetWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    std::string coreStreet = addressPtr->getStreet();
+    memset(street, 0, DSZ_JAVALIBCORE_ADDRESS_STREET_SIZE);
 
-    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+    cLibErrorNum = DszCLibAddressGetStreet(
+        address,
+        street, DSZ_JAVALIBCORE_ADDRESS_STREET_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedStringClass == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        streetWrappedString,
+        street);
 
-    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
-
-    if (setStringID == nullptr)
-        return (1);
-
-    jstring streetValue = jenv->NewStringUTF(coreStreet.data());
-
-    jenv->CallVoidMethod(street, setStringID, streetValue);
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeGetCity
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCity(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject city
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCity(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject cityWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    char city[DSZ_JAVALIBCORE_ADDRESS_CITY_SIZE];
 
-    auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
+    (void) addressClass;
 
-    if (addressPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (address == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (cityWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    std::string coreCity = addressPtr->getCity();
+    memset(city, 0, DSZ_JAVALIBCORE_ADDRESS_CITY_SIZE);
 
-    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+    cLibErrorNum = DszCLibAddressGetCity(
+        address,
+        city, DSZ_JAVALIBCORE_ADDRESS_CITY_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedStringClass == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        cityWrappedString,
+        city);
 
-    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
-
-    if (setStringID == nullptr)
-        return (1);
-
-    jstring cityValue = jenv->NewStringUTF(coreCity.data());
-
-    jenv->CallVoidMethod(city, setStringID, cityValue);
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeGetProvince
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetProvince(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject province
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetProvince(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject provinceWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    char province[DSZ_JAVALIBCORE_ADDRESS_PROVINCE_SIZE];
 
-    auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
+    (void) addressClass;
 
-    if (addressPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (address == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (provinceWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    std::string coreProvince = addressPtr->getProvince();
+    memset(province, 0, DSZ_JAVALIBCORE_ADDRESS_PROVINCE_SIZE);
 
-    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+    cLibErrorNum = DszCLibAddressGetProvince(
+        address,
+        province, DSZ_JAVALIBCORE_ADDRESS_PROVINCE_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedStringClass == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        provinceWrappedString,
+        province);
 
-    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
-
-    if (setStringID == nullptr)
-        return (1);
-
-    jstring provinceValue = jenv->NewStringUTF(coreProvince.data());
-
-    jenv->CallVoidMethod(province, setStringID, provinceValue);
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeGetCountry
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCountry(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject country
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetZipCode(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject zipCodeWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    char zipCode[DSZ_JAVALIBCORE_ADDRESS_ZIPCODE_SIZE];
 
-    auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
+    (void) addressClass;
 
-    if (addressPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (address == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (zipCodeWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    std::string coreCountry = addressPtr->getCountry();
+    memset(zipCode, 0, DSZ_JAVALIBCORE_ADDRESS_ZIPCODE_SIZE);
 
-    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+    cLibErrorNum = DszCLibAddressGetZipCode(
+        address,
+        zipCode, DSZ_JAVALIBCORE_ADDRESS_ZIPCODE_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedStringClass == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        zipCodeWrappedString,
+        zipCode);
 
-    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
-
-    if (setStringID == nullptr)
-        return (1);
-
-    jstring countryValue = jenv->NewStringUTF(coreCountry.data());
-
-    jenv->CallVoidMethod(country, setStringID, countryValue);
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeGetZipCode
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetZipCode(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject zipCode
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCountry(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject countryWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    char country[DSZ_JAVALIBCORE_ADDRESS_COUNTRY_SIZE];
 
-    auto* addressPtr = GET_CORE_ADDRESS_PTR(addressImpl);
+    (void) addressClass;
 
-    if (addressPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (address == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (countryWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    std::string coreZipCode = addressPtr->getZipCode();
+    memset(country, 0, DSZ_JAVALIBCORE_ADDRESS_COUNTRY_SIZE);
 
-    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+    cLibErrorNum = DszCLibAddressGetCountry(
+        address,
+        country, DSZ_JAVALIBCORE_ADDRESS_COUNTRY_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedStringClass == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        countryWrappedString,
+        country);
 
-    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
-
-    if (setStringID == nullptr)
-        return (1);
-
-    jstring zipCodeValue = jenv->NewStringUTF(coreZipCode.data());
-
-    jenv->CallVoidMethod(zipCode, setStringID, zipCodeValue);
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Person
- * Method:    nativeCreatePerson
- * Signature: (Ljava/lang/String;Ljava/lang/String;IJLnet/dotslashzero/javalib/Core/PersonType;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeCreatePerson(
-    JNIEnv* jenv, jclass,
-    jstring lastName, jstring firstName, jint age,
-    jlong addressImplPtr,
-    jobject personImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeToString(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject addressStringWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
+    char addressString[DSZ_JAVALIBCORE_ADDRESS_STRING_SIZE];
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    const char* jstringCstr = nullptr;
-    jboolean isStringCopy = JNI_FALSE;
+    (void) addressClass;
 
-    jstringCstr = jenv->GetStringUTFChars(lastName, &isStringCopy);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((address == NULL) || (address == DSZ_CLIB_ADDRESS_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (addressStringWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    if (jstringCstr == nullptr)
-        return (2);
+    memset(addressString, 0, DSZ_JAVALIBCORE_ADDRESS_STRING_SIZE);
 
-    std::string coreLastName(jstringCstr);
+    cLibErrorNum = DszCLibAddressToString(
+        address,
+        addressString, DSZ_JAVALIBCORE_ADDRESS_STRING_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (isStringCopy == JNI_TRUE)
-        jenv->ReleaseStringUTFChars(lastName, jstringCstr);
+    addressString[DSZ_JAVALIBCORE_ADDRESS_STRING_SIZE - 1] = '\0';
 
-    jstringCstr = jenv->GetStringUTFChars(firstName, &isStringCopy);
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        addressStringWrappedString,
+        addressString);
 
-    if (jstringCstr == nullptr)
-        return (2);
-
-    std::string coreFirstName(jstringCstr);
-
-    if (isStringCopy == JNI_TRUE)
-        jenv->ReleaseStringUTFChars(firstName, jstringCstr);
-
-    int coreAge = static_cast<int>(age);
-
-    auto* coreAddressPtr = GET_CORE_ADDRESS_PTR(addressImplPtr);
-
-    if (coreAddressPtr == nullptr)
-        return (2);
-
-    std::unique_ptr<CXXLib::Person> corePersonPtr(
-        new CXXLib::Person(
-            coreLastName, coreFirstName,
-            coreAge, *coreAddressPtr
-        )
-    );
-
-    // call personImpl.setAddress(long impl); - long is actually a jlong in native type
-
-    jclass corePersonTypeClass /* net.dotslashzero.javalib.Core.PersonType */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$PersonType");
-
-    if (corePersonTypeClass == nullptr)
-        return (1);
-
-    jmethodID setAddressID = jenv->GetMethodID(corePersonTypeClass, "setAddress", "(J)V");
-
-    if (setAddressID == nullptr)
-        return (1);
-
-    jlong impl = reinterpret_cast<jlong>(corePersonPtr.get());
-
-    jenv->CallVoidMethod(personImpl, setAddressID, impl);
-
-    // it is important that we release here in case CallVoidMethod fails...
-    corePersonPtr.release();
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Person
- * Method:    nativeDestroyPerson
- * Signature: (J)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeDestroyPerson(
-    JNIEnv*, jclass, jlong personImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeCreatePerson(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jstring lastName,
+    jstring firstName,
+    jint age,
+    jlong addressImpl,
+    jobject personPersonType)
 {
-    auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibPerson person = DSZ_CLIB_PERSON_INVALID;
+    char cLastName[DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE];
+    char cFirstName[DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE];
+    int cAge = (int) age;
+    DszCLibAddress address = (DszCLibAddress) addressImpl;
 
-    if (personPtr == nullptr)
-        return (-1);
+    (void) personClass;
 
-    delete (personPtr);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (lastName == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (firstName == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((address == NULL) || (address == DSZ_CLIB_ADDRESS_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (personPersonType == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    return (0);
+    memset(cLastName, 0, DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE);
+    errorNum = DszJavaLibCoreCopyJStringToCString(
+        pEnv,
+        lastName,
+        cLastName, DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE,
+        NULL);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return(DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+
+    memset(cFirstName, 0, DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE);
+    errorNum = DszJavaLibCoreCopyJStringToCString(
+        pEnv,
+        firstName,
+        cFirstName, DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE,
+        NULL);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+
+    cLibErrorNum = DszCLibPersonCreate(
+        cLastName,
+        cFirstName,
+        cAge,
+        address,
+        &person);
+
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+
+    errorNum = DszJavaLibCoreNativeTypeSetAddress(
+        pEnv,
+        personPersonType,
+        (uintptr_t) person);
+
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        DszCLibPersonDestroy(person); /* this is important! */
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Person
- * Method:    nativeGetLastName
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetLastName(
-    JNIEnv* jenv, jclass, jlong personImpl, jobject lastName
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeDestroyPerson(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibPerson person = (DszCLibPerson) personImpl;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
+    (void) personClass;
 
-    if (personPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    std::string coreLastName = personPtr->getLastName();
+    if ((person == NULL) || (person == DSZ_CLIB_PERSON_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+    cLibErrorNum = DszCLibPersonDestroy(person);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        DszJavaLibCoreErrorNum errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedStringClass == nullptr)
-        return (1);
-
-    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
-
-    if (setStringID == nullptr)
-        return (1);
-
-    jstring lastNameValue = jenv->NewStringUTF(coreLastName.data());
-
-    jenv->CallVoidMethod(lastName, setStringID, lastNameValue);
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Person
- * Method:    nativeGetFirstName
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetFirstName(
-    JNIEnv* jenv, jclass, jlong personImpl, jobject firstName
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeGetLastName(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject lastNameWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibPerson person = (DszCLibPerson) personImpl;
+    char lastName[DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE];
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
+    (void) personClass;
 
-    if (personPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((person == NULL) || (person == DSZ_CLIB_PERSON_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (lastNameWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    std::string coreFirstName = personPtr->getFirstName();
+    memset(lastName, 0, DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE);
 
-    jclass WrappedStringClass /* net.dotslashzero.javalib.Core.WrappedString */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedString");
+    cLibErrorNum = DszCLibPersonGetLastName(
+        person,
+        lastName, DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedStringClass == nullptr)
-        return (1);
+    lastName[DSZ_JAVALIBCORE_PERSON_LASTNAME_SIZE - 1] = '\0';
 
-    jmethodID setStringID = jenv->GetMethodID(WrappedStringClass, "setString", "(Ljava/lang/String;)V");
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        lastNameWrappedString,
+        lastName);
 
-    if (setStringID == nullptr)
-        return (1);
-
-    jstring firstNameValue = jenv->NewStringUTF(coreFirstName.data());
-
-    jenv->CallVoidMethod(firstName, setStringID, firstNameValue);
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Person
- * Method:    nativeGetAge
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedInteger;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAge(
-    JNIEnv* jenv, jclass, jlong personImpl, jobject age
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeGetFirstName(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject firstNameWrappedString)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibPerson person = (DszCLibPerson) personImpl;
+    char firstName[DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE];
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
+    (void) personClass;
 
-    if (personPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((person == NULL) || (person == DSZ_CLIB_PERSON_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (firstNameWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    int coreAge = personPtr->getAge();
+    memset(firstName, 0, DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE);
 
-    jclass WrappedIntegerClass /* net.dotslashzero.javalib.Core.WrappedInteger */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$WrappedInteger");
+    cLibErrorNum = DszCLibPersonGetFirstName(
+        person,
+        firstName, DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (WrappedIntegerClass == nullptr)
-        return (1);
+    firstName[DSZ_JAVALIBCORE_PERSON_FIRSTNAME_SIZE - 1] = '\0';
 
-    jmethodID setIntID = jenv->GetMethodID(WrappedIntegerClass, "setInt", "(I)V");
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        firstNameWrappedString,
+        firstName);
 
-    if (setIntID == nullptr)
-        return (1);
-
-    jenv->CallVoidMethod(age, setIntID, static_cast<jint>(coreAge));
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Person
- * Method:    nativeGetAddress
- * Signature: (JLnet/dotslashzero/javalib/Core/AddressType;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAddress(
-    JNIEnv* jenv, jclass, jlong personImpl, jobject addressImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAge(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject ageWrappedInteger)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibPerson person = (DszCLibPerson) personImpl;
+    int age = 0;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    auto* personPtr = GET_CORE_PERSON_PTR(personImpl);
+    (void) personClass;
 
-    if (personPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((person == NULL) || (person == DSZ_CLIB_PERSON_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (ageWrappedInteger == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    auto coreAddress = personPtr->getAddress();
+    cLibErrorNum = DszCLibPersonGetAge(
+        person,
+        &age);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    std::unique_ptr<CXXLib::Address> coreNewAddressPtr(
-        new CXXLib::Address(
-            coreAddress.getStreetNum(), coreAddress.getStreet(),
-            coreAddress.getCity(), coreAddress.getProvince(),
-            coreAddress.getCountry(), coreAddress.getZipCode()
-        )
-    );
+    errorNum = DszJavaLibCoreWrappedIntegerSetInt(
+        pEnv,
+        ageWrappedInteger,
+        age);
 
-    // call addressImpl.setAddress(long impl); - long is actually a jlong in native type
-
-    jclass coreAddressTypeClass /* net.dotslashzero.javalib.Core.AddressType */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$AddressType");
-
-    if (coreAddressTypeClass == nullptr)
-        return (1);
-
-    jmethodID setAddressID = jenv->GetMethodID(coreAddressTypeClass, "setAddress", "(J)V");
-
-    if (setAddressID == nullptr)
-        return (1);
-
-    jlong impl = reinterpret_cast<jlong>(coreNewAddressPtr.get());
-
-    jenv->CallVoidMethod(addressImpl, setAddressID, impl);
-
-    // it is important that we release here in case CallVoidMethod fails...
-    coreNewAddressPtr.release();
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Printer
- * Method:    nativeCreatePrinter
- * Signature: (Lnet/dotslashzero/javalib/IGenerator;Lnet/dotslashzero/javalib/Core/PrinterType;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinter(
-    JNIEnv* jenv, jclass, jobject generatorInstance, jobject printerImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAddress(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject addressAddressType)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibPerson person = (DszCLibPerson) personImpl;
+    DszCLibAddress address = DSZ_CLIB_ADDRESS_INVALID;
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    // Create a JavaLibGeneratorImpl
-    std::unique_ptr<JavaLibCore::JavaLibGeneratorImpl> generator(
-        new JavaLibCore::JavaLibGeneratorImpl(jenv, generatorInstance)
-    );
-    std::unique_ptr<CXXLib::Printer> corePrinterPtr(new CXXLib::Printer(std::move(generator)));
+    (void) personClass;
 
-    // call printerImpl.setAddress(long impl); - long is actually a jlong in native type
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((person == NULL) || (person == DSZ_CLIB_PERSON_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (addressAddressType == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    jclass corePrinterTypeClass /* net.dotslashzero.javalib.Core.PrinterType */ =
-        jenv->FindClass("net/dotslashzero/javalib/Core$PrinterType");
+    cLibErrorNum = DszCLibPersonGetAddress(
+        person,
+        &address);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    if (corePrinterTypeClass == nullptr)
-        return (1);
+    errorNum = DszJavaLibCoreNativeTypeSetAddress(
+        pEnv,
+        addressAddressType,
+        (uintptr_t) address);
 
-    jmethodID setAddressID = jenv->GetMethodID(corePrinterTypeClass, "setAddress", "(J)V");
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        DszCLibAddressDestroy(address);
 
-    if (setAddressID == nullptr)
-        return (1);
-
-    jlong impl = reinterpret_cast<jlong>(corePrinterPtr.get());
-
-    jenv->CallVoidMethod(printerImpl, setAddressID, impl);
-
-    // it is important that we release here in case CallVoidMethod fails...
-    corePrinterPtr.release();
-
-    END_EX_GUARD(jenv);
-
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Printer
- * Method:    nativeDestroyPrinter
- * Signature: (J)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyPrinter(
-    JNIEnv*, jclass, jlong printerImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeToString(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject personStringWrappedString)
 {
-    auto* printerPtr = GET_CORE_PRINTER_PTR(printerImpl);
+    DszCLibPerson person = (DszCLibPerson) personImpl;
+    char personString[DSZ_JAVALIBCORE_PERSON_STRING_SIZE];
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    if (printerPtr == nullptr)
-        return (-1);
+    (void) personClass;
 
-    delete (printerPtr);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((person == NULL) || (person == DSZ_CLIB_PERSON_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (personStringWrappedString == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    return (0);
+    memset(personString, 0, DSZ_JAVALIBCORE_PERSON_STRING_SIZE);
+
+    cLibErrorNum = DszCLibPersonToString(
+        person,
+        personString, DSZ_JAVALIBCORE_PERSON_STRING_SIZE,
+        NULL);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
+
+    personString[DSZ_JAVALIBCORE_ADDRESS_STRING_SIZE - 1] = '\0';
+
+    errorNum = DszJavaLibCoreWrappedStringSetString(
+        pEnv,
+        personStringWrappedString,
+        personString);
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Printer
- * Method:    nativePrintInt
- * Signature: (J)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintInt(
-    JNIEnv* jenv, jclass, jlong printerImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreateGenerator(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jobject generatorGeneratorType)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibGenerator generator = DSZ_CLIB_GENERATOR_INVALID;
 
-    auto* printerPtr = GET_CORE_PRINTER_PTR(printerImpl);
+    (void) printerClass;
 
-    if (printerPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (generatorGeneratorType == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    printerPtr->printInt();
+    cLibErrorNum = DszCLibGeneratorCreate(
+        (DszCLibGenerateIntFunction) &(DszJavaLibCorePrinterGenerateIntRedirect),
+        (DszCLibGenerateStringFunction) &(DszJavaLibCorePrinterGenerateStringRedirect),
+        &generator);
 
-    END_EX_GUARD(jenv);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
 
-    return (0);
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+
+    errorNum = DszJavaLibCoreNativeTypeSetAddress(
+        pEnv,
+        generatorGeneratorType,
+        (uintptr_t) generator);
+
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        DszCLibGeneratorDestroy(generator); /* this is important! */
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
 }
 
-/*
- * Class:     net_dotslashzero_javalib_Printer
- * Method:    nativePrintString
- * Signature: (J)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintString(
-    JNIEnv* jenv, jclass, jlong printerImpl
-)
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyGenerator(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong generatorImpl)
 {
-    BEGIN_EX_GUARD(jenv);
+    DszCLibGenerator generator = (DszCLibGenerator) generatorImpl;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
 
-    auto* printerPtr = GET_CORE_PRINTER_PTR(printerImpl);
+    (void) printerClass;
 
-    if (printerPtr == nullptr)
-        return (-1);
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    printerPtr->printString();
+    if ((generator == NULL) || (generator == DSZ_CLIB_GENERATOR_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
 
-    END_EX_GUARD(jenv);
+    cLibErrorNum = DszCLibGeneratorDestroy(generator);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        DszJavaLibCoreErrorNum errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
 
-    return (0);
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
+}
+
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinter(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong generatorImpl,
+    jobject printerPrinterType)
+{
+    DszJavaLibCoreErrorNum errorNum = DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibGenerator generator = (DszCLibGenerator) generatorImpl;
+    DszCLibPrinter printer = DSZ_CLIB_PRINTER_INVALID;
+
+    (void) printerClass;
+
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if (printerPrinterType == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+    if ((generator == NULL) || (generator == DSZ_CLIB_GENERATOR_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    /* note: printer takes ownership of generator after this call is successful */
+    cLibErrorNum = DszCLibPrinterCreate(
+        generator,
+        &printer);
+
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+
+    errorNum = DszJavaLibCoreNativeTypeSetAddress(
+        pEnv,
+        printerPrinterType,
+        (uintptr_t) printer);
+
+    if (errorNum != DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR)
+        DszCLibPrinterDestroy(printer); /* this is important! */
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+}
+
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyPrinter(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong printerImpl)
+{
+    DszCLibPrinter printer = (DszCLibPrinter) printerImpl;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+
+    (void) printerClass;
+
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    if ((printer == NULL) || (printer == DSZ_CLIB_PRINTER_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    cLibErrorNum = DszCLibPrinterDestroy(printer);
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        DszJavaLibCoreErrorNum errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
+}
+
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintInt(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong printerImpl,
+    jobject generatorInstance)
+{
+    DszCLibPrinter printer = (DszCLibPrinter) printerImpl;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszJavaLibCorePrinterUserData userData = {
+        .JavaEnv = NULL,
+        .Generator = NULL
+    };
+
+    (void) printerClass;
+
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    if ((printer == NULL) || (printer == DSZ_CLIB_PRINTER_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    if (generatorInstance == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    /* note: if design requires executing printInt in a different thread/process space,
+        userData must be kept alive longer than the call*/
+
+    userData.JavaEnv = pEnv;
+    userData.Generator = generatorInstance;
+
+    cLibErrorNum = DszCLibPrinterPrintIntWithUserData(
+        printer,
+        (void*) &userData);
+
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        DszJavaLibCoreErrorNum errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
+}
+
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintString(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong printerImpl,
+    jobject generatorInstance)
+{
+    DszCLibPrinter printer = (DszCLibPrinter) printerImpl;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszJavaLibCorePrinterUserData userData = {
+        .JavaEnv = NULL,
+        .Generator = NULL
+    };
+
+    (void) printerClass;
+
+    if (pEnv == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    if ((printer == NULL) || (printer == DSZ_CLIB_PRINTER_INVALID))
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    if (generatorInstance == NULL)
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_JAVALIB_JNI_ERROR));
+
+    /* note: if design requires executing printInt in a different thread/process space,
+        userData must be kept alive longer than the call*/
+
+    userData.JavaEnv = pEnv;
+    userData.Generator = generatorInstance;
+
+    cLibErrorNum = DszCLibPrinterPrintStringWithUserData(
+        printer,
+        (void*) &userData);
+
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+        DszJavaLibCoreErrorNum errorNum = DszJavaLibCoreConvertCLibErrorNum(cLibErrorNum);
+        return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(errorNum));
+    }
+
+    return (DSZ_JAVALIBCORE_RETURN_ERRORNUM(DSZ_JAVALIBCORE_ERRORNUM_NO_ERROR));
 }

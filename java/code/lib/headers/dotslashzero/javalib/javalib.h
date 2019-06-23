@@ -1,249 +1,335 @@
-#if !defined(JAVALIB_API_H)
-#define JAVALIB_API_H
+#pragma once
 
 #include <jni.h>
 
 #if defined(__cplusplus)
-#define JAVALIB_API extern "C"
-#endif // defined(__cplusplus)
-
-#undef net_dotslashzero_javalib_JavaLibException_serialVersionUID
-#define net_dotslashzero_javalib_JavaLibException_serialVersionUID -3042686055658047285LL
-#undef net_dotslashzero_javalib_JavaLibException_serialVersionUID
-#define net_dotslashzero_javalib_JavaLibException_serialVersionUID -3387516993124229948LL
-/*
- * Class:     net_dotslashzero_javalib_JavaLibException
- * Method:    nativeDestroyException
- * Signature: (J)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeDestroyException(
-    JNIEnv*, jclass, jlong exceptionImpl
-);
+extern "C"
+{
+#endif /* defined(__cplusplus) */
 
 /*
  * Class:     net_dotslashzero_javalib_JavaLibException
- * Method:    nativeGetMessage
- * Signature: (J[C)I
+ * Method:    nativeGetErrorMessage
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetMessage(
-    JNIEnv* jenv, jclass, jlong exceptionImpl, jcharArray message
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_JavaLibException_nativeGetErrorMessage(
+    JNIEnv* pEnv,
+    jclass javaLibExceptionClass,
+    jlong errorNum,
+    jobject errorMessageWrappedString);
+
+/*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeInitialize
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeInitialize(
+    JNIEnv* pEnv,
+    jclass libraryClass);
+
+/*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeUninitialize
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeUninitialize(
+    JNIEnv* pEnv,
+    jclass libraryClass);
 
 /*
  * Class:     net_dotslashzero_javalib_Library
  * Method:    nativeGetVersionString
- * Signature: (Lnet/dotslashzero/javalib/Core/WrappedString;)I
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedString;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionString(
-    JNIEnv* jenv, jclass, jobject versionString
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionString(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionStringWrappedString);
 
 /*
  * Class:     net_dotslashzero_javalib_Library
  * Method:    nativeGetVersionMajor
- * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)I
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)J
  */
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMajor(
-    JNIEnv* jenv, jclass, jobject versionMajor
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMajor(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionMajorWrappedLong);
 
 /*
  * Class:     net_dotslashzero_javalib_Library
  * Method:    nativeGetVersionMinor
- * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)I
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)J
  */
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMinor(
-    JNIEnv* jenv, jclass, jobject versionMinor
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionMinor(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionMinorWrappedLong);
+
+/*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeGetVersionPatch
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedLong;)J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionPatch(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionPatchWrappedLong);
+
+/*
+ * Class:     net_dotslashzero_javalib_Library
+ * Method:    nativeGetVersionExtra
+ * Signature: (Lnet/dotslashzero/javalib/Core/WrappedString;)J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Library_nativeGetVersionExtra(
+    JNIEnv* pEnv,
+    jclass libraryClass,
+    jobject versionExtraWrappedString);
 
 /*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeCreateAddress
- * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lnet/dotslashzero/javalib/Core/AddressType;)I
+ * Signature: (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lnet/dotslashzero/javalib/Core/AddressType;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeCreateAddress(
-    JNIEnv* jenv, jclass,
-    jint streetNum, jstring street,
-    jstring city, jstring province,
-    jstring country, jstring zipCode,
-    jobject addressType
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeCreateAddress(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jint streetNum,
+    jstring street,
+    jstring city,
+    jstring province,
+    jstring zipCode,
+    jstring country,
+    jobject addressAddressType);
 
 /*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeDestroyAddress
- * Signature: (J)I
+ * Signature: (J)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeDestroyAddress(
-    JNIEnv*, jclass, jlong addressImpl
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeDestroyAddress(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl);
 
 /*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeGetStreetNum
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedInteger;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedInteger;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreetNum(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject streetNum
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreetNum(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject streetNumWrappedInteger);
 
 /*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeGetStreet
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreet(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject street
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetStreet(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject streetWrappedString);
 
 /*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeGetCity
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCity(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject city
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCity(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject cityWrappedString);
 
 /*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeGetProvince
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetProvince(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject province
-);
-
-/*
- * Class:     net_dotslashzero_javalib_Address
- * Method:    nativeGetCountry
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
- */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCountry(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject country
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetProvince(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject provinceWrappedString);
 
 /*
  * Class:     net_dotslashzero_javalib_Address
  * Method:    nativeGetZipCode
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Address_nativeGetZipCode(
-    JNIEnv* jenv, jclass, jlong addressImpl, jobject zipCode
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetZipCode(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject zipCodeWrappedString);
+
+/*
+ * Class:     net_dotslashzero_javalib_Address
+ * Method:    nativeGetCountry
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeGetCountry(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject countryWrappedString);
+
+/*
+ * Class:     net_dotslashzero_javalib_Address
+ * Method:    nativeToString
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Address_nativeToString(
+    JNIEnv* pEnv,
+    jclass addressClass,
+    jlong addressImpl,
+    jobject addressStringWrappedString);
 
 /*
  * Class:     net_dotslashzero_javalib_Person
  * Method:    nativeCreatePerson
- * Signature: (Ljava/lang/String;Ljava/lang/String;IJLnet/dotslashzero/javalib/Core/PersonType;)I
+ * Signature: (Ljava/lang/String;Ljava/lang/String;IJLnet/dotslashzero/javalib/Core/PersonType;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeCreatePerson(
-    JNIEnv* jenv, jclass,
-    jstring lastName, jstring firstName, jint age,
-    jlong addressImplPtr,
-    jobject personImpl
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeCreatePerson(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jstring lastName,
+    jstring firstName,
+    jint age,
+    jlong addressImpl,
+    jobject personPersonType);
 
 /*
  * Class:     net_dotslashzero_javalib_Person
  * Method:    nativeDestroyPerson
- * Signature: (J)I
+ * Signature: (J)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeDestroyPerson(
-    JNIEnv*, jclass, jlong personImpl
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeDestroyPerson(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl);
 
 /*
  * Class:     net_dotslashzero_javalib_Person
  * Method:    nativeGetLastName
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetLastName(
-    JNIEnv* jenv, jclass, jlong personImpl, jobject lastName
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeGetLastName(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject lastNameWrappedString);
 
 /*
  * Class:     net_dotslashzero_javalib_Person
  * Method:    nativeGetFirstName
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetFirstName(
-    JNIEnv* jenv, jclass, jlong personImpl, jobject firstName
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeGetFirstName(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject firstNameWrappedString);
 
 /*
  * Class:     net_dotslashzero_javalib_Person
  * Method:    nativeGetAge
- * Signature: (JLnet/dotslashzero/javalib/Core/WrappedInteger;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedInteger;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAge(
-    JNIEnv* jenv, jclass, jlong personImpl, jobject age
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAge(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject ageWrappedInteger);
 
 /*
  * Class:     net_dotslashzero_javalib_Person
  * Method:    nativeGetAddress
- * Signature: (JLnet/dotslashzero/javalib/Core/AddressType;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/AddressType;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAddress(
-    JNIEnv* jenv, jclass, jlong personImpl, jobject addressImpl
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeGetAddress(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject addressAddressType);
+
+/*
+ * Class:     net_dotslashzero_javalib_Person
+ * Method:    nativeToString
+ * Signature: (JLnet/dotslashzero/javalib/Core/WrappedString;)J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeToString(
+    JNIEnv* pEnv,
+    jclass personClass,
+    jlong personImpl,
+    jobject personStringWrappedString);
+
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativeCreateGenerator
+ * Signature: (Lnet/dotslashzero/javalib/Core/GeneratorType;)J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreateGenerator(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jobject generatorGeneratorType);
+/*
+ * Class:     net_dotslashzero_javalib_Printer
+ * Method:    nativeDestroyGenerator
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyGenerator(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong generatorImpl);
 
 /*
  * Class:     net_dotslashzero_javalib_Printer
  * Method:    nativeCreatePrinter
- * Signature: (Lnet/dotslashzero/javalib/IGenerator;Lnet/dotslashzero/javalib/Core/PrinterType;)I
+ * Signature: (JLnet/dotslashzero/javalib/Core/PrinterType;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinter(
-    JNIEnv* jenv, jclass, jobject generatorInstance, jobject printerImpl
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinter(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong generatorImpl,
+    jobject printerPrinterType);
 
 /*
  * Class:     net_dotslashzero_javalib_Printer
  * Method:    nativeDestroyPrinter
- * Signature: (J)I
+ * Signature: (J)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyPrinter(
-    JNIEnv*, jclass, jlong printerImpl
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyPrinter(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong printerImpl);
 
 /*
  * Class:     net_dotslashzero_javalib_Printer
  * Method:    nativePrintInt
- * Signature: (J)I
+ * Signature: (JLnet/dotslashzero/javalib/IGenerator;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintInt(
-    JNIEnv* jenv, jclass, jlong printerImpl
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintInt(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong printerImpl,
+    jobject generatorInstance);
 
 /*
  * Class:     net_dotslashzero_javalib_Printer
  * Method:    nativePrintString
- * Signature: (J)I
+ * Signature: (JLnet/dotslashzero/javalib/IGenerator;)J
  */
-JAVALIB_API
-JNIEXPORT jint JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintString(
-    JNIEnv* jenv, jclass, jlong printerImpl
-);
+JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintString(
+    JNIEnv* pEnv,
+    jclass printerClass,
+    jlong printerImpl,
+    jobject generatorInstance);
 
-#endif // !defined(JAVALIB_API_H)
+#if defined(__cplusplus)
+}
+#endif /* defined(__cplusplus) */

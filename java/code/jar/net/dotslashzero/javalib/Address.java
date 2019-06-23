@@ -4,28 +4,32 @@ public class Address extends Core.ApiBase<Core.AddressType>
 {
     Address()
     {
-        _impl = new Core.AddressType(0);
+        m_impl = new Core.AddressType(0);
     }
 
     public Address(
-        int streetNum, String street,
-        String city, String province,
-        String country, String zipCode
-    ) throws JavaLibException
+        int streetNum,
+        String street,
+        String city,
+        String province,
+        String zipCode,
+        String country) throws JavaLibException
     {
-        _impl = new Core.AddressType(0);
-        // Note: Even if this native method returns a result that we can evaluate, the native function itself is
-        // capable of throwing exceptions.
-        nativeCreateAddress(streetNum, street, city, province, country, zipCode, _impl);
+        m_impl = new Core.AddressType(0);
+
+        long nativeErrorNum = nativeCreateAddress(
+            streetNum,
+            street,
+            city,
+            province,
+            zipCode,
+            country,
+            m_impl);
+
+        if (nativeErrorNum != 0)
+            throw (new JavaLibException(nativeErrorNum));
     }
 
-    private static native int nativeCreateAddress(
-        int streetNum, String street,
-        String city, String province,
-        String country, String zipCode,
-        Core.AddressType addressImpl
-    );
-	
 	@SuppressWarnings("deprecation")
     @Override
     protected synchronized void finalize()
@@ -34,82 +38,106 @@ public class Address extends Core.ApiBase<Core.AddressType>
         return;
     }
 
-    private static native int nativeDestroyAddress(long addressImpl);
-
     public int getStreetNum() throws JavaLibException
     {
-        Core.WrappedInteger result = new Core.WrappedInteger(0);
-        nativeGetStreetNum(this.getImpl(), result);
-        return (result.getValue());
-    }
+        Core.WrappedInteger streetNum = new Core.WrappedInteger(0);
 
-    private static native int nativeGetStreetNum(long addressImpl, Core.WrappedInteger streetNum);
+        long nativeErrorNum = nativeGetStreetNum(this.getImpl(), streetNum);
+        if (nativeErrorNum != 0)
+            throw (new JavaLibException(nativeErrorNum));
+
+        return (streetNum.getInt());
+    }
 
     public String getStreet() throws JavaLibException
     {
-        Core.WrappedString result = new Core.WrappedString("");
-        nativeGetStreet(this.getImpl(), result);
-        return (result.getValue());
-    }
+        Core.WrappedString street = new Core.WrappedString("");
 
-    private static native int nativeGetStreet(long addressImpl, Core.WrappedString street);
+        long nativeErrorNum = nativeGetStreet(this.getImpl(), street);
+        if (nativeErrorNum != 0)
+            throw (new JavaLibException(nativeErrorNum));
+
+        return (street.getString());
+    }
 
     public String getCity() throws JavaLibException
     {
-        Core.WrappedString result = new Core.WrappedString("");
-        nativeGetCity(this.getImpl(), result);
-        return (result.getValue());
-    }
+        Core.WrappedString city = new Core.WrappedString("");
 
-    private static native int nativeGetCity(long addressImpl, Core.WrappedString city);
+        long nativeErrorNum = nativeGetProvince(this.getImpl(), city);
+        if (nativeErrorNum != 0)
+            throw (new JavaLibException(nativeErrorNum));
+
+        return (city.getString());
+    }
 
     public String getProvince() throws JavaLibException
     {
-        Core.WrappedString result = new Core.WrappedString("");
-        nativeGetProvince(this.getImpl(), result);
-        return (result.getValue());
+        Core.WrappedString province = new Core.WrappedString("");
+
+        long nativeErrorNum = nativeGetProvince(this.getImpl(), province);
+        if (nativeErrorNum != 0)
+            throw (new JavaLibException(nativeErrorNum));
+
+        return (province.getString());
     }
-
-    private static native int nativeGetProvince(long addressImpl, Core.WrappedString province);
-
-    public String getCountry() throws JavaLibException
-    {
-        Core.WrappedString result = new Core.WrappedString("");
-        nativeGetCountry(this.getImpl(), result);
-        return (result.getValue());
-    }
-
-    private static native int nativeGetCountry(long addressImpl, Core.WrappedString country);
 
     public String getZipCode() throws JavaLibException
     {
-        Core.WrappedString result = new Core.WrappedString("");
-        nativeGetZipCode(this.getImpl(), result);
-        return (result.getValue());
+        Core.WrappedString zipCode = new Core.WrappedString("");
+
+        long nativeErrorNum = nativeGetZipCode(this.getImpl(), zipCode);
+        if (nativeErrorNum != 0)
+            throw (new JavaLibException(nativeErrorNum));
+
+        return (zipCode.getString());
     }
 
-    private static native int nativeGetZipCode(long addressImpl, Core.WrappedString zipCode);
+    public String getCountry() throws JavaLibException
+    {
+        Core.WrappedString country = new Core.WrappedString("");
+
+        long nativeErrorNum = nativeGetCountry(this.getImpl(), country);
+        if (nativeErrorNum != 0)
+            throw (new JavaLibException(nativeErrorNum));
+
+        return (country.getString());
+    }
 
     @Override
     public String toString()
     {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append(this.getStreetNum());
-            sb.append(" ");
-            sb.append(this.getStreet());
-            sb.append(System.lineSeparator());
-            sb.append(this.getCity());
-            sb.append(", ");
-            sb.append(this.getProvince());
-            sb.append(System.lineSeparator());
-            sb.append(this.getCountry());
-            sb.append(" ");
-            sb.append(this.getZipCode());
-            return (sb.toString());
-        }
-        catch (Throwable t) {
+        Core.WrappedString addressString = new Core.WrappedString("");
+
+        long nativeErrorNum = nativeToString(this.getImpl(), addressString);
+        if (nativeErrorNum != 0)
             return ("");
-        }
+
+        return (addressString.getString());
     }
+
+    private static native long nativeCreateAddress(
+        int streetNum,
+        String street,
+        String city,
+        String province,
+        String zipCode,
+        String country,
+        Core.AddressType addressImpl);
+
+    private static native long nativeDestroyAddress(long addressImpl);
+
+    private static native long nativeGetStreetNum(long addressImpl, Core.WrappedInteger streetNum);
+
+    private static native long nativeGetStreet(long addressImpl, Core.WrappedString street);
+
+    private static native long nativeGetCity(long addressImpl, Core.WrappedString city);
+
+    private static native long nativeGetProvince(long addressImpl, Core.WrappedString province);
+
+    private static native long nativeGetZipCode(long addressImpl, Core.WrappedString zipCode);
+
+    private static native long nativeGetCountry(long addressImpl, Core.WrappedString country);
+
+    private static native long nativeToString(long addressImpl, Core.WrappedString adressString);
 }

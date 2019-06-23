@@ -7,21 +7,21 @@ class Core
 {
     static class WrappedType<T>
     {
-        T _value;
+        T m_value;
 
         public WrappedType(T value)
         {
-            _value = value;
+            m_value = value;
         }
 
         public T getValue()
         {
-            return (_value);
+            return (m_value);
         }
 
         public void setValue(T value)
         {
-            _value = value;
+            m_value = value;
             return;
         }
     }
@@ -35,25 +35,17 @@ class Core
 
         public void setAddress(long address)
         {
-            this.setValue(Long.valueOf(address));
+            setValue(Long.valueOf(address));
             return;
         }
 
         public long getAddress()
         {
-            return (this.getValue().longValue());
+            return (getValue().longValue());
         }
     }
 
-    static class ExceptionType extends NativeType
-    {
-        public ExceptionType(long impl)
-        {
-            super(Long.valueOf(impl));
-        }
-    }
-
-    static class AddressType extends NativeType
+    static final class AddressType extends NativeType
     {
         public AddressType(long impl)
         {
@@ -61,7 +53,7 @@ class Core
         }
     }
 
-    static class PersonType extends NativeType
+    static final class PersonType extends NativeType
     {
         public PersonType(long impl)
         {
@@ -69,7 +61,15 @@ class Core
         }
     }
 
-    static class PrinterType extends NativeType
+    static final class GeneratorType extends NativeType
+    {
+        public GeneratorType(long impl)
+        {
+            super(Long.valueOf(impl));
+        }
+    }
+
+    static final class PrinterType extends NativeType
     {
         public PrinterType(long impl)
         {
@@ -79,15 +79,15 @@ class Core
 
     public static class ApiBase<T extends NativeType>
     {
-        T _impl;
+        T m_impl;
 
         long getImpl()
         {
-            return (_impl.getAddress());
+            return (m_impl.getAddress());
         }
     }
 
-    static class WrappedInteger extends WrappedType<Integer>
+    static final class WrappedInteger extends WrappedType<Integer>
     {
         public WrappedInteger(Integer value)
         {
@@ -96,17 +96,17 @@ class Core
 
         public void setInt(int value)
         {
-            this.setValue(Integer.valueOf(value));
+            setValue(Integer.valueOf(value));
             return;
         }
 
         public int getInt()
         {
-            return (this.getValue().intValue());
+            return (getValue().intValue());
         }
     }
 
-    static class WrappedLong extends WrappedType<Long>
+    static final class WrappedLong extends WrappedType<Long>
     {
         public WrappedLong(Long value)
         {
@@ -115,17 +115,17 @@ class Core
 
         public void setLong(long value)
         {
-            this.setValue(Long.valueOf(value));
+            setValue(Long.valueOf(value));
             return;
         }
 
         public long getLong()
         {
-            return (this.getValue().longValue());
+            return (getValue().longValue());
         }
     }
 
-    static class WrappedString extends WrappedType<String>
+    static final class WrappedString extends WrappedType<String>
     {
         public WrappedString(String value)
         {
@@ -134,13 +134,13 @@ class Core
 
         public void setString(String value)
         {
-            this.setValue(value);
+            setValue(value);
             return;
         }
 
         public String getString()
         {
-            return (this.getValue());
+            return (getValue());
         }
     }
 }

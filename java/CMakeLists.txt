@@ -9,8 +9,20 @@ endif ()
 find_package(Java)
 find_package(JNI)
 
-set(LB_JAVALIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib")
-set(LB_JAVALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib")
+if (NOT JAVA_FOUND)
+    message(FATAL_ERROR "Java platform not found.")
+    return ()
+endif ()
+
+if (NOT JNI_FOUND)
+    message(FATAL_ERROR "JNI headers and libraries not found.")
+    return ()
+endif ()
+
+message(STATUS "JNI_INCLUDE_DIRS: ${JNI_INCLUDE_DIRS}")
+
+set(LB_JAVALIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib/headers")
+set(LB_JAVALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib/sources")
 
 set(LB_JAVALIB_HEADER_FILES
     "${LB_JAVALIB_HEADER_DIR}/dotslashzero/javalib/javalib.h")
@@ -19,7 +31,7 @@ set(LB_JAVALIB_SOURCE_FILES
 
 source_group(headers\\dotslashzero\\javalib ${LB_JAVALIB_HEADER_FILES})
 source_group(sources\\dotslashzero\\javalib ${LB_JAVALIB_SOURCE_FILES})
-    
+
 if (UNIX)
     set(LB_JAVALIB_COMPILE_DEFINITIONS)
     set(LB_JAVALIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
@@ -43,13 +55,13 @@ target_compile_options(
     PRIVATE ${LB_JAVALIB_COMPILE_OPTIONS})
 target_include_directories(
     javalib
-    PRIVATE ${LB_JAVALIB_HEADER_DIR} ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
+    PRIVATE ${LB_JAVALIB_HEADER_DIR} ${JNI_INCLUDE_DIRS})
 target_link_options(
     javalib
     PRIVATE ${LB_JAVALIB_LINK_OPTIONS})
 target_link_libraries(
     javalib
-    PRIVATE cxxlib)
+    PRIVATE clib ${JNI_LIBRARIES})
 
 # Build the JAR wrappers for Java projects to consume
 file(GLOB JAVA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/code/jar/net/dotslashzero/javalib/*.java")
@@ -60,15 +72,15 @@ add_custom_target(
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/code/jar"
     SOURCES ${JAVA_SOURCES}
     DEPENDS ${JAVA_SOURCES}
-    VERBATIM
-)
+    VERBATIM)
+
 add_custom_command(
     TARGET javalib_jar
     POST_BUILD
     COMMAND ${Java_JAR_EXECUTABLE} cvf "$<TARGET_FILE_DIR:javalib>/JavaLib.jar" net/
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    VERBATIM
-)
+    VERBATIM)
+
 add_dependencies(javalib_jar javalib)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")

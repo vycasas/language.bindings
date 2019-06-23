@@ -4,14 +4,10 @@ import net.dotslashzero.javalib.Library;
 import net.dotslashzero.javalib.Person;
 import net.dotslashzero.javalib.Printer;
 
-public class Test
+public final class Test
 {
-    public static class MyGenerator implements IGenerator
+    public static final class MyGenerator implements IGenerator
     {
-        public MyGenerator()
-        {
-        }
-
         public int generateInt(int data)
         {
             return (data * data);
@@ -32,7 +28,7 @@ public class Test
             System.out.println(Library.getVersionString());
 
             System.out.println("Creating a new address...");
-            Address addr = new Address(9898, "Corner St.", "Gotham", "CA", "Antartica", "4132");
+            Address addr = new Address(9898, "Corner St.", "Gotham", "CA", "4132", "Antartica");
             System.out.println("New address created!");
             System.out.println("Address:");
             System.out.println(addr.toString());
@@ -52,8 +48,6 @@ public class Test
             System.out.println("Performing printer actions...");
             printer.printInt();
             printer.printString();
-
-            Library.terminate();
         }
         catch (Exception e) {
             System.err.print("Exception: ");
@@ -64,6 +58,9 @@ public class Test
             System.err.print("Error: ");
             System.err.println(e.getMessage());
             e.printStackTrace(System.err);
+        }
+        finally {
+            Library.uninitialize();
         }
 
         return;

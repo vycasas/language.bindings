@@ -1,38 +1,20 @@
 package net.dotslashzero.javalib;
 
-public class JavaLibException extends Exception
+public final class JavaLibException extends Exception
 {
-    Core.ExceptionType _impl;
+    private static final long serialVersionUID = 5380981636603930675L;
 
-    long getImpl()
+    public JavaLibException(long errorNum)
     {
-        return (_impl.getAddress());
+        super(getErrorMessage(errorNum));
     }
 
-    JavaLibException(long impl)
+    private static String getErrorMessage(long errorNum)
     {
-        _impl = new Core.ExceptionType(impl);
-    }
-	
-	@SuppressWarnings("deprecation")
-    @Override
-    protected synchronized void finalize()
-    {
-        //nativeDestroyException(this.getImpl());
-        return;
+        Core.WrappedString errorMessage = new Core.WrappedString("");
+        nativeGetErrorMessage(errorNum, errorMessage);
+        return (errorMessage.getString());
     }
 
-    private static native int nativeDestroyException(long exceptionImpl);
-
-    @Override
-    public String getMessage()
-    {
-        char[] message = new char[512];
-        int nativeCallResult = nativeGetMessage(this.getImpl(), message);
-        if (nativeCallResult != 0)
-            return (new String());
-        return (new String(message));
-    }
-
-    private static native int nativeGetMessage(long exceptionImpl, char[] message);
+    private static native long nativeGetErrorMessage(long errorNum, Core.WrappedString errorMessage);
 }
