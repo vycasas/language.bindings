@@ -12,7 +12,7 @@ namespace DotSlashZero::CxxLib
 {
     namespace Core
     {
-        std::string ErrorNumToStdString(DszCLibErrorNum errorNum)
+        static std::string ErrorNumToStdString(DszCLibErrorNum errorNum)
         {
             std::string::size_type constexpr ERRORNUM_STRING_SIZE = 40;
             std::string errorNumString(ERRORNUM_STRING_SIZE, '\0');
@@ -23,6 +23,62 @@ namespace DotSlashZero::CxxLib
                 nullptr);
 
             return (errorNumString.c_str());
+        }
+
+        static DszCLibErrorNum GenerateIntRedirect(
+            int data,
+            int* pInt,
+            void* pUserData)
+        {
+            if (pUserData == nullptr)
+                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+            if (pInt == nullptr)
+                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+            auto pGenerator = reinterpret_cast<IGenerator*>(pUserData);
+
+            if (!pGenerator)
+                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+            *pInt = pGenerator->GenerateInt(data);
+
+            return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+        }
+
+        static DszCLibErrorNum GenerateStringRedirect(
+            int data,
+            char* pString, std::size_t stringSize,
+            std::size_t* pCharsWritten,
+            void* pUserData)
+        {
+            if (pUserData == nullptr)
+                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+            auto pGenerator = reinterpret_cast<IGenerator*>(pUserData);
+
+            if (!pGenerator)
+                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+
+            auto generatedString = pGenerator->GenerateString(data);
+
+            std::size_t numChars = 0;
+
+            if ((pString != nullptr) && (stringSize > 0)) {
+                std::fill_n(pString, stringSize, '\0');
+                auto const COPY_COUNT = (std::min)(stringSize, generatedString.size());
+                std::copy_n(generatedString.cbegin(), COPY_COUNT, pString);
+                pString[stringSize - 1] = '\0';
+                numChars = std::string_view(pString).size();
+            }
+            else {
+                numChars = generatedString.size();
+            }
+
+            if (pCharsWritten != nullptr)
+                *pCharsWritten = numChars;
+
+            return (DSZ_CLIB_ERRORNUM_NO_ERROR);
         }
     }
     // namespace Core
@@ -415,8 +471,8 @@ namespace DotSlashZero::CxxLib
         DszCLibGenerator generatorImpl = DSZ_CLIB_GENERATOR_INVALID;
 
         auto errorNum = DszCLibGeneratorCreate(
-            (DszCLibGenerateIntFunction)& (Printer::GenerateIntRedirect__),
-            (DszCLibGenerateStringFunction)& (Printer::GenerateStringRedirect__),
+            (DszCLibGenerateIntFunction) &(Core::GenerateIntRedirect),
+            (DszCLibGenerateStringFunction) &(Core::GenerateStringRedirect),
             &generatorImpl);
 
         DSZ_CXXLIBCORE_API_CHECK(errorNum);
@@ -430,10 +486,7 @@ namespace DotSlashZero::CxxLib
 
     Printer::~Printer(void) noexcept
     {
-        if (m_impl != DSZ_CLIB_PRINTER_INVALID) {
-            DszCLibPrinterDestroy(m_impl);
-            m_impl = DSZ_CLIB_PRINTER_INVALID;
-        }
+        Destroy__();
 
         return;
     }
@@ -442,7 +495,7 @@ namespace DotSlashZero::CxxLib
     {
         auto errorNum = DszCLibPrinterPrintIntWithUserData(
             m_impl,
-            const_cast<void*>(reinterpret_cast<void const*>(this)));
+            const_cast<void*>(reinterpret_cast<void const*>(m_pGenerator.get())));
 
         DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
@@ -453,71 +506,21 @@ namespace DotSlashZero::CxxLib
     {
         auto errorNum = DszCLibPrinterPrintStringWithUserData(
             m_impl,
-            const_cast<void*>(reinterpret_cast<void const*>(this)));
+            const_cast<void*>(reinterpret_cast<void const*>(m_pGenerator.get())));
 
         DSZ_CXXLIBCORE_API_CHECK(errorNum);
 
         return;
     }
 
-    /*static*/
-    DszCLibErrorNum Printer::GenerateIntRedirect__(
-        int data,
-        int* pInt,
-        void* pUserData)
+    void Printer::Destroy__() noexcept
     {
-        if (pUserData == nullptr)
-            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
-
-        if (pInt == nullptr)
-            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
-
-        auto pPrinter = reinterpret_cast<Printer*>(pUserData);
-        auto& pGenerator = pPrinter->m_pGenerator; // note: this must be a reference to an std::unique_ptr! dangerous... watch out!
-
-        if (!pGenerator)
-            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
-
-        *pInt = pGenerator->GenerateInt(data);
-
-        return (DSZ_CLIB_ERRORNUM_NO_ERROR);
-    }
-
-    /*static*/
-    DszCLibErrorNum Printer::GenerateStringRedirect__(
-        int data,
-        char* pString, std::size_t stringSize,
-        std::size_t* pCharsWritten,
-        void* pUserData)
-    {
-        if (pUserData == nullptr)
-            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
-
-        auto pPrinter = reinterpret_cast<Printer*>(pUserData);
-        auto& pGenerator = pPrinter->m_pGenerator; // note: this must be a reference to an std::unique_ptr! dangerous... watch out!
-
-        if (!pGenerator)
-            return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
-
-        auto generatedString = pGenerator->GenerateString(data);
-
-        std::size_t numChars = 0;
-
-        if ((pString != nullptr) && (stringSize > 0)) {
-            std::fill_n(pString, stringSize, '\0');
-            auto const COPY_COUNT = (std::min)(stringSize, generatedString.size());
-            std::copy_n(generatedString.cbegin(), COPY_COUNT, pString);
-            pString[stringSize - 1] = '\0';
-            numChars = std::string_view(pString).size();
-        }
-        else {
-            numChars = generatedString.size();
+        if (m_impl != DSZ_CLIB_PRINTER_INVALID) {
+            DszCLibPrinterDestroy(m_impl);
+            m_impl = DSZ_CLIB_PRINTER_INVALID;
         }
 
-        if (pCharsWritten != nullptr)
-            *pCharsWritten = numChars;
-
-        return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+        return;
     }
 }
 // namespace DotSlashZero::CXXLib

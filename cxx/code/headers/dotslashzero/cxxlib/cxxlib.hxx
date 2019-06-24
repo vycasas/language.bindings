@@ -143,17 +143,7 @@ namespace DotSlashZero::CxxLib
         DSZ_CXXLIB_API void PrintString(void) const;
 
     private:
-        // redirect functions for C interop
-        static DszCLibErrorNum GenerateIntRedirect__(
-            int data,
-            int* pInt,
-            void* pUserData);
-
-        static DszCLibErrorNum GenerateStringRedirect__(
-            int data,
-            char* pString, std::size_t stringSize,
-            std::size_t* pCharsWritten,
-            void* pUserData);
+        void Destroy__() noexcept;
 
         DszCLibPrinter m_impl;
         std::unique_ptr<IGenerator> m_pGenerator;
