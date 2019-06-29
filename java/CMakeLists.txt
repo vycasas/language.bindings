@@ -29,12 +29,16 @@ set(LB_JAVALIB_HEADER_FILES
 set(LB_JAVALIB_SOURCE_FILES
     "${LB_JAVALIB_SOURCE_DIR}/dotslashzero/javalib/javalib.c")
 
-source_group(headers\\dotslashzero\\javalib ${LB_JAVALIB_HEADER_FILES})
-source_group(sources\\dotslashzero\\javalib ${LB_JAVALIB_SOURCE_FILES})
+source_group(headers\\dotslashzero\\javalib FILES ${LB_JAVALIB_HEADER_FILES})
+source_group(sources\\dotslashzero\\javalib FILES ${LB_JAVALIB_SOURCE_FILES})
 
 if (UNIX)
     set(LB_JAVALIB_COMPILE_DEFINITIONS)
-    set(LB_JAVALIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
+    set(LB_JAVALIB_COMPILE_OPTIONS
+        -W -Wall -Wextra -Werror
+        -pedantic -pedantic-errors
+        -fpic -fPIC
+        -fvisibility=hidden)
     set(LB_JAVALIB_LINK_OPTIONS)
 elseif (MSVC)
     set(LB_JAVALIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)

@@ -9,12 +9,16 @@ set(LB_CLIB_HEADER_FILES
 set(LB_CLIB_SOURCE_FILES
     "${LB_CLIB_SOURCE_DIR}/dotslashzero/clib/clib.c")
 
-source_group(headers\\dotslashzero\\clib ${LB_CLIB_HEADER_FILES})
-source_group(sources\\dotslashzero\\clib ${LB_CLIB_SOURCE_FILES})
+source_group(headers\\dotslashzero\\clib FILES ${LB_CLIB_HEADER_FILES})
+source_group(sources\\dotslashzero\\clib FILES ${LB_CLIB_SOURCE_FILES})
 
 if (UNIX)
     set(LB_CLIB_COMPILE_DEFINITIONS)
-    set(LB_CLIB_COMPILE_OPTIONS -W -Wall -Wextra -Werror -pedantic -pedantic-errors -fpic -fPIC -fvisibility=hidden)
+    set(LB_CLIB_COMPILE_OPTIONS
+        -W -Wall -Wextra -Werror
+        -pedantic -pedantic-errors
+        -fpic -fPIC
+        -fvisibility=hidden)
     set(LB_CLIB_LINK_OPTIONS)
 elseif (MSVC)
     set(LB_CLIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)

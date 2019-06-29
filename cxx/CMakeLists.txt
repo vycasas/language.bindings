@@ -14,8 +14,8 @@ set(LB_CXXLIB_HEADER_FILES
 set(LB_CXXLIB_SOURCE_FILES
     "${LB_CXXLIB_SOURCE_DIR}/dotslashzero/cxxlib/cxxlib.cxx")
 
-source_group(headers\\dotslashzero\\cxxlib ${LB_CXXLIB_HEADER_FILES})
-source_group(sources\\dotslashzero\\cxxlib ${LB_CXXLIB_SOURCE_FILES})
+source_group(headers\\dotslashzero\\cxxlib FILES ${LB_CXXLIB_HEADER_FILES})
+source_group(sources\\dotslashzero\\cxxlib FILES ${LB_CXXLIB_SOURCE_FILES})
 
 if (UNIX)
     set(LB_CXXLIB_COMPILE_DEFINITIONS)
