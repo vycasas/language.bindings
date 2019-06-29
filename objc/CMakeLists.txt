@@ -15,8 +15,14 @@ find_library(FOUNDATION Foundation)
 
 set(LB_OBJCLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_OBJCLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
-set(LB_OBJCLIB_HEADER_FILES "${LB_OBJCLIB_HEADER_DIR}/dotslashzero/objclib/ObjCLib.h")
-set(LB_OBJCLIB_SOURCE_FILES "${LB_OBJCLIB_SOURCE_DIR}/dotslashzero/objclib/ObjCLib.m")
+
+set(LB_OBJCLIB_HEADER_FILES
+    "${LB_OBJCLIB_HEADER_DIR}/dotslashzero/objclib/ObjCLib.h")
+set(LB_OBJCLIB_SOURCE_FILES
+    "${LB_OBJCLIB_SOURCE_DIR}/dotslashzero/objclib/ObjCLib.m")
+
+source_group(headers\\dotslashzero\\objclib FILES ${LB_OBJCLIB_HEADER_FILES})
+source_group(sources\\dotslashzero\\objclib FILES ${LB_OBJCLIB_SOURCE_FILES})
 
 set(LB_OBJCLIB_COMPILE_DEFINITIONS)
 set(LB_OBJCLIB_COMPILE_OPTIONS

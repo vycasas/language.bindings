@@ -27,7 +27,7 @@ if (NOT ("${LB_VERSION_EXTRA}" STREQUAL ""))
     set(LB_VERSION_STRING "${LB_VERSION_STRING}-${LB_VERSION_EXTRA}")
 endif ()
 
-message("language.bindings version ${LB_VERSION_STRING}")
+message(STATUS "Building language.bindings version ${LB_VERSION_STRING}")
 
 set(LB_COMMON_HEADER_DIR "${CMAKE_BINARY_DIR}/headers")
 configure_file(
