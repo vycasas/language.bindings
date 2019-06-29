@@ -64,19 +64,19 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if (LB_BUILD_C)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/c)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/c")
 endif ()
 
 if (LB_BUILD_CXX)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/cxx)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/cxx")
 endif ()
 
 if (LB_BUILD_JAVA)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/java)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/java")
 endif ()
 
 if (LB_BUILD_OBJC)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/objc)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/objc")
 endif ()
 
 if (LB_BUILD_DOTNET)
