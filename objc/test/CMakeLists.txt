@@ -49,5 +49,5 @@ target_link_options(
     PRIVATE ${LB_OBJCLIB_TEST_LINK_OPTIONS})
 
 add_dependencies(objclib_test objclib)
-# dependency is necessary because objclib target is not linked directly via CMake target system
-
+# dependency is necessary because objclib target is not linked directly via CMake target system (objclib_test links
+# with the framework)
