@@ -1,14 +1,10 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(dotnetframeworklib_test CSharp)
 
+set(LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR "${CMAKE_BINARY_DIR}/$(Configuration)")
 set(LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_FILES
-    "${LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_DIR}/Program.cs")
-
-source_group(sources FILES ${LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_FILES})
-
-# TODO: until CMake has better C# support (e.g. LangVersion), command line is used for now
+set(LB_DOTNETFRAMEWORKLIB_TEST_GUID "{5CEB1F04-D7D6-40F6-BB94-B8A3AEE26603}")
 
 set(LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM "x64")
 if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
@@ -17,23 +13,32 @@ elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Win32")
     set(LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM "x86")
 endif ()
 
-set(LB_DOTNETFRAMEWORKLIB_TEST_COMPILE_FLAGS_DEBUG "")
+# .csproj files does not support full absolute paths for source files
+file(RELATIVE_PATH LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE
+    ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/Program.cs")
+file(RELATIVE_PATH LB_DOTNETFRAMEWORKLIB_TEST_ASSEMBLYINFO_CS_FILE
+    ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/AssemblyInfo.cs")
 
-add_custom_target(
-    dotnetframeworklib_test ALL
-    COMMAND ${CMAKE_CSharp_COMPILER}
-        -langversion:8
-        -platform:${LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM}
-        $<$<OR:$<CONFIG:DEBUG>,$<CONFIG:RELWITHDEBINFO>>:-debug>
-        $<$<CONFIG:DEBUG>:-debug:full> $<$<CONFIG:RELWITHDEBINFO>:-debug:pdbonly>
-        $<$<NOT:$<CONFIG:DEBUG>>:-optimize>
-        $<IF:$<CONFIG:DEBUG>,-define:DEBUG,-define:TRACE>
-        -target:exe -out:$<TARGET_FILE_DIR:dotnetframeworklib>/DotSlashZero.DotNetFrameworkLib.Test.exe
-        -warnaserror+ -warn:4
-        -reference:$<TARGET_FILE:dotnetframeworklib>
-        ${LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_FILES}
-    DEPENDS ${LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_FILES}
-    SOURCES ${LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_FILES}
-    VERBATIM)
+STRING(REPLACE "/" "\\"
+    LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE ${LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE})
+STRING(REPLACE "/" "\\"
+    LB_DOTNETFRAMEWORKLIB_TEST_ASSEMBLYINFO_CS_FILE ${LB_DOTNETFRAMEWORKLIB_TEST_ASSEMBLYINFO_CS_FILE})
 
-add_dependencies(dotnetframeworklib_test dotnetframeworklib)
+# would be nice to use the generator expressions, but the values are needed during configure time
+get_property(LB_DOTNETFRAMEWORK_LIB_TARGET_FILE_NAME
+    TARGET dotnetframeworklib
+    PROPERTY OUTPUT_NAME)
+
+set(LB_DOTNETFRAMEWORK_LIB_TARGET_FILE_PATH
+    "${CMAKE_BINARY_DIR}/$(Configuration)/${LB_DOTNETFRAMEWORK_LIB_TARGET_FILE_NAME}.dll")
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/dotnetframeworklib_test.csproj.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/dotnetframeworklib_test.csproj")
+
+include_external_msproject(
+    dotnetframeworklib_test "${CMAKE_CURRENT_BINARY_DIR}/dotnetframeworklib_test.csproj"
+    TYPE "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}" # C# console app project type
+    GUID ${LB_DOTNETFRAMEWORKLIB_TEST_GUID}
+    PLATFORM ${LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM}
+    dotnetframeworklib)

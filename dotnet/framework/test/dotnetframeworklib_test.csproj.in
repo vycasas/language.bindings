@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</Platform>
+    <ProjectGuid>@LB_DOTNETFRAMEWORKLIB_TEST_GUID@</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DotSlashZero.DotNetFrameworkLib.Test</RootNamespace>
+    <AssemblyName>DotSlashZero.DotNetFrameworkLib.Test</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR@</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>full</DebugType>
+    <PlatformTarget>@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</PlatformTarget>
+    <LangVersion>8</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@'">
+    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR@</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'MinSizeRel|@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@'">
+    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR@</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'RelWithDebInfo|@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@'">
+    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR@</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>full</DebugType>
+    <PlatformTarget>@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LangVersion>8</LangVersion>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="@LB_DOTNETFRAMEWORK_LIB_TARGET_FILE_NAME@, Version=2.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>@LB_DOTNETFRAMEWORK_LIB_TARGET_FILE_PATH@</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="@LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE@" />
+    <Compile Include="@LB_DOTNETFRAMEWORKLIB_TEST_ASSEMBLYINFO_CS_FILE@" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
