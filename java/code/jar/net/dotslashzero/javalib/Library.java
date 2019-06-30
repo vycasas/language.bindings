@@ -9,15 +9,13 @@ public final class Library
     {
     }
 
-    public static void initialize() throws UnsatisfiedLinkError, JavaLibException
+    public static boolean initialize() throws UnsatisfiedLinkError
     {
         System.loadLibrary("javalib");
 
         long nativeErrorNum = nativeInitialize();
-        if (nativeErrorNum != 0)
-            throw (new JavaLibException(nativeErrorNum));
 
-        return;
+        return (nativeErrorNum == 0);
     }
 
     public static void uninitialize()

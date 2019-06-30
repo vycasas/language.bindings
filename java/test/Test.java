@@ -22,7 +22,9 @@ public final class Test
     public static void main(String[] args)
     {
         try {
-            Library.initialize();
+            boolean initOk = Library.initialize();
+            if (!initOk)
+                return;
 
             System.out.print("Library initialized... version ");
             System.out.println(Library.getVersionString());
