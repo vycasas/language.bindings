@@ -138,11 +138,10 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 @implementation OLLibrary
 
-+ (void) initialize
++ (BOOL) initialize
 {
     DszCLibErrorNum errorNum = DszCLibLibraryInitialize();
-    DSZ_OBJCLIBCORE_API_CHECK(errorNum);
-    return;
+    return ((errorNum == DSZ_CLIB_ERRORNUM_NO_ERROR) ? YES : NO);
 }
 
 + (void) uninitialize

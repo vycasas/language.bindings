@@ -68,14 +68,14 @@ target_link_libraries(
     PRIVATE clib ${JNI_LIBRARIES})
 
 # Build the JAR wrappers for Java projects to consume
-file(GLOB JAVA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/code/jar/net/dotslashzero/javalib/*.java")
+file(GLOB LB_JAVALIB_JAR_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/code/jar/net/dotslashzero/javalib/*.java")
 add_custom_target(
     javalib_jar ALL
     COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_CURRENT_BINARY_DIR} -verbose -deprecation -Werror
-        -cp ${CMAKE_CURRENT_SOURCE_DIR} ${JAVA_SOURCES}
+        -cp ${CMAKE_CURRENT_SOURCE_DIR} ${LB_JAVALIB_JAR_SOURCE_FILES}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/code/jar"
-    SOURCES ${JAVA_SOURCES}
-    DEPENDS ${JAVA_SOURCES}
+    SOURCES ${LB_JAVALIB_JAR_SOURCE_FILES}
+    DEPENDS ${LB_JAVALIB_JAR_SOURCE_FILES}
     VERBATIM)
 
 add_custom_command(

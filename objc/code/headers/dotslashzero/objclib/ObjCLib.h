@@ -10,7 +10,7 @@ extern "C"
 
 @interface OLLibrary : NSObject
 
-+ (void) initialize;
++ (BOOL) initialize;
 + (void) uninitialize;
 + (NSString*) getVersionString;
 + (NSUInteger) getVersionMajor;
