@@ -9,12 +9,12 @@ using namespace System::Security::Permissions;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-[assembly:AssemblyTitleAttribute(L"dotnetlib")];
-[assembly:AssemblyDescriptionAttribute(L"")];
+[assembly:AssemblyTitleAttribute(L"DotSlashZero.DotNetFrameworkLib")];
+[assembly:AssemblyDescriptionAttribute(L".NET Framework sample library for language.bindings.")];
 [assembly:AssemblyConfigurationAttribute(L"")];
-[assembly:AssemblyCompanyAttribute(L"")];
-[assembly:AssemblyProductAttribute(L"dotnetlib")];
-[assembly:AssemblyCopyrightAttribute(L"Copyright (c) Vincent Ycasas 2014")];
+[assembly:AssemblyCompanyAttribute(L"DotSlashZero")];
+[assembly:AssemblyProductAttribute(L"DotSlashZero.DotNetFrameworkLib")];
+[assembly:AssemblyCopyrightAttribute(L"Copyright (c) Vincent Ycasas 2019")];
 [assembly:AssemblyTrademarkAttribute(L"")];
 [assembly:AssemblyCultureAttribute(L"")];
 
@@ -29,7 +29,7 @@ using namespace System::Security::Permissions;
 // You can specify all the value or you can default the Revision and Build Numbers
 // by using the '*' as shown below:
 
-[assembly:AssemblyVersionAttribute("1.0.0.0")];
+[assembly:AssemblyVersionAttribute("2.0.0.0")];
 
 [assembly:ComVisible(false)];
 
