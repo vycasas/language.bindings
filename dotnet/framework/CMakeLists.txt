@@ -64,4 +64,4 @@ set_target_properties(dotnetframeworklib
 set_target_properties(dotnetframeworklib
     PROPERTIES VS_DOTNET_REFERECES "System")
 
-# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")

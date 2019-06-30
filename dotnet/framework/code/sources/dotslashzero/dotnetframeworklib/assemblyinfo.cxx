@@ -10,11 +10,11 @@ using namespace System::Security::Permissions;
 // associated with an assembly.
 //
 [assembly:AssemblyTitleAttribute(L"DotSlashZero.DotNetFrameworkLib")];
-[assembly:AssemblyDescriptionAttribute(L"")];
+[assembly:AssemblyDescriptionAttribute(L".NET Framework sample library for language.bindings.")];
 [assembly:AssemblyConfigurationAttribute(L"")];
-[assembly:AssemblyCompanyAttribute(L"")];
+[assembly:AssemblyCompanyAttribute(L"DotSlashZero")];
 [assembly:AssemblyProductAttribute(L"DotSlashZero.DotNetFrameworkLib")];
-[assembly:AssemblyCopyrightAttribute(L"Copyright (c) Vincent Ycasas 2014")];
+[assembly:AssemblyCopyrightAttribute(L"Copyright (c) Vincent Ycasas 2019")];
 [assembly:AssemblyTrademarkAttribute(L"")];
 [assembly:AssemblyCultureAttribute(L"")];
 

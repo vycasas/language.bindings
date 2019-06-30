@@ -1,424 +1,632 @@
-#include "api_dotnet.hxx"
+#include <dotslashzero/dotnetframeworklib/dotnetframeworklib.hxx>
+
+#include <dotslashzero/cxxlib/cxxlib.hxx>
+
+#include <cassert>
+#include <vector>
 
 #include <vcclr.h>
 
-#define BEGIN_EX_GUARD \
+#define DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD \
     try {
-#define END_EX_GUARD \
+
+#define DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD \
     } \
-    catch (const CXXLib::Exception& e) { \
-        throw (gcnew DotNetLib::Exception(e)); \
+    catch (DotSlashZero::CxxLib::Exception const& e) { \
+        throw (Core::CreateNewException(e)); \
     } \
-    catch (std::exception& e) { \
-        throw (gcnew DotNetLib::Exception(CXXLib::Exception(e))); \
+    catch (std::exception const& e) { \
+        throw (Core::CreateNewException(e)); \
+    } \
+    catch (...) { \
+        throw (Core::CreateNewException(L"An unknown error has occurred.")); \
     }
 
-namespace DotNetLibCore
+#define DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW \
+    } \
+    catch (...) { \
+        bool const NO_EXCEPTION_CAUGHT = false; \
+        assert(NO_EXCEPTION_CAUGHT); \
+    }
+
+namespace DotSlashZero::DotNetFrameworkLib
 {
-    namespace Utils
+    namespace Core
     {
-        inline System::String^ CXXStdStringToSystemString(const std::string& str)
+        using CliByteArray = cli::array<System::Byte>;
+        using ByteVector = std::vector<std::byte>;
+
+        static inline CliByteArray^ ByteVectorToCliByteArray(ByteVector const& byteVect)
         {
-            System::String^ result = gcnew System::String(str.c_str());
+            auto cliByteArray = gcnew CliByteArray(static_cast<int>(byteVect.size()));
+
+            for (int i = 0; i < byteVect.size(); i++)
+                cliByteArray[i] = static_cast<System::Byte>(byteVect[i]);
+
+            return (cliByteArray);
+        }
+
+        static inline ByteVector CliByteArrayToByteVector(CliByteArray^ cliByteArray)
+        {
+            ByteVector byteVector(
+                static_cast<ByteVector::size_type>(cliByteArray->Length),
+                ByteVector::value_type());
+
+            for (int i = 0; i < cliByteArray->Length; i++)
+                byteVector[i] = static_cast<std::byte>(cliByteArray[i]);
+
+            return (byteVector);
+        }
+
+        static inline System::String^ StdStringToSystemString(std::string const& str)
+        {
+            return (gcnew System::String(str.c_str()));
+        }
+
+        static inline std::string SystemStringToStdString(System::String^ str)
+        {
+            auto utf8ByteArray = System::Text::Encoding::UTF8->GetBytes(str);
+            auto utf8ByteVect = CliByteArrayToByteVector(utf8ByteArray);
+            utf8ByteVect.push_back(std::byte());
+            std::string result(reinterpret_cast<char const*>(utf8ByteVect.data()));
             return (result);
         }
 
-        inline std::string SystemStringToCXXStdString(System::String^ str)
+        static inline Exception^ CreateNewException(System::String^ message)
         {
-            std::string result;
-            array<unsigned char>^ byteArray = System::Text::Encoding::UTF8->GetBytes(str);
-            for (int i = 0; i < byteArray->Length; i++) {
-                result.push_back(static_cast<std::string::value_type>(byteArray[i]));
+            return (gcnew Exception(message));
+        }
+
+        static inline Exception^ CreateNewException(CxxLib::Exception const& e)
+        {
+            try
+            {
+                auto message = Core::StdStringToSystemString(e.GetMessage());
+                return (CreateNewException(message));
             }
-            return (result);
+            catch (...)
+            {
+                bool const NO_EXCEPTION_CAUGHT= false;
+                assert(NO_EXCEPTION_CAUGHT);
+                return (CreateNewException(L"A severe error has occurred while throwing an exception."));
+            }
         }
-    } // namespace Utils
 
-    class DotNetLibException final : public CXXLib::Exception
-    {
-    public:
-        DotNetLibException(void) : CXXLib::Exception()
-        { return; }
+        static inline Exception^ CreateNewException(std::exception const& e)
+        {
+            try
+            {
+                auto message = Core::StdStringToSystemString(e.what());
+                return (CreateNewException(message));
+            }
+            catch (...)
+            {
+                bool const NO_EXCEPTION_CAUGHT = false;
+                assert(NO_EXCEPTION_CAUGHT);
+                return (CreateNewException(L"A severe error has occurred while throwing an exception."));
+            }
+        }
 
-        DotNetLibException(CLibErrNum errNum) : CXXLib::Exception(errNum)
-        { return; }
-    }; // class DotNetLibException
+        class GeneratorImpl final : public CxxLib::IGenerator
+        {
+        public:
+            GeneratorImpl(DotNetFrameworkLib::IGenerator^ generator) :
+                m_rGenerator(generator)
+            { return; }
 
-    class DotNetLibGeneratorImpl final : public CXXLib::GeneratorBase
-    {
-    public:
-        DotNetLibGeneratorImpl(DotNetLib::IGenerator^ generator);
+            ~GeneratorImpl(void) noexcept
+            {
+                m_rGenerator = nullptr;
+                return;
+            }
 
-        // We need to implement 
+            int GenerateInt(int data) const override
+            {
+                try
+                {
+                    auto result = m_rGenerator->GenerateInt(static_cast<System::Int32>(data));
 
-        virtual ~DotNetLibGeneratorImpl(void) override;
+                    return (static_cast<int>(result));
+                }
+                catch (System::Exception^ e)
+                {
+                    throw (std::runtime_error(Core::SystemStringToStdString(e->Message)));
+                }
+            }
 
-        virtual int generateInt(int data) const override;
-        virtual std::string generateString(int data) const override;
+            std::string GenerateString(int data) const override
+            {
+                try
+                {
+                    auto result = m_rGenerator->GenerateString(static_cast<System::Int32>(data));
 
-        gcroot<DotNetLib::IGenerator^> _generatorPtr;
-    };
+                    return (Core::SystemStringToStdString(result));
+                }
+                catch (System::Exception^ e)
+                {
+                    throw (std::runtime_error(Core::SystemStringToStdString(e->Message)));
+                }
+            }
 
-    DotNetLibGeneratorImpl::DotNetLibGeneratorImpl(DotNetLib::IGenerator^ generator) :
-        _generatorPtr(generator)
+        private:
+            msclr::gcroot<DotNetFrameworkLib::IGenerator^> m_rGenerator;
+        };
+        // class GeneratorImpl
+    }
+    // namespace Core
+
+    Exception::Exception(System::String^ message) :
+        System::Exception(message)
     { return; }
 
-    DotNetLibGeneratorImpl::~DotNetLibGeneratorImpl(void)
-    { return; }
-
-    int DotNetLibGeneratorImpl::generateInt(int data) const
+    Exception::~Exception()
     {
-        try {
-            return (_generatorPtr->GenerateInt(data));
-        }
-        catch (System::Exception^) {
-            throw (DotNetLibException(2));
-        }
-    }
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-    std::string DotNetLibGeneratorImpl::generateString(int data) const
-    {
-        try {
-            return (
-                DotNetLibCore::Utils::SystemStringToCXXStdString(_generatorPtr->GenerateString(data))
-            );
-        }
-        catch (System::Exception^) {
-            throw (DotNetLibException(2));
-        }
-    }
+        this->!Exception();
 
-    // Unfortunately, due to Microsoft's error, we have to extend the CXXLib::Printer API to workaround with having
-    // an std::unique_ptr as a parameter. Apparently, this issue only occurs when compiling with "/clr" flags (or any of
-    // its variants).
-    // See here for details:
-    // https://connect.microsoft.com/VisualStudio/feedback/details/858243
-    class CXXLibPrinterAPIWorkAround : public CXXLib::Printer
-    {
-    public:
-        // The fix is to pass std::unique_ptr by r-value reference.
-        CXXLibPrinterAPIWorkAround(std::unique_ptr<CXXLib::GeneratorBase>&& generator);
-
-        virtual ~CXXLibPrinterAPIWorkAround(void) override;
-    }; // class CXXLibPrinterAPIWorkAround
-
-    CXXLibPrinterAPIWorkAround::CXXLibPrinterAPIWorkAround(std::unique_ptr<CXXLib::GeneratorBase>&& generator)
-    {
-        this->createInstance(std::move(generator));
         return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW;
     }
 
-    CXXLibPrinterAPIWorkAround::~CXXLibPrinterAPIWorkAround(void)
-    { return; }
+    Exception::!Exception()
+    { 
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-} // namespace DotNetLibCore
-
-namespace DotNetLib
-{
-    Exception::Exception(void) :
-        System::Exception(),
-        _impl(nullptr)
-    { return; }
-
-    Exception::!Exception(void)
-    {
-        this->CleanUp();
         return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW;
     }
 
-    Exception::~Exception(void)
+    // static
+    System::Boolean Library::Initialize()
     {
-        this->CleanUp();
-        return;
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        auto initOk = CxxLib::Library::Initialize();
+
+        return (static_cast<System::Boolean>(initOk));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
-    Exception::Exception(const CXXLib::Exception& e) :
-        System::Exception(DotNetLibCore::Utils::CXXStdStringToSystemString(e.getMessage()))
+    // static
+    System::Void Library::Uninitialize()
     {
-        _impl = new CXXLib::Exception(e);
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        CxxLib::Library::Uninitialize();
+
         return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
-    void Exception::CleanUp(void)
+    // static property
+    System::String^ Library::VersionString::get()
     {
-        if (_impl != nullptr) {
-            delete (_impl);
-            _impl = nullptr;
-        }
-        return;
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        auto const& versionString = CxxLib::Library::GetVersionString();
+
+        return (Core::StdStringToSystemString(versionString));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
-    void Library::Initialize(void)
+    // static property
+    System::Int32 Library::VersionMajor::get()
     {
-        BEGIN_EX_GUARD;
-        CXXLib::Library::initialize();
-        END_EX_GUARD;
-        return;
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        auto const& versionMajor = CxxLib::Library::GetVersionMajor();
+
+        return (static_cast<System::Int32>(versionMajor));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
-    void Library::Terminate(void)
+    // static property
+    System::Int32 Library::VersionMinor::get()
     {
-        BEGIN_EX_GUARD;
-        CXXLib::Library::terminate();
-        END_EX_GUARD;
-        return;
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        auto const& versionMinor = CxxLib::Library::GetVersionMinor();
+
+        return (static_cast<System::Int32>(versionMinor));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
-	System::String^ Library::GetVersionString(void)
-	{
-		BEGIN_EX_GUARD;
-		return (DotNetLibCore::Utils::CXXStdStringToSystemString(CXXLib::Library::getVersionString()));
-		END_EX_GUARD;
-	}
+    // static property
+    System::Int32 Library::VersionPatch::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-	System::UInt64 Library::GetVersionMajor(void)
-	{
-		BEGIN_EX_GUARD;
-		return (static_cast<System::UInt64>(CXXLib::Library::getVersionMajor()));
-		END_EX_GUARD;
-	}
+        auto const& versionPatch = CxxLib::Library::GetVersionPatch();
 
-	System::UInt64 Library::GetVersionMinor(void)
-	{
-		BEGIN_EX_GUARD;
-		return (static_cast<System::UInt64>(CXXLib::Library::getVersionMinor()));
-		END_EX_GUARD;
-	}
+        return (static_cast<System::Int32>(versionPatch));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // static property
+    System::String^ Library::VersionExtra::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        auto const& versionString = CxxLib::Library::GetVersionExtra();
+
+        return (Core::StdStringToSystemString(versionString));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
 
     Address::Address(
-        int streetNum,
+        System::Int32 streetNum,
         System::String^ street,
         System::String^ city,
         System::String^ province,
-        System::String^ country,
-        System::String^ zipCode
-    ) : _impl(nullptr)
+        System::String^ zipCode,
+        System::String^ country)
     {
-        BEGIN_EX_GUARD;
-        _impl = new CXXLib::Address(
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        auto streetNumInt = static_cast<int>(streetNum);
+        auto streetStdStr = Core::SystemStringToStdString(street);
+        auto cityStdStr = Core::SystemStringToStdString(city);
+        auto provinceStdStr = Core::SystemStringToStdString(province);
+        auto zipCodeStdStr = Core::SystemStringToStdString(zipCode);
+        auto countryStdStr = Core::SystemStringToStdString(country);
+
+        auto pAddress = std::make_unique<CxxLib::Address>(
+            streetNumInt,
+            streetStdStr,
+            cityStdStr,
+            provinceStdStr,
+            zipCodeStdStr,
+            countryStdStr);
+
+        m_pImpl = pAddress.release();
+
+        return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    Address::~Address()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        this->!Address();
+
+        return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW;
+    }
+
+    Address::!Address()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        if (m_pImpl != nullptr) {
+            std::unique_ptr<CxxLib::Address> pAddress(m_pImpl); // a pattern to free objects without using delete explicitly
+            m_pImpl = nullptr;
+        }
+
+        return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW;
+    }
+
+    // property
+    System::Int32 Address::StreetNum::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& streetNum = m_pImpl->GetStreetNum();
+
+        return (static_cast<System::Int32>(streetNum));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // property
+    System::String^ Address::Street::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& street = m_pImpl->GetStreet();
+
+        return (Core::StdStringToSystemString(street));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // property
+    System::String^ Address::City::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& city = m_pImpl->GetCity();
+
+        return (Core::StdStringToSystemString(city));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // property
+    System::String^ Address::Province::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& province = m_pImpl->GetProvince();
+
+        return (Core::StdStringToSystemString(province));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // property
+    System::String^ Address::ZipCode::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& zipCode = m_pImpl->GetZipCode();
+
+        return (Core::StdStringToSystemString(zipCode));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // property
+    System::String^ Address::Country::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& country = m_pImpl->GetCountry();
+
+        return (Core::StdStringToSystemString(country));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    System::String^ Address::ToString() /*override*/
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& addressString = m_pImpl->ToString();
+
+        return (Core::StdStringToSystemString(addressString));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    CxxLib::Address* Address::GetImpl()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        return (m_pImpl);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    Person::Person(
+        System::String^ lastName,
+        System::String^ firstName,
+        System::Int32 age,
+        DotNetFrameworkLib::Address^ address)
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        auto lastNameStdStr = Core::SystemStringToStdString(lastName);
+        auto firstNameStdStr = Core::SystemStringToStdString(firstName);
+        auto ageInt = static_cast<int>(age);
+        auto pAddressImpl = address->GetImpl();
+
+        assert(pAddressImpl != nullptr);
+
+        auto pPerson = std::make_unique<CxxLib::Person>(
+            lastNameStdStr,
+            firstNameStdStr,
+            ageInt,
+            *pAddressImpl);
+
+        m_pImpl = pPerson.release();
+
+        return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    Person::~Person()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        this->!Person();
+
+        return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW;
+    }
+
+    Person::!Person()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        if (m_pImpl != nullptr) {
+            std::unique_ptr<CxxLib::Person> pPerson(m_pImpl);
+            m_pImpl = nullptr;
+        }
+
+        return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW;
+    }
+
+    // property
+    System::String^ Person::LastName::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& lastName = m_pImpl->GetLastName();
+
+        return (Core::StdStringToSystemString(lastName));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // property
+    System::String^ Person::FirstName::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& firstName = m_pImpl->GetFirstName();
+
+        return (Core::StdStringToSystemString(firstName));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // property
+    System::Int32 Person::Age::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& age = m_pImpl->GetAge();
+
+        return (static_cast<System::Int32>(age));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    // property
+    DotNetFrameworkLib::Address^ Person::Address::get()
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& address = m_pImpl->GetAddress();
+
+        auto streetNum = static_cast<System::Int32>(address.GetStreetNum());
+        auto street = Core::StdStringToSystemString(address.GetStreet());
+        auto city = Core::StdStringToSystemString(address.GetCity());
+        auto province = Core::StdStringToSystemString(address.GetProvince());
+        auto zipCode = Core::StdStringToSystemString(address.GetZipCode());
+        auto country = Core::StdStringToSystemString(address.GetCountry());
+
+        return (gcnew DotNetFrameworkLib::Address(
             streetNum,
-            DotNetLibCore::Utils::SystemStringToCXXStdString(street),
-            DotNetLibCore::Utils::SystemStringToCXXStdString(city),
-            DotNetLibCore::Utils::SystemStringToCXXStdString(province),
-            DotNetLibCore::Utils::SystemStringToCXXStdString(country),
-            DotNetLibCore::Utils::SystemStringToCXXStdString(zipCode)
-        );
-        END_EX_GUARD;
+            street,
+            city,
+            province,
+            zipCode,
+            country));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    System::String^ Person::ToString() /*override*/
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        auto const& personString = m_pImpl->ToString();
+
+        return (Core::StdStringToSystemString(personString));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    Printer::Printer(IGenerator^ generator)
+    {
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        auto pGenerator = std::make_unique<Core::GeneratorImpl>(generator);
+
+        auto pPrinter = std::make_unique<CxxLib::Printer>(pGenerator.release());
+
+        m_pImpl = pPrinter.release();
+
         return;
+        
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
-    Address::!Address(void)
+    Printer::~Printer()
     {
-        this->CleanUp();
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        this->!Printer();
+
         return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW;
     }
 
-    Address::~Address(void)
+    Printer::!Printer()
     {
-        this->CleanUp();
-        return;
-    }
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-    int Address::StreetNum::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (_impl->getStreetNum());
-        END_EX_GUARD;
-    }
-
-    System::String^ Address::Street::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (DotNetLibCore::Utils::CXXStdStringToSystemString(_impl->getStreet()));
-        END_EX_GUARD;
-    }
-
-    System::String^ Address::City::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (DotNetLibCore::Utils::CXXStdStringToSystemString(_impl->getCity()));
-        END_EX_GUARD;
-    }
-
-    System::String^ Address::Province::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (DotNetLibCore::Utils::CXXStdStringToSystemString(_impl->getProvince()));
-        END_EX_GUARD;
-    }
-
-    System::String^ Address::Country::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (DotNetLibCore::Utils::CXXStdStringToSystemString(_impl->getCountry()));
-        END_EX_GUARD;
-    }
-
-    System::String^ Address::ZipCode::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (DotNetLibCore::Utils::CXXStdStringToSystemString(_impl->getZipCode()));
-        END_EX_GUARD;
-    }
-
-    System::String^ Address::ToString(void)
-    {
-        System::Text::StringBuilder^ sb = gcnew System::Text::StringBuilder();
-        sb->Append(this->StreetNum);
-        sb->Append(L" ");
-        sb->Append(this->Street);
-        sb->Append(System::Environment::NewLine);
-        sb->Append(this->City);
-        sb->Append(L" ");
-        sb->Append(this->Province);
-        sb->Append(System::Environment::NewLine);
-        sb->Append(this->Country);
-        sb->Append(L" ");
-        sb->Append(this->ZipCode);
-        return (sb->ToString());
-    }
-
-    void Address::CleanUp(void)
-    {
-        if (_impl != nullptr) {
-            delete (_impl);
-            _impl = nullptr;
+        if (m_pImpl != nullptr) {
+            std::unique_ptr<CxxLib::Printer> pPrinter(m_pImpl);
+            m_pImpl = nullptr;
         }
+
         return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD_NO_THROW;
     }
 
-    Person::Person(System::String^ lastName, System::String^ firstName, int age, DotNetLib::Address^ address) :
-        _impl(nullptr)
+    System::Void Printer::PrintInt()
     {
-        BEGIN_EX_GUARD;
-        _impl = new CXXLib::Person(
-            DotNetLibCore::Utils::SystemStringToCXXStdString(lastName),
-            DotNetLibCore::Utils::SystemStringToCXXStdString(firstName),
-            age,
-            *(address->GetImpl())
-        );
-        END_EX_GUARD;
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        m_pImpl->PrintInt();
+
         return;
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
-    Person::!Person(void)
+    System::Void Printer::PrintString()
     {
-        this->CleanUp();
+        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
+
+        assert(m_pImpl != nullptr);
+
+        m_pImpl->PrintString();
+
         return;
-    }
 
-    Person::~Person(void)
-    {
-        this->CleanUp();
-        return;
+        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
-
-    System::String^ Person::LastName::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (DotNetLibCore::Utils::CXXStdStringToSystemString(_impl->getLastName()));
-        END_EX_GUARD;
-    }
-
-    System::String^ Person::FirstName::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (DotNetLibCore::Utils::CXXStdStringToSystemString(_impl->getFirstName()));
-        END_EX_GUARD;
-    }
-
-    int Person::Age::get(void)
-    {
-        BEGIN_EX_GUARD;
-        return (_impl->getAge());
-        END_EX_GUARD;
-    }
-
-    DotNetLib::Address^ Person::Address::get(void)
-    {
-        BEGIN_EX_GUARD;
-        auto implAddr = _impl->getAddress();
-        DotNetLib::Address^ result = gcnew DotNetLib::Address(
-            implAddr.getStreetNum(),
-            DotNetLibCore::Utils::CXXStdStringToSystemString(implAddr.getStreet()),
-            DotNetLibCore::Utils::CXXStdStringToSystemString(implAddr.getCity()),
-            DotNetLibCore::Utils::CXXStdStringToSystemString(implAddr.getProvince()),
-            DotNetLibCore::Utils::CXXStdStringToSystemString(implAddr.getCountry()),
-            DotNetLibCore::Utils::CXXStdStringToSystemString(implAddr.getZipCode())
-        );
-        return (result);
-        END_EX_GUARD;
-    }
-
-    System::String^ Person::ToString(void)
-    {
-        System::Text::StringBuilder^ sb = gcnew System::Text::StringBuilder();
-        sb->Append(this->LastName);
-        sb->Append(L", ");
-        sb->Append(this->FirstName);
-        sb->Append(System::Environment::NewLine);
-        sb->Append(this->Age);
-        sb->Append(L" years old");
-        sb->Append(System::Environment::NewLine);
-        sb->Append(this->Address->ToString());
-        return (sb->ToString());
-    }
-
-    void Person::CleanUp(void)
-    {
-        if (_impl != nullptr) {
-            delete (_impl);
-            _impl = nullptr;
-        }
-        return;
-    }
-
-    Printer::Printer(IGenerator^ generator) :
-        _impl(nullptr)
-    {
-        BEGIN_EX_GUARD;
-        _impl = new DotNetLibCore::CXXLibPrinterAPIWorkAround(
-            std::unique_ptr<CXXLib::GeneratorBase>(std::move(new DotNetLibCore::DotNetLibGeneratorImpl(generator)))
-        );
-        END_EX_GUARD;
-        return;
-    }
-
-    Printer::!Printer(void)
-    {
-        this->CleanUp();
-        return;
-    }
-
-    Printer::~Printer(void)
-    {
-        this->CleanUp();
-        return;
-    }
-
-    void Printer::PrintInt(void)
-    {
-        BEGIN_EX_GUARD;
-        _impl->printInt();
-        END_EX_GUARD;
-        return;
-    }
-
-    void Printer::PrintString(void)
-    {
-        BEGIN_EX_GUARD;
-        _impl->printString();
-        END_EX_GUARD;
-        return;
-    }
-
-    void Printer::CleanUp(void)
-    {
-        if (_impl != nullptr) {
-            delete (_impl);
-            _impl = nullptr;
-        }
-        return;
-    }
-
-} // namespace DotNetLib
+}
+// namespace DotSlashZero::DotNetFrameworkLib
