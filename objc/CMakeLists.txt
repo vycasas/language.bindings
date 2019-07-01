@@ -26,11 +26,13 @@ source_group(sources\\dotslashzero\\objclib FILES ${LB_OBJCLIB_SOURCE_FILES})
 
 set(LB_OBJCLIB_COMPILE_DEFINITIONS)
 set(LB_OBJCLIB_COMPILE_OPTIONS
-    -ObjC
     -W -Wall -Wextra -Werror
     -pedantic -pedantic-errors
     -fobjc-arc -fobjc-arc-exceptions
     -fpic -fPIC)
+if (NOT XCODE)
+    set(LB_OBJCLIB_COMPILE_OPTIONS -ObjC ${LB_OBJCLIB_COMPILE_OPTIONS})
+endif ()
 set(LB_OBJCLIB_LINK_OPTIONS)
 
 add_library(

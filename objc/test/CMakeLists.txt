@@ -25,11 +25,13 @@ source_group(sources FILES ${LB_OBJCLIB_TEST_SOURCE_FILES})
 
 set(LB_OBJCLIB_TEST_COMPILE_DEFINITIONS)
 set(LB_OBJCLIB_TEST_COMPILE_OPTIONS
-    -ObjC
     -W -Wall -Wextra -Werror
     -pedantic -pedantic-errors
     -fobjc-arc -fobjc-arc-exceptions
     -fpie -fPIE)
+if (NOT XCODE)
+    set(LB_OBJCLIB_TEST_COMPILE_OPTIONS -ObjC ${LB_OBJCLIB_COMPILE_OPTIONS})
+endif ()
 set(LB_OBJCLIB_TEST_LINK_OPTIONS)
 
 add_executable(
