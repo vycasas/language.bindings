@@ -6,21 +6,34 @@ if (NOT LB_BUILD_C)
     return ()
 endif ()
 
-set(LB_DOTNETCORELIB_BINARY_DIR "${CMAKE_BINARY_DIR}/$(Configuration)") # TODO: this will be different for Linux
+get_property(LB_IS_MULTI_CONFIG_IDE GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if (LB_IS_MULTI_CONFIG_IDE AND (NOT MSVC))
+    message(FATAL_ERROR "Only MSVC generator is supported for multi config .NET Core project")
+    return ()
+endif ()
+
+set(LB_DOTNETCORELIB_BINARY_DIR "${CMAKE_BINARY_DIR}")
+if (MSVC)
+    set(LB_DOTNETCORELIB_BINARY_DIR "${CMAKE_BINARY_DIR}/$(Configuration)")
+endif ()
+
 set(LB_DOTNETCORELIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code")
 
 set(LB_DOTNETCORELIB_GUID "{49D6814D-8947-42A7-8AF1-BD955AC74EEF}")
 set(LB_DOTNETCORELIB_ASSEMBLY_NAME "DotSlashZero.DotNetCoreLib")
 set(LB_DOTNETCORELIB_ROOT_NAMESPACE "DotSlashZero.DotNetCoreLib")
 
-set(LB_DOTNETCORELIB_PLATFORM "x64")
-if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
-    set(LB_DOTNETCORELIB_PLATFORM "x64")
-elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Win32")
-    set(LB_DOTNETCORELIB_PLATFORM "x86")
+if (MSVC)
+    if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+        set(LB_DOTNETCORELIB_PLATFORM "x64")
+    elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Win32")
+        set(LB_DOTNETCORELIB_PLATFORM "x86")
+    else ()
+        message(FATAL_ERROR "Unsupported platform for dotnetcorelib: ${CMAKE_VS_PLATFORM_NAME}")
+        return ()
+    endif ()
 else ()
-    message(FATAL_ERROR "Unsupported platform for dotnetcorelib: ${CMAKE_VS_PLATFORM_NAME}")
-    return ()
+    set(LB_DOTNETCORELIB_PLATFORM ${LB_DOTNET_PLATFORM})
 endif ()
 
 file(RELATIVE_PATH LB_DOTNETCORELIB_ASSEMBLYINFO_CS_FILE
@@ -48,7 +61,9 @@ else ()
 
     file(GLOB LB_DOTNETCORELIB_SOURCE_FILES "${LB_DOTNETCORELIB_SOURCE_DIR}/*.cs")
     add_custom_target(dotnetcorelib ALL
-        COMMAND ${LB_DOTNET_BIN_PATH} build -configuration $<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib.csproj"
+        COMMAND ${LB_DOTNET_BIN_PATH} build
+            --output ${LB_DOTNETCORELIB_BINARY_DIR}
+            --configuration $<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib.csproj"
             SOURCES ${LB_DOTNETCORELIB_SOURCE_FILES}
             DEPENDS ${LB_DOTNETCORELIB_SOURCE_FILES}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

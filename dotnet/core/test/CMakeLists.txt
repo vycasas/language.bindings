@@ -1,7 +1,17 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(dotnetcorelib_test)
 
-set(LB_DOTNETCORELIB_TEST_BINARY_DIR "${CMAKE_BINARY_DIR}/$(Configuration)")
+get_property(LB_IS_MULTI_CONFIG_IDE GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if (LB_IS_MULTI_CONFIG_IDE AND (NOT MSVC))
+    message(FATAL_ERROR "Only MSVC generator is supported for multi config .NET Core project")
+    return ()
+endif ()
+
+set(LB_DOTNETCORELIB_TEST_BINARY_DIR "${CMAKE_BINARY_DIR}")
+if (MSVC)
+    set(LB_DOTNETCORELIB_TEST_BINARY_DIR "${CMAKE_BINARY_DIR}/$(Configuration)")
+endif ()
+
 set(LB_DOTNETCORELIB_TEST_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(LB_DOTNETCORELIB_TEST_GUID "{4251CCD3-A4CB-49E6-A44D-CEB899B450AB}")
@@ -9,13 +19,17 @@ set(LB_DOTNETCORELIB_TEST_ASSEMBLY_NAME "DotSlashZero.DotNetCoreLib.Test")
 set(LB_DOTNETCORELIB_TEST_ROOT_NAMESPACE "DotSlashZero.DotNetCoreLib.Test")
 
 set(LB_DOTNETCORELIB_TEST_PLATFORM "x64")
-if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
-    set(LB_DOTNETCORELIB_TEST_PLATFORM "x64")
-elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Win32")
-    set(LB_DOTNETCORELIB_TEST_PLATFORM "x86")
+if (MSVC)
+    if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+        set(LB_DOTNETCORELIB_TEST_PLATFORM "x64")
+    elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Win32")
+        set(LB_DOTNETCORELIB_TEST_PLATFORM "x86")
+    else ()
+        message(FATAL_ERROR "Unsupported platform for dotnetcorelib_test: ${CMAKE_VS_PLATFORM_NAME}")
+        return ()
+    endif ()
 else ()
-    message(FATAL_ERROR "Unsupported platform for dotnetcorelib_test: ${CMAKE_VS_PLATFORM_NAME}")
-    return ()
+    set(LB_DOTNETCORELIB_PLATFORM ${LB_DOTNET_PLATFORM})
 endif ()
 
 file(RELATIVE_PATH LB_DOTNETCORELIB_TEST_ASSEMBLYINFO_CS_FILE
@@ -24,7 +38,7 @@ string(REPLACE "AssemblyInfo.cs" "*.cs"
     LB_DOTNETCORELIB_TEST_SOURCE_FILES_GLOB ${LB_DOTNETCORELIB_TEST_ASSEMBLYINFO_CS_FILE})
 
 set(LB_DOTNETCORELIB_ASSEMBLY_FILE_PATH
-    "${CMAKE_BINARY_DIR}/$(Configuration)/${LB_DOTNETCORELIB_ASSEMBLY_NAME}.dll")
+    "${LB_DOTNETCORELIB_TEST_BINARY_DIR}/${LB_DOTNETCORELIB_ASSEMBLY_NAME}.dll")
 
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/dotnetcorelib_test.csproj.in"
@@ -47,7 +61,8 @@ else ()
     file(GLOB LB_DOTNETCORELIB_TEST_SOURCE_FILES "${LB_DOTNETCORELIB_TEST_SOURCE_DIR}/*.cs")
     add_custom_target(dotnetcorelib_test ALL
         COMMAND ${LB_DOTNET_BIN_PATH} build
-            -configuration $<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib_test.csproj"
+            --output ${LB_DOTNETCORELIB_TEST_BINARY_DIR}
+            --configuration $<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib_test.csproj"
             SOURCES ${LB_DOTNETCORELIB_TEST_SOURCE_FILES}
             DEPENDS ${LB_DOTNETCORELIB_TEST_SOURCE_FILES}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

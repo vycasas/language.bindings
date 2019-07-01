@@ -62,6 +62,10 @@ if (LB_BUILD_DOTNET)
     else ()
         set(LB_DOTNET_BIN_PATH "dotnet"
             CACHE FILEPATH "The file path to the dotnet binary executable of the .NET Core SDK")
+
+        # TODO: auto check for i386 -> x86
+        set(LB_DOTNET_PLATFORM "x64"
+            CACHE STRING "The target platform for .NET Core projects (can be set to x64 or x86)")
     endif ()
 endif ()
 
