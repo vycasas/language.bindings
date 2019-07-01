@@ -38,7 +38,7 @@ static DszCLibGenerator const DSZ_CLIB_GENERATOR_INVALID        = (DszCLibGenera
 static DszCLibPrinter const DSZ_CLIB_PRINTER_INVALID            = (DszCLibPrinter) NULL;
 
 DSZ_CLIB_API(void) DszCLibErrorNumGetMessage(
-    DszCLibErrorNum errnum,
+    DszCLibErrorNum errorNum,
     char* pMessage, size_t messageSize,
     size_t* pCharsWritten);
 

@@ -3,9 +3,6 @@ project(language.bindings)
 
 enable_language(C)
 enable_language(CXX)
-if (MSVC)
-    enable_language(CSharp)
-endif ()
 
 file(READ "${CMAKE_SOURCE_DIR}/Version.txt" LB_VERSION_TXT_CONTENTS)
 string(REPLACE "." ";" LB_VERSION_PARTS "${LB_VERSION_TXT_CONTENTS}")

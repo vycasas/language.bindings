@@ -49,8 +49,8 @@ namespace DotSlashZero.DotNetFrameworkLib.Test
                     "Antartica");
 
                 await Console.Out.WriteLineAsync("New address created!");
-                await Console.Out.WriteLineAsync("Address:");
 
+                await Console.Out.WriteLineAsync("Address:");
                 await Console.Out.WriteLineAsync($"{address}");
 
                 await Console.Out.WriteLineAsync("Creating a new person...");

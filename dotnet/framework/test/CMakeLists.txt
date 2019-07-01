@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(dotnetframeworklib_test CSharp)
+project(dotnetframeworklib_test)
 
 set(LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR "${CMAKE_BINARY_DIR}/$(Configuration)")
 set(LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
