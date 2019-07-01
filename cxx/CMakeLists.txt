@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(cxxlib CXX)
 
 if (NOT LB_BUILD_C)
-    message(FATAL_ERROR "C++ wrapper requires building C library.")
+    message(FATAL_ERROR "Project cxxlib requires building clib first.")
     return ()
 endif ()
 

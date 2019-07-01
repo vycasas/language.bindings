@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(dotnetframeworklib CXX)
 
 if (NOT MSVC)
-    message(FATAL_ERROR "Only MSVC compilers are supported for .NET projects.")
+    message(FATAL_ERROR "Only MSVC compilers are supported for .NET Framework projects.")
     return ()
 endif ()
 

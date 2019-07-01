@@ -11,6 +11,9 @@ if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
     set(LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM "x64")
 elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Win32")
     set(LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM "x86")
+else ()
+    message(FATAL_ERROR "Unsupported platform for dotnetframeworklib_test: ${CMAKE_VS_PLATFORM_NAME}")
+    return ()
 endif ()
 
 # .csproj files does not support full absolute paths for source files
@@ -19,9 +22,12 @@ file(RELATIVE_PATH LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE
 file(RELATIVE_PATH LB_DOTNETFRAMEWORKLIB_TEST_ASSEMBLYINFO_CS_FILE
     ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/AssemblyInfo.cs")
 
-STRING(REPLACE "/" "\\"
+# MSVC old style .csproj requires paths to use back slashes
+string(REPLACE "/" "\\"
+    LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR "${LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR}/")
+string(REPLACE "/" "\\"
     LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE ${LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE})
-STRING(REPLACE "/" "\\"
+string(REPLACE "/" "\\"
     LB_DOTNETFRAMEWORKLIB_TEST_ASSEMBLYINFO_CS_FILE ${LB_DOTNETFRAMEWORKLIB_TEST_ASSEMBLYINFO_CS_FILE})
 
 # would be nice to use the generator expressions, but the values are needed during configure time
@@ -38,7 +44,7 @@ configure_file(
 
 include_external_msproject(
     dotnetframeworklib_test "${CMAKE_CURRENT_BINARY_DIR}/dotnetframeworklib_test.csproj"
-    TYPE "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}" # C# console app project type
+    TYPE "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}" # C# project type
     GUID ${LB_DOTNETFRAMEWORKLIB_TEST_GUID}
     PLATFORM ${LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM}
     dotnetframeworklib)
