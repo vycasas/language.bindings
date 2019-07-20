@@ -23,7 +23,7 @@ set(LB_OBJCLIB_TEST_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(LB_OBJCLIB_TEST_HEADER_FILES)
 set(LB_OBJCLIB_TEST_SOURCE_FILES
-    "${LB_OBJCLIB_TEST_SOURCE_DIR}/test.m")
+    "${LB_OBJCLIB_TEST_SOURCE_DIR}/Test.m")
 
 source_group(headers FILES ${LB_OBJCLIB_TEST_HEADER_FILES})
 source_group(sources FILES ${LB_OBJCLIB_TEST_SOURCE_FILES})
@@ -55,11 +55,7 @@ target_include_directories(
     PRIVATE ${LB_OBJCLIB_TEST_HEADER_DIR})
 target_link_libraries(
     objclib_test
-    PRIVATE $<TARGET_BUNDLE_DIR:objclib> ${FOUNDATION})
+    PRIVATE $<TARGET_BUNDLE_DIR:objclib> objclib ${FOUNDATION})
 target_link_options(
     objclib_test
     PRIVATE ${LB_OBJCLIB_TEST_LINK_OPTIONS})
-
-add_dependencies(objclib_test objclib)
-# dependency is necessary because objclib target is not linked directly via CMake target system (objclib_test links
-# with the framework)
