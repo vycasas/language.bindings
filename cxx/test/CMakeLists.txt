@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(cxxlib_test CXX)
 
 set(LB_CXXLIB_TEST_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
