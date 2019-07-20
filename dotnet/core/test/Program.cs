@@ -1,9 +1,7 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using DotSlashZero;
-using DotSlashZero.DotNetFrameworkLib;
 
-namespace DotSlashZero.DotNetFrameworkLib.Test
+namespace DotSlashZero.DotNetCoreLib.Test
 {
     internal static class Program
     {
@@ -25,7 +23,7 @@ namespace DotSlashZero.DotNetFrameworkLib.Test
             }
         }
 
-        public static async Task<int> Main()
+        internal static async Task<int> Main()
         {
             try
             {
@@ -79,11 +77,6 @@ namespace DotSlashZero.DotNetFrameworkLib.Test
                 printer.PrintString();
 
                 return (0);
-            }
-            catch (DotNetFrameworkLib.Exception e)
-            {
-                await Console.Error.WriteLineAsync($"An error has occurred: {e}");
-                return (-1);
             }
             catch (System.Exception e)
             {
