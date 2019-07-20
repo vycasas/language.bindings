@@ -2,27 +2,33 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(swiftlib C)
 
 if (NOT APPLE)
-    message(FATAL_ERROR "Only Darwin compilers are supported for Objective-C projects.")
+    message(FATAL_ERROR "Only Apple platforms are supported for Swift projects.")
     return ()
 endif ()
 
-if (NOT LB_BUILD_C)
+if (NOT TARGET clib)
     message(FATAL_ERROR "Project objclib requires building clib first.")
     return ()
 endif ()
 
 find_library(FOUNDATION Foundation)
 
+if (FOUNDATION-NOTFOUND)
+    message(FATAL_ERROR "Foundation library not found.")
+    return ()
+endif ()
+
+set(LB_SWIFTLIB_OUTPUT_DIR $<TARGET_FILE_DIR:clib>)
 set(LB_SWIFTLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_SWIFTLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
-set(LB_SWIFTLIB_OUTPUT_DIR $<TARGET_FILE_DIR:clib>)
 
 set(LB_SWIFTLIB_BRIDGING_HEADER_FILE "${LB_SWIFTLIB_HEADER_DIR}/dotslashzero/swiftlib/bridgingheader.h")
 set(LB_SWIFTLIB_SOURCE_FILES "${LB_SWIFTLIB_SOURCE_DIR}/dotslashzero/swiftlib/SwiftLib.swift")
 
 set(LB_SWIFTLIB_COMPILE_OPTIONS
     -warnings-as-errors
-    -warn-implicit-overrides)
+    -warn-implicit-overrides
+    -Xcc -fpic -Xcc -fPIC)
 set(LB_SWIFTLIB_COMPILE_OPTIONS_DEBUG
     -Onone -g
     -D DEBUG)
@@ -80,7 +86,6 @@ if (XCODE)
             "$<$<CONFIG:RelWithDebInfo>:${LB_SWIFTLIB_COMPILE_OPTIONS_RELWITHDEBINFO}>"
             -import-objc-header ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
             ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_LINK_OPTIONS}
-            -Xcc -fpic -Xcc -fPIC
         COMMAND cp -v "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources/Info.plist"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         SOURCES ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
@@ -119,7 +124,6 @@ else ()
             ${LB_SWIFTLIB_COMPILE_OPTIONS}
             -import-objc-header ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
             ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_LINK_OPTIONS}
-            -Xcc -fpic -Xcc -fPIC
         COMMAND cp -v "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources/Info.plist"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         SOURCES ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}

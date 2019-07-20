@@ -23,7 +23,7 @@
     <DebugSymbols>true</DebugSymbols>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
-    <OutputPath>@LB_DOTNETCORELIB_BINARY_DIR@</OutputPath>
+    <OutputPath>@LB_DOTNETCORELIB_OUTPUT_DIR@</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|@LB_DOTNETCORELIB_PLATFORM@'">
@@ -33,7 +33,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <Optimize>true</Optimize>
-    <OutputPath>@LB_DOTNETCORELIB_BINARY_DIR@</OutputPath>
+    <OutputPath>@LB_DOTNETCORELIB_OUTPUT_DIR@</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|@LB_DOTNETCORELIB_PLATFORM@'">
@@ -43,7 +43,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <Optimize>true</Optimize>
-    <OutputPath>@LB_DOTNETCORELIB_BINARY_DIR@</OutputPath>
+    <OutputPath>@LB_DOTNETCORELIB_OUTPUT_DIR@</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|@LB_DOTNETCORELIB_PLATFORM@'">
@@ -53,7 +53,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <Optimize>true</Optimize>
-    <OutputPath>@LB_DOTNETCORELIB_BINARY_DIR@</OutputPath>
+    <OutputPath>@LB_DOTNETCORELIB_OUTPUT_DIR@</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

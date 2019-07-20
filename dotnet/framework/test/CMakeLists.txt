@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(dotnetframeworklib_test)
 
-set(LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR "${CMAKE_BINARY_DIR}/$(Configuration)")
-set(LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+if (NOT MSVC)
+    message(FATAL_ERROR "Only MSVC compilers are supported for .NET Framework projects.")
+    return ()
+endif ()
+
+if (NOT TARGET dotnetframeworklib)
+    message(FATAL_ERROR "Cannot build test project without building the actual library to test (dotnetframeworklib).")
+    return ()
+endif ()
 
 set(LB_DOTNETFRAMEWORKLIB_TEST_GUID "{5CEB1F04-D7D6-40F6-BB94-B8A3AEE26603}")
 
@@ -16,6 +23,9 @@ else ()
     return ()
 endif ()
 
+set(LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR $<TAGET_FILE_DIR:dotnetframeworklib>)
+set(LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
 # .csproj files does not support full absolute paths for source files
 file(RELATIVE_PATH LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE
     ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/Program.cs")
@@ -24,7 +34,7 @@ file(RELATIVE_PATH LB_DOTNETFRAMEWORKLIB_TEST_ASSEMBLYINFO_CS_FILE
 
 # MSVC old style .csproj requires paths to use back slashes
 string(REPLACE "/" "\\"
-    LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR "${LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR}/")
+    LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR "${LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR}/")
 string(REPLACE "/" "\\"
     LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE ${LB_DOTNETFRAMEWORKLIB_TEST_PROGRAM_CS_FILE})
 string(REPLACE "/" "\\"

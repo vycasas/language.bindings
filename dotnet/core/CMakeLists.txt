@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(dotnetcorelib)
 
-if (NOT LB_BUILD_C)
+if (NOT TARGET clib)
     message(FATAL_ERROR "Project dotnetcorelib requires building clib first.")
     return ()
 endif ()
@@ -11,13 +11,6 @@ if (LB_IS_MULTI_CONFIG_IDE AND (NOT MSVC))
     message(FATAL_ERROR "Only MSVC generator is supported for multi config .NET Core project")
     return ()
 endif ()
-
-set(LB_DOTNETCORELIB_BINARY_DIR "${CMAKE_BINARY_DIR}")
-if (MSVC)
-    set(LB_DOTNETCORELIB_BINARY_DIR "${CMAKE_BINARY_DIR}/$(Configuration)")
-endif ()
-
-set(LB_DOTNETCORELIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code")
 
 set(LB_DOTNETCORELIB_GUID "{49D6814D-8947-42A7-8AF1-BD955AC74EEF}")
 set(LB_DOTNETCORELIB_ASSEMBLY_NAME "DotSlashZero.DotNetCoreLib")
@@ -35,6 +28,9 @@ if (MSVC)
 else ()
     set(LB_DOTNETCORELIB_PLATFORM ${LB_DOTNET_PLATFORM})
 endif ()
+
+set(LB_DOTNETCORELIB_OUTPUT_DIR $<TARGET_FILE_DIR:clib>)
+set(LB_DOTNETCORELIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code")
 
 file(RELATIVE_PATH LB_DOTNETCORELIB_ASSEMBLYINFO_CS_FILE
     ${CMAKE_CURRENT_BINARY_DIR} "${LB_DOTNETCORELIB_SOURCE_DIR}/AssemblyInfo.cs")
@@ -62,12 +58,11 @@ else ()
     file(GLOB LB_DOTNETCORELIB_SOURCE_FILES "${LB_DOTNETCORELIB_SOURCE_DIR}/*.cs")
     add_custom_target(dotnetcorelib ALL
         COMMAND ${LB_DOTNET_BIN_PATH} build
-            --output ${LB_DOTNETCORELIB_BINARY_DIR}
+            --output ${LB_DOTNETCORELIB_OUTPUT_DIR}
             --configuration $<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib.csproj"
             SOURCES ${LB_DOTNETCORELIB_SOURCE_FILES}
             DEPENDS ${LB_DOTNETCORELIB_SOURCE_FILES}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            VERBATIM)
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     add_dependencies(dotnetcorelib clib)
 endif ()
 
