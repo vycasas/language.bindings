@@ -2,16 +2,21 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(objclib C)
 
 if (NOT APPLE)
-    message(FATAL_ERROR "Only Darwin compilers are supported for Objective-C projects.")
+    message(FATAL_ERROR "Only Apple platforms are supported for Objective-C projects.")
     return ()
 endif ()
 
-if (NOT LB_BUILD_C)
+if (NOT TARGET clib)
     message(FATAL_ERROR "Project objclib requires building clib first.")
     return ()
 endif ()
 
 find_library(FOUNDATION Foundation)
+
+if (FOUNDATION-NOTFOUND)
+    message(FATAL_ERROR "Foundation library not found.")
+    return ()
+endif ()
 
 set(LB_OBJCLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_OBJCLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")

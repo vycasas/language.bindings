@@ -1,25 +1,24 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(javalib CXX)
 
-if (NOT LB_BUILD_C)
+if (NOT TARGET clib)
     message(FATAL_ERROR "Project javalib requires building clib first.")
     return ()
 endif ()
 
 find_package(Java)
-find_package(JNI)
 
 if (NOT JAVA_FOUND)
     message(FATAL_ERROR "Java platform not found.")
     return ()
 endif ()
 
+find_package(JNI)
+
 if (NOT JNI_FOUND)
     message(FATAL_ERROR "JNI headers and libraries not found.")
     return ()
 endif ()
-
-message(STATUS "JNI_INCLUDE_DIRS: ${JNI_INCLUDE_DIRS}")
 
 set(LB_JAVALIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib/headers")
 set(LB_JAVALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib/sources")

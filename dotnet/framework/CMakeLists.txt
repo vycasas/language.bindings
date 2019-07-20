@@ -6,7 +6,7 @@ if (NOT MSVC)
     return ()
 endif ()
 
-if (NOT LB_BUILD_CXX)
+if (NOT TARGET cxxlib)
     message(FATAL_ERROR "Project dotnetframeworklib requires building cxxlib first.")
     return ()
 endif ()
@@ -14,6 +14,7 @@ endif ()
 set(LB_DOTNETFRAMEWORKLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_DOTNETFRAMEWORKLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 set(LB_DOTNETFRAMEWORKLIB_RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
+
 set(LB_DOTNETFRAMEWORKLIB_HEADER_FILES
     "${LB_DOTNETFRAMEWORKLIB_HEADER_DIR}/dotslashzero/dotnetframeworklib/dotnetframeworklib.hxx")
 set(LB_DOTNETFRAMEWORKLIB_SOURCE_FILES

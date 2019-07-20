@@ -19,7 +19,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@'">
     <LangVersion>@LB_CSHARP_LANG_VERSION@</LangVersion>
     <PlatformTarget>@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</PlatformTarget>
-    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR@</OutputPath>
+    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR@</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -31,7 +31,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@'">
     <LangVersion>@LB_CSHARP_LANG_VERSION@</LangVersion>
     <PlatformTarget>@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</PlatformTarget>
-    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR@</OutputPath>
+    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR@</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
@@ -43,7 +43,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'MinSizeRel|@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@'">
     <LangVersion>@LB_CSHARP_LANG_VERSION@</LangVersion>
     <PlatformTarget>@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</PlatformTarget>
-    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR@</OutputPath>
+    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR@</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
@@ -55,7 +55,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'RelWithDebInfo|@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@'">
     <LangVersion>@LB_CSHARP_LANG_VERSION@</LangVersion>
     <PlatformTarget>@LB_DOTNETFRAMEWORKLIB_TEST_PLATFORM@</PlatformTarget>
-    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_BINARY_DIR@</OutputPath>
+    <OutputPath>@LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR@</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>

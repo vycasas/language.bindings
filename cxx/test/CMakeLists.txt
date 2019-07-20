@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(cxxlib_test CXX)
 
-set(LB_CXXLIB_TEST_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(LB_CXXLIB_TEST_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+if (NOT TARGET cxxlib)
+    message(FATAL_ERROR "Cannot build test project without building the actual library to test (cxxlib).")
+    return ()
+endif ()
+
+set(LB_CXXLIB_TEST_HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(LB_CXXLIB_TEST_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(LB_CXXLIB_TEST_HEADER_FILES)
 set(LB_CXXLIB_TEST_SOURCE_FILES
