@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(objclib C CXX)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+project(objclib C)
 
 if (NOT APPLE)
     message(FATAL_ERROR "Only Darwin compilers are supported for Objective-C projects.")
@@ -53,20 +53,20 @@ target_link_options(
     objclib
     PRIVATE ${LB_OBJCLIB_LINK_OPTIONS})
 target_link_libraries(objclib
-    PUBLIC clib ${FOUNDATION} objc c++ c)
+    PUBLIC clib ${FOUNDATION} objc c)
 
-set(LB_LB_OBJCLIB_VERSION "${LB_VERSION_MAJOR}.${LB_VERSION_MINOR}.${LB_VERSION_PATCH}")
+set(LB_OBJCLIB_VERSION "${LB_VERSION_MAJOR}.${LB_VERSION_MINOR}.${LB_VERSION_PATCH}")
 
 set_target_properties(
     objclib PROPERTIES
     FRAMEWORK TRUE
     FRAMEWORK_VERSION C
-    MACOSX_FRAMEWORK_BUNDLE_VERSION ${LB_LB_OBJCLIB_VERSION}
+    MACOSX_FRAMEWORK_BUNDLE_VERSION ${LB_OBJCLIB_VERSION}
     MACOSX_FRAMEWORK_IDENTIFIER "net.dotslashzero.ObjCLib"
-    MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${LB_LB_OBJCLIB_VERSION}
+    MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${LB_OBJCLIB_VERSION}
     OUTPUT_NAME "ObjCLib"
-    VERSION ${LB_LB_OBJCLIB_VERSION}
-    SOVERSION ${LB_LB_OBJCLIB_VERSION}
+    VERSION ${LB_OBJCLIB_VERSION}
+    SOVERSION ${LB_OBJCLIB_VERSION}
     PUBLIC_HEADER "${LB_OBJCLIB_HEADER_DIR}/dotslashzero/objclib/ObjCLib.h")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")

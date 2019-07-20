@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(javalib_test)
 
 file(GLOB LB_JAVALIB_TEST_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.java")
