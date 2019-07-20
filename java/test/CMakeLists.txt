@@ -23,7 +23,7 @@ set(LB_JAVALIB_JAR_FILE "$<TARGET_FILE_DIR:javalib>/JavaLib.jar")
 if (UNIX)
     add_custom_target(
         javalib_test ALL
-        COMMAND${Java_JAVAC_EXECUTABLE} -d ${LB_JAVALIB_TEST_OUTPUT_DIR} -verbose -deprecation -Werror
+        COMMAND ${Java_JAVAC_EXECUTABLE} -d ${LB_JAVALIB_TEST_OUTPUT_DIR} -verbose -deprecation -Werror
             -cp ${LB_JAVALIB_TEST_OUTPUT_DIR}:${LB_JAVALIB_JAR_FILE}
             ${LB_JAVALIB_TEST_SOURCE_FILES}
         SOURCES ${LB_JAVALIB_TEST_SOURCE_FILES}

@@ -29,7 +29,12 @@ else ()
     set(LB_DOTNETCORELIB_PLATFORM ${LB_DOTNET_PLATFORM})
 endif ()
 
-set(LB_DOTNETCORELIB_OUTPUT_DIR $<TARGET_FILE_DIR:clib>)
+get_target_property(LB_CLIB_OUTPUT_DIR clib LIBRARY_OUTPUT_DIRECTORY)
+set(LB_DOTNETCORELIB_OUTPUT_DIR ${LB_CLIB_OUTPUT_DIR})
+if (MSVC)
+    # There must be a better way to do this
+    set(LB_DOTNETCORELIB_OUTPUT_DIR "${LB_DOTNETCORELIB_OUTPUT_DIR}/$(Configuration)")
+endif ()
 set(LB_DOTNETCORELIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code")
 
 file(RELATIVE_PATH LB_DOTNETCORELIB_ASSEMBLYINFO_CS_FILE
@@ -57,12 +62,15 @@ else ()
 
     file(GLOB LB_DOTNETCORELIB_SOURCE_FILES "${LB_DOTNETCORELIB_SOURCE_DIR}/*.cs")
     add_custom_target(dotnetcorelib ALL
+        COMMAND echo "dotnet build begin"
         COMMAND ${LB_DOTNET_BIN_PATH} build
-            --output ${LB_DOTNETCORELIB_OUTPUT_DIR}
-            --configuration $<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib.csproj"
-            SOURCES ${LB_DOTNETCORELIB_SOURCE_FILES}
-            DEPENDS ${LB_DOTNETCORELIB_SOURCE_FILES}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+           --output ${LB_DOTNETCORELIB_OUTPUT_DIR}
+           --configuration ${CMAKE_BUILD_TYPE} "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib.csproj"
+        COMMAND echo "dotnet build end"
+        SOURCES ${LB_DOTNETCORELIB_SOURCE_FILES}
+        DEPENDS ${LB_DOTNETCORELIB_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
     add_dependencies(dotnetcorelib clib)
 endif ()
 

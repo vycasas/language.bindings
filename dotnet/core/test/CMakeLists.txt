@@ -60,11 +60,13 @@ else ()
 
     file(GLOB LB_DOTNETCORELIB_TEST_SOURCE_FILES "${LB_DOTNETCORELIB_TEST_SOURCE_DIR}/*.cs")
     add_custom_target(dotnetcorelib_test ALL
+        COMMAND echo "dotnet build begin"
         COMMAND ${LB_DOTNET_BIN_PATH} build
             --output ${LB_DOTNETCORELIB_TEST_OUTPUT_DIR}
-            --configuration $<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib_test.csproj"
-            SOURCES ${LB_DOTNETCORELIB_TEST_SOURCE_FILES}
-            DEPENDS ${LB_DOTNETCORELIB_TEST_SOURCE_FILES}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+            --configuration ${CMAKE_BUILD_TYPE} "${CMAKE_CURRENT_BINARY_DIR}/dotnetcorelib_test.csproj"
+        COMMAND echo "dotnet build end"
+        SOURCES ${LB_DOTNETCORELIB_TEST_SOURCE_FILES}
+        DEPENDS ${LB_DOTNETCORELIB_TEST_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     add_dependencies(dotnetcorelib_test dotnetcorelib)
 endif ()

@@ -23,7 +23,8 @@ else ()
     return ()
 endif ()
 
-set(LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR $<TAGET_FILE_DIR:dotnetframeworklib>)
+get_target_property(LB_DOTNETFRAMEWORKLIB_OUTPUT_DIR dotnetframeworklib LIBRARY_OUTPUT_DIRECTORY)
+set(LB_DOTNETFRAMEWORKLIB_TEST_OUTPUT_DIR "${LB_DOTNETFRAMEWORKLIB_OUTPUT_DIR}/$(Configuration)")
 set(LB_DOTNETFRAMEWORKLIB_TEST_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # .csproj files does not support full absolute paths for source files
