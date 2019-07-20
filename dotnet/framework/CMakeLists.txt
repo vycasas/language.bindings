@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(dotnetframeworklib CXX)
 
 if (NOT MSVC)
-    message(FATAL_ERROR "Only MSVC compilers are supported for .NET projects.")
+    message(FATAL_ERROR "Only MSVC compilers are supported for .NET Framework projects.")
     return ()
 endif ()
 
@@ -10,7 +10,6 @@ if (NOT LB_BUILD_CXX)
     message(FATAL_ERROR "Project dotnetframeworklib requires building cxxlib first.")
     return ()
 endif ()
-
 
 set(LB_DOTNETFRAMEWORKLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_DOTNETFRAMEWORKLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
