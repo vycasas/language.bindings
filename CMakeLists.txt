@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(language.bindings)
 
 enable_language(C)
@@ -56,6 +56,7 @@ option(LB_BUILD_CXX "Build C++ wrapper." OFF)
 option(LB_BUILD_JAVA "Build Java wrapper." OFF)
 if (APPLE)
     option(LB_BUILD_OBJC "Build Objective-C wrapper." OFF)
+    option(LB_BUILD_SWIFT "Build Swift wrapper." OFF)
 endif ()
 option(LB_BUILD_DOTNET "Build .NET wrapper." OFF)
 if (MSVC AND LB_BUILD_DOTNET)
@@ -84,6 +85,10 @@ endif ()
 
 if (LB_BUILD_OBJC)
     add_subdirectory("${CMAKE_SOURCE_DIR}/objc")
+endif ()
+
+if (LB_BUILD_SWIFT)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/swift")
 endif ()
 
 if (LB_BUILD_DOTNET)
