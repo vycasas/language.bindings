@@ -64,72 +64,32 @@ set(LB_SWIFTLIB_FRAMEWORK_NAME "SwiftLib.framework")
 set(LB_SWIFTLIB_FRAMEWORK_FILE "${LB_SWIFTLIB_OUTPUT_DIR}/${LB_SWIFTLIB_FRAMEWORK_NAME}")
 set(LB_SWIFTLIB_FRAMEWORK_VERSION "A")
 
-if (XCODE)
-    add_custom_target(
-        swiftlib ALL
-        COMMAND rm -fr ${LB_SWIFTLIB_FRAMEWORK_FILE}
-        COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}"
-        COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Headers"
-        COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Modules/SwiftLib.swiftmodule"
-        COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources"
-        COMMAND swiftc
-            -emit-library
-            -o "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/SwiftLib"
-            -emit-module
-            -emit-module-path "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Modules/SwiftLib.swiftmodule/x86_64.swiftmodule"
-            -emit-objc-header
-            -emit-objc-header-path "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Headers/SwiftLib-Swift.h"
-            ${LB_SWIFTLIB_COMPILE_OPTIONS}
-            "$<$<CONFIG:Debug>:${LB_SWIFTLIB_COMPILE_OPTIONS_DEBUG}>"
-            "$<$<CONFIG:Release>:${LB_SWIFTLIB_COMPILE_OPTIONS_RELEASE}>"
-            "$<$<CONFIG:MinSizeRel>:${LB_SWIFTLIB_COMPILE_OPTIONS_MINSIZEREL}>"
-            "$<$<CONFIG:RelWithDebInfo>:${LB_SWIFTLIB_COMPILE_OPTIONS_RELWITHDEBINFO}>"
-            -import-objc-header ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
-            ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_LINK_OPTIONS}
-        COMMAND cp -v "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources/Info.plist"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        SOURCES ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
-        DEPENDS ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
-        COMMAND_EXPAND_LISTS)
-else ()
-    string(TOLOWER "${CMAKE_BUILD_TYPE}" LB_CMAKE_BUILD_TYPE)
-
-    if ("${LB_CMAKE_BUILD_TYPE}" STREQUAL "debug")
-        set(LB_SWIFTLIB_COMPILE_OPTIONS ${LB_SWIFTLIB_COMPILE_OPTIONS} ${LB_SWIFTLIB_COMPILE_OPTIONS_DEBUG})
-    elseif ("${LB_CMAKE_BUILD_TYPE}" STREQUAL "release")
-        set(LB_SWIFTLIB_COMPILE_OPTIONS ${LB_SWIFTLIB_COMPILE_OPTIONS} ${LB_SWIFTLIB_COMPILE_OPTIONS_RELEASE})
-    elseif ("${LB_CMAKE_BUILD_TYPE}" STREQUAL "minsizerel")
-        set(LB_SWIFTLIB_COMPILE_OPTIONS ${LB_SWIFTLIB_COMPILE_OPTIONS} ${LB_SWIFTLIB_COMPILE_OPTIONS_MINSIZEREL})
-    elseif ("${LB_CMAKE_BUILD_TYPE}" STREQUAL "relwithdebinfo")
-        set(LB_SWIFTLIB_COMPILE_OPTIONS ${LB_SWIFTLIB_COMPILE_OPTIONS} ${LB_SWIFTLIB_COMPILE_OPTIONS_RELWITHDEBINFO})
-    else ()
-        message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
-        return ()
-    endif ()
-
-    add_custom_target(
-        swiftlib ALL
-        COMMAND rm -fr ${LB_SWIFTLIB_FRAMEWORK_FILE}
-        COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}"
-        COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Headers"
-        COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Modules/SwiftLib.swiftmodule"
-        COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources"
-        COMMAND swiftc
-            -emit-library
-            -o "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/SwiftLib"
-            -emit-module
-            -emit-module-path "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Modules/SwiftLib.swiftmodule/x86_64.swiftmodule"
-            -emit-objc-header
-            -emit-objc-header-path "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Headers/SwiftLib-Swift.h"
-            ${LB_SWIFTLIB_COMPILE_OPTIONS}
-            -import-objc-header ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
-            ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_LINK_OPTIONS}
-        COMMAND cp -v "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources/Info.plist"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        SOURCES ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
-        DEPENDS ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
-        COMMAND_EXPAND_LISTS)
-endif ()
+add_custom_target(
+    swiftlib ALL
+    COMMAND rm -fr ${LB_SWIFTLIB_FRAMEWORK_FILE}
+    COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}"
+    COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Headers"
+    COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Modules/SwiftLib.swiftmodule"
+    COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources"
+    COMMAND swiftc
+        -emit-library
+        -o "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/SwiftLib"
+        -emit-module
+        -emit-module-path "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Modules/SwiftLib.swiftmodule/x86_64.swiftmodule"
+        -emit-objc-header
+        -emit-objc-header-path "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Headers/SwiftLib-Swift.h"
+        ${LB_SWIFTLIB_COMPILE_OPTIONS}
+        "$<$<CONFIG:Debug>:${LB_SWIFTLIB_COMPILE_OPTIONS_DEBUG}>"
+        "$<$<CONFIG:Release>:${LB_SWIFTLIB_COMPILE_OPTIONS_RELEASE}>"
+        "$<$<CONFIG:MinSizeRel>:${LB_SWIFTLIB_COMPILE_OPTIONS_MINSIZEREL}>"
+        "$<$<CONFIG:RelWithDebInfo>:${LB_SWIFTLIB_COMPILE_OPTIONS_RELWITHDEBINFO}>"
+        -import-objc-header ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
+        ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_LINK_OPTIONS}
+    COMMAND cp -v "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources/Info.plist"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    SOURCES ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
+    DEPENDS ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
+    COMMAND_EXPAND_LISTS)
 
 add_custom_command(
     TARGET swiftlib
@@ -141,5 +101,7 @@ add_custom_command(
     COMMAND ln -sfvh "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/Resources" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Resources"
     COMMAND mv -v "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/SwiftLib.dSYM" "${LB_SWIFTLIB_OUTPUT_DIR}/SwiftLib.dSYM" || true
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_dependencies(swiftlib clib)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")
