@@ -97,7 +97,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressToString(
     size_t* pCharsWritten);
 
 /*
-** Note: DszCLibPersonCreate makes a copy of address argument, so it does not need to be persisted.
+// Note: DszCLibPersonCreate makes a copy of address argument, so it does not need to be persisted.
 */
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
     char const* lastName,
@@ -156,7 +156,7 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibGeneratorDestroy(
     DszCLibGenerator generator);
 
 /*
-** Takes ownership of generator. Do not destroy generator after creating printer with this function.
+// Takes ownership of generator. Do not destroy generator after creating printer with this function.
 */
 DSZ_CLIB_API(DszCLibErrorNum) DszCLibPrinterCreate(
     DszCLibGenerator generator,

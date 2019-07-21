@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(cxxlib CXX)
 
-if (NOT LB_BUILD_C)
+if (NOT TARGET clib)
     message(FATAL_ERROR "Project cxxlib requires building clib first.")
     return ()
 endif ()

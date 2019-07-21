@@ -8,9 +8,9 @@
 #error Please use pure C compiler for this file.
 #endif /* defined(__cplusplus) */
 
-#define DSZ_OBJCLIBCORE_API_CHECK(errorNum) \
-    if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) \
-        @throw ([[OLException alloc] initWithDszCLibErrorNum: errorNum]);
+#define DSZ_OBJCLIBCORE_API_CHECK(cLibErrorNum) \
+    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) \
+        @throw ([[OLException alloc] initWithDszCLibErrorNum: cLibErrorNum]);
 
 /* -------- */
 /* additional interface declarations that are hidden from the public header file */
