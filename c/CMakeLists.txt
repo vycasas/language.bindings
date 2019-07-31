@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(clib C)
 
+message(STATUS "Building project: clib")
+
 set(LB_CLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_CLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 
