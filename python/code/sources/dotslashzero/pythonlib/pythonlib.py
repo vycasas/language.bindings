@@ -38,7 +38,6 @@ class Library(object):
             if Library.__is_initialized:
                 pythonlib_native.library_uninitialize()
                 Library.__is_initialized = False
-            # should the native library be unloaded?
         except:
             return
 
