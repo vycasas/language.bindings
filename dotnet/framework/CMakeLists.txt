@@ -11,6 +11,8 @@ if (NOT TARGET cxxlib)
     return ()
 endif ()
 
+message(STATUS "Building project: dotnetframeworklib")
+
 set(LB_DOTNETFRAMEWORKLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_DOTNETFRAMEWORKLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 set(LB_DOTNETFRAMEWORKLIB_RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")

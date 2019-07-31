@@ -6,6 +6,8 @@ if (NOT TARGET clib)
     return ()
 endif ()
 
+message(STATUS "Building project: dotnetcorelib")
+
 get_property(LB_IS_MULTI_CONFIG_IDE GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if (LB_IS_MULTI_CONFIG_IDE AND (NOT MSVC))
     message(FATAL_ERROR "Only MSVC generator is supported for multi config .NET Core project")

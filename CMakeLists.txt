@@ -69,6 +69,7 @@ if (LB_BUILD_DOTNET)
             CACHE STRING "The target platform for .NET Core projects (can be set to x64 or x86)")
     endif ()
 endif ()
+option(LB_BUILD_PYTHON "Build Python wrapper." OFF)
 
 if (NOT CMAKE_BUILD_TYPE OR "${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release")
@@ -101,3 +102,8 @@ endif ()
 if (LB_BUILD_DOTNET)
     add_subdirectory("${CMAKE_SOURCE_DIR}/dotnet")
 endif ()
+
+if (LB_BUILD_PYTHON)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/python")
+endif ()
+
