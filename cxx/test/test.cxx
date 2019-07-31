@@ -33,27 +33,30 @@ int main(void)
     }
 
     try {
-
         std::cout << "Library initialized... version " << DotSlashZero::CxxLib::Library::GetVersionString() << std::endl;
 
         std::cout << "Creating a new address..." << std::endl;
         DotSlashZero::CxxLib::Address address{ 9898, "Corner St.", "Gotham", "CA", "4132", "Antartica" };
         std::cout << "New address created!" << std::endl;
+
         std::cout << "Address:" << std::endl;
         std::cout << address.ToString() << std::endl;
 
         std::cout << "Creating a new person..." << std::endl;
         DotSlashZero::CxxLib::Person person{ "Wayne", "Bruce", 25, address };
         std::cout << "New person created!" << std::endl;
+
         std::cout << "Person:" << std::endl;
         std::cout << person.ToString() << std::endl;
 
         std::cout << "Creating a new generator..." << std::endl;
         auto pGenerator = std::make_unique<MyGenerator>();
         std::cout << "New generator created!" << std::endl;
+
         std::cout << "Creating a new printer..." << std::endl;
         DotSlashZero::CxxLib::Printer printer(pGenerator.release());
         std::cout << "New printer created!" << std::endl;
+
         std::cout << "Performing printer actions..." << std::endl;
         printer.PrintInt();
         printer.PrintString();

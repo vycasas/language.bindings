@@ -248,7 +248,7 @@ namespace DotSlashZero::CxxLib
 
     std::string Address::GetStreet(void) const
     {
-        std::string::size_type constexpr STREET_SIZE = 40;
+        std::string::size_type constexpr STREET_SIZE = 16;
         std::string street(STREET_SIZE, '\0');
 
         auto errorNum = DszCLibAddressGetStreet(m_impl, street.data(), street.size(), nullptr);
@@ -272,7 +272,7 @@ namespace DotSlashZero::CxxLib
 
     std::string Address::GetProvince(void) const
     {
-        std::string::size_type constexpr PROVINCE_SIZE = 8;
+        std::string::size_type constexpr PROVINCE_SIZE = 16;
         std::string province(PROVINCE_SIZE, '\0');
 
         auto errorNum = DszCLibAddressGetProvince(m_impl, province.data(), province.size(), nullptr);
@@ -284,7 +284,7 @@ namespace DotSlashZero::CxxLib
 
     std::string Address::GetZipCode(void) const
     {
-        std::string::size_type constexpr ZIP_CODE_SIZE = 8;
+        std::string::size_type constexpr ZIP_CODE_SIZE = 16;
         std::string zipCode(ZIP_CODE_SIZE, '\0');
 
         auto errorNum = DszCLibAddressGetCountry(m_impl, zipCode.data(), zipCode.size(), nullptr);
@@ -308,7 +308,7 @@ namespace DotSlashZero::CxxLib
 
     std::string Address::ToString(void) const
     {
-        std::string::size_type constexpr ADDRESS_STRING_SIZE = 256;
+        std::string::size_type constexpr ADDRESS_STRING_SIZE = 80;
         std::string addressString(ADDRESS_STRING_SIZE, '\0');
 
         auto errorNum = DszCLibAddressToString(m_impl, addressString.data(), addressString.size(), nullptr);
@@ -389,7 +389,7 @@ namespace DotSlashZero::CxxLib
 
     std::string Person::GetLastName(void) const
     {
-        std::string::size_type const LAST_NAME_SIZE = 24;
+        std::string::size_type const LAST_NAME_SIZE = 16;
         std::string lastName(LAST_NAME_SIZE, '\0');
 
         auto errorNum = DszCLibPersonGetLastName(
@@ -404,7 +404,7 @@ namespace DotSlashZero::CxxLib
 
     std::string Person::GetFirstName(void) const
     {
-        std::string::size_type const FIRST_NAME_SIZE = 24;
+        std::string::size_type const FIRST_NAME_SIZE = 16;
         std::string firstName(FIRST_NAME_SIZE, '\0');
 
         auto errorNum = DszCLibPersonGetFirstName(
@@ -441,7 +441,7 @@ namespace DotSlashZero::CxxLib
 
     std::string Person::ToString(void) const
     {
-        std::string::size_type PERSON_STRING_SIZE = 512;
+        std::string::size_type PERSON_STRING_SIZE = 160;
         std::string personString(PERSON_STRING_SIZE, '\0');
 
         auto errorNum = DszCLibPersonToString(
