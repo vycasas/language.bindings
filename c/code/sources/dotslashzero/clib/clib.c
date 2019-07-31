@@ -24,15 +24,18 @@
 
 #define DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(errorNum) ((size_t) errorNum)
 
-#define DSZ_CLIBCORE_ADDRESS_STREET_SIZE 40
+/*
+// These have to be macros because they are used in struct type declarations.
+*/
+#define DSZ_CLIBCORE_ADDRESS_STREET_SIZE 16
 #define DSZ_CLIBCORE_ADDRESS_CITY_SIZE 16
 #define DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE 16
-#define DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE 8
+#define DSZ_CLIBCORE_ADDRESS_ZIP_CODE_SIZE 16
 #define DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE 16
-#define DSZ_CLIBCORE_ADDRESS_STRING_SIZE 128
-#define DSZ_CLIBCORE_PERSON_LASTNAME_SIZE 24
-#define DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE 24
-#define DSZ_CLIBCORE_PERSON_STRING_SIZE 256
+#define DSZ_CLIBCORE_ADDRESS_STRING_SIZE 80
+#define DSZ_CLIBCORE_PERSON_LAST_NAME_SIZE 16
+#define DSZ_CLIBCORE_PERSON_FIRST_NAME_SIZE 16
+#define DSZ_CLIBCORE_PERSON_STRING_SIZE 160
 
 typedef enum DszCLibCoreErrorNum_
 {
@@ -50,7 +53,7 @@ typedef struct DszCLibCoreAddress_
     char Street[DSZ_CLIBCORE_ADDRESS_STREET_SIZE];
     char City[DSZ_CLIBCORE_ADDRESS_CITY_SIZE];
     char Province[DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE];
-    char ZipCode[DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE];
+    char ZipCode[DSZ_CLIBCORE_ADDRESS_ZIP_CODE_SIZE];
     char Country[DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE];
 }
 DszCLibCoreAddress;
@@ -59,8 +62,8 @@ typedef DszCLibCoreAddress* DszCLibCoreAddressPtr;
 
 typedef struct DszCLibCorePerson_
 {
-    char LastName[DSZ_CLIBCORE_PERSON_LASTNAME_SIZE];
-    char FirstName[DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE];
+    char LastName[DSZ_CLIBCORE_PERSON_LAST_NAME_SIZE];
+    char FirstName[DSZ_CLIBCORE_PERSON_FIRST_NAME_SIZE];
     int Age;
     DszCLibCoreAddressPtr Address;
 }
@@ -233,8 +236,8 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibAddressCreate(
     strncpy(pCoreAddress->Province, province, DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE);
     pCoreAddress->Province[DSZ_CLIBCORE_ADDRESS_PROVINCE_SIZE - 1] = '\0';
 
-    strncpy(pCoreAddress->ZipCode, zipCode, DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE);
-    pCoreAddress->ZipCode[DSZ_CLIBCORE_ADDRESS_ZIPCODE_SIZE - 1] = '\0';
+    strncpy(pCoreAddress->ZipCode, zipCode, DSZ_CLIBCORE_ADDRESS_ZIP_CODE_SIZE);
+    pCoreAddress->ZipCode[DSZ_CLIBCORE_ADDRESS_ZIP_CODE_SIZE - 1] = '\0';
 
     strncpy(pCoreAddress->Country, country, DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE);
     pCoreAddress->Country[DSZ_CLIBCORE_ADDRESS_COUNTRY_SIZE - 1] = '\0';
@@ -458,11 +461,11 @@ DSZ_CLIB_API(DszCLibErrorNum) DszCLibPersonCreate(
     if (pCorePerson == NULL)
         return (DSZ_CLIBCORE_ERRORNUM_TO_CLIBERRORNUM(DSZ_CLIBCORE_ERRORNUM_GENERAL_ERROR));
 
-    strncpy(pCorePerson->LastName, lastName, DSZ_CLIBCORE_PERSON_LASTNAME_SIZE);
-    pCorePerson->LastName[DSZ_CLIBCORE_PERSON_LASTNAME_SIZE - 1] = '\0';
+    strncpy(pCorePerson->LastName, lastName, DSZ_CLIBCORE_PERSON_LAST_NAME_SIZE);
+    pCorePerson->LastName[DSZ_CLIBCORE_PERSON_LAST_NAME_SIZE - 1] = '\0';
 
-    strncpy(pCorePerson->FirstName, firstName, DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE);
-    pCorePerson->FirstName[DSZ_CLIBCORE_PERSON_FIRSTNAME_SIZE - 1] = '\0';
+    strncpy(pCorePerson->FirstName, firstName, DSZ_CLIBCORE_PERSON_FIRST_NAME_SIZE);
+    pCorePerson->FirstName[DSZ_CLIBCORE_PERSON_FIRST_NAME_SIZE - 1] = '\0';
 
     pCorePerson->Age = age;
 
