@@ -20,6 +20,8 @@ if (NOT JNI_FOUND)
     return ()
 endif ()
 
+message(STATUS "Building project: javalib")
+
 set(LB_JAVALIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib/headers")
 set(LB_JAVALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/lib/sources")
 

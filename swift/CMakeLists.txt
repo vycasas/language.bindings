@@ -18,6 +18,8 @@ if (FOUNDATION-NOTFOUND)
     return ()
 endif ()
 
+message(STATUS "Building project: swiftlib")
+
 set(LB_SWIFTLIB_OUTPUT_DIR $<TARGET_FILE_DIR:clib>)
 set(LB_SWIFTLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_SWIFTLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")

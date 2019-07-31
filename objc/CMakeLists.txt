@@ -18,6 +18,8 @@ if (FOUNDATION-NOTFOUND)
     return ()
 endif ()
 
+message(STATUS "Building project: objclib")
+
 set(LB_OBJCLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_OBJCLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 

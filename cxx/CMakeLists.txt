@@ -6,6 +6,8 @@ if (NOT TARGET clib)
     return ()
 endif ()
 
+message(STATUS "Building project: cxxlib")
+
 set(LB_CXXLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
 set(LB_CXXLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
 
