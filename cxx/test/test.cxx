@@ -36,14 +36,24 @@ int main(void)
         std::cout << "Library initialized... version " << DotSlashZero::CxxLib::Library::GetVersionString() << std::endl;
 
         std::cout << "Creating a new address..." << std::endl;
-        DotSlashZero::CxxLib::Address address{ 9898, "Corner St.", "Gotham", "CA", "4132", "Antartica" };
+        DotSlashZero::CxxLib::Address address{
+            9898,
+            "Corner St.",
+            "Gotham",
+            "CA",
+            "4132",
+            "Antartica" };
         std::cout << "New address created!" << std::endl;
 
         std::cout << "Address:" << std::endl;
         std::cout << address.ToString() << std::endl;
 
         std::cout << "Creating a new person..." << std::endl;
-        DotSlashZero::CxxLib::Person person{ "Wayne", "Bruce", 25, address };
+        DotSlashZero::CxxLib::Person person{
+            "Wayne",
+            "Bruce",
+            25,
+            address };
         std::cout << "New person created!" << std::endl;
 
         std::cout << "Person:" << std::endl;
