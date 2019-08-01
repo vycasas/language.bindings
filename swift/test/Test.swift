@@ -25,6 +25,7 @@ fileprivate func main() -> Int32 {
             zipCode: "4321",
             country: "Antartica")
         print("New address created!")
+
         print("Address:")
         print("\(address)")
 
@@ -35,20 +36,24 @@ fileprivate func main() -> Int32 {
             age: 25,
             address: address)
         print("New person created!")
+
         print("Person:")
         print("\(person)")
 
         print("Creating a new generator...")
         let myGenerator = MyGenerator()
         print("New generator created!")
+
         print("Creating a new printer...")
         let printer = try Printer(generator: myGenerator)
         print("New printer created!")
+
+        print("Performing printer actions...")
         try printer.printInt()
         try printer.printString()
     }
     catch {
-        print("Error: \(error)")
+        print("An error has occurred: \(error)")
     }
     return 0
 }
