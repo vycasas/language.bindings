@@ -4,7 +4,7 @@
 
 #if defined(__cplusplus)
     #error Please use pure C compiler for this file.
-#endif /* defined(__cplusplus) */ 
+#endif /* defined(__cplusplus) */
 
 @interface MyGenerator : NSObject<OLGenerator>
 
@@ -56,6 +56,7 @@ int main(void)
             zipCode:@"4132"
             country:@"Antartica"];
         NSLog(@"New address created!");
+
         NSLog(@"\nAddress:\n%@", [address toString]);
 
         NSLog(@"Creating a new Person...");
@@ -65,24 +66,28 @@ int main(void)
             age:25
             address:address];
         NSLog(@"New person created!");
+
         NSLog(@"\nPerson:\n%@", [person toString]);
 
         NSLog(@"Creating a new generator...");
         MyGenerator* generator = [[MyGenerator alloc] init];
         NSLog(@"New generator created!");
+
         NSLog(@"Creating a new printer...");
         OLPrinter* printer = [[OLPrinter alloc] initWithGenerator: generator];
         NSLog(@"New printer created!");
+
+        NSLog(@"Performing printer actions...");
         [printer printInt];
         [printer printString];
 
         [OLLibrary uninitialize];
     }
     @catch (OLException* e) {
-        NSLog(@"OLException: %@ %@", [e name], [e reason]);
+        NSLog(@"An error has occurred: %@ %@", [e name], [e reason]);
     }
     @catch (NSException* e) {
-        NSLog(@"NSException: %@ %@", [e name], [e reason]);
+        NSLog(@"An error has occurred: %@ %@", [e name], [e reason]);
     }
 
     return (0);
