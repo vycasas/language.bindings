@@ -28,11 +28,14 @@ namespace DotSlashZero.DotNetCoreLib
 
         #region caller interface
 
-        private static string ErrorNumGetMessage(DszCLibErrorNum errorNum) // this method is special and will only be used within this class
+        private static string ErrorNumGetMessage(DszCLibErrorNum cLibErrorNum) // this method is special and will only be used within this class
         {
             var message = string.Empty;
 
-            GetStringHelperNoReturn<DszCLibErrorNum>(DszCLibErrorNumGetMessage, errorNum, ref message);
+            GetStringHelperNoReturn<DszCLibErrorNum>(
+                DszCLibErrorNumGetMessage,
+                cLibErrorNum,
+                ref message);
 
             return (message);
         }
@@ -55,10 +58,12 @@ namespace DotSlashZero.DotNetCoreLib
         {
             var versionString = string.Empty;
 
-            var errorNum = GetStringHelperNoInput(DszCLibLibraryGetVersionString, ref versionString);
+            var cLibErrorNum = GetStringHelperNoInput(
+                DszCLibLibraryGetVersionString,
+                ref versionString);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionString);
         }
@@ -67,10 +72,10 @@ namespace DotSlashZero.DotNetCoreLib
         {
             CSizeT versionMajor = CSizeT.Zero;
 
-            var errorNum = DszCLibLibraryGetVersionMajor(ref versionMajor);
+            var cLibErrorNum = DszCLibLibraryGetVersionMajor(ref versionMajor);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionMajor.ToInt32());
         }
@@ -79,10 +84,10 @@ namespace DotSlashZero.DotNetCoreLib
         {
             CSizeT versionMinor = CSizeT.Zero;
 
-            var errorNum = DszCLibLibraryGetVersionMinor(ref versionMinor);
+            var cLibErrorNum = DszCLibLibraryGetVersionMinor(ref versionMinor);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionMinor.ToInt32());
         }
@@ -91,10 +96,10 @@ namespace DotSlashZero.DotNetCoreLib
         {
             CSizeT versionPatch = CSizeT.Zero;
 
-            var errorNum = DszCLibLibraryGetVersionPatch(ref versionPatch);
+            var cLibErrorNum = DszCLibLibraryGetVersionPatch(ref versionPatch);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionPatch.ToInt32());
         }
@@ -103,10 +108,12 @@ namespace DotSlashZero.DotNetCoreLib
         {
             var versionExtra = string.Empty;
 
-            var errorNum = GetStringHelperNoInput(DszCLibLibraryGetVersionExtra, ref versionExtra);
+            var cLibErrorNum = GetStringHelperNoInput(
+                DszCLibLibraryGetVersionExtra,
+                ref versionExtra);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionExtra);
         }
@@ -123,111 +130,129 @@ namespace DotSlashZero.DotNetCoreLib
             string zipCode,
             string country)
         {
-            var address = DSZ_CLIB_ADDRESS_INVALID;
+            var cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
 
-            var errorNum = DszCLibAddressCreate(
+            var cLibErrorNum = DszCLibAddressCreate(
                 streetNum,
                 street,
                 city,
                 province,
                 zipCode,
                 country,
-                ref address);
+                ref cLibAddress);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
-            return (address);
+            return (cLibAddress);
         }
 
-        internal static void AddressDestroy(DszCLibAddress address)
+        internal static void AddressDestroy(DszCLibAddress cLibAddress)
         {
-            DszCLibAddressDestroy(address);
+            DszCLibAddressDestroy(cLibAddress);
             return;
         }
 
-        internal static int AddressGetStreetNum(DszCLibAddress address)
+        internal static int AddressGetStreetNum(DszCLibAddress cLibAddress)
         {
             int streetNum = 0;
 
-            var errorNum = DszCLibAddressGetStreetNum(
-                address,
+            var cLibErrorNum = DszCLibAddressGetStreetNum(
+                cLibAddress,
                 ref streetNum);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (streetNum);
         }
 
-        internal static string AddressGetStreet(DszCLibAddress address)
+        internal static string AddressGetStreet(DszCLibAddress cLibAddress)
         {
-            string street = string.Empty;
+            var street = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibAddressGetStreet, address, ref street);
+            var cLibErrorNum = GetStringHelper<DszCLibAddress>(
+                DszCLibAddressGetStreet,
+                cLibAddress,
+                ref street);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (street);
         }
 
-        internal static string AddressGetCity(DszCLibAddress address)
+        internal static string AddressGetCity(DszCLibAddress cLibAddress)
         {
-            string city = string.Empty;
+            var city = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibAddressGetCity, address, ref city);
+            var cLibErrorNum = GetStringHelper<DszCLibAddress>(
+                DszCLibAddressGetCity,
+                cLibAddress,
+                ref city);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (city);
         }
 
-        internal static string AddressGetProvince(DszCLibAddress address)
+        internal static string AddressGetProvince(DszCLibAddress cLibAddress)
         {
-            string province = string.Empty;
+            var province = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibAddressGetProvince, address, ref province);
+            var cLibErrorNum = GetStringHelper<DszCLibAddress>(
+                DszCLibAddressGetProvince,
+                cLibAddress,
+                ref province);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (province);
         }
 
-        internal static string AddressGetZipCode(DszCLibAddress address)
+        internal static string AddressGetZipCode(DszCLibAddress cLibAddress)
         {
-            string zipCode = string.Empty;
+            var zipCode = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibAddressGetZipCode, address, ref zipCode);
+            var cLibErrorNum = GetStringHelper<DszCLibAddress>(
+                DszCLibAddressGetZipCode,
+                cLibAddress,
+                ref zipCode);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (zipCode);
         }
 
-        internal static string AddressGetCountry(DszCLibAddress address)
+        internal static string AddressGetCountry(DszCLibAddress cLibAddress)
         {
-            string country = string.Empty;
+            var country = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibAddressGetCountry, address, ref country);
+            var cLibErrorNum = GetStringHelper<DszCLibAddress>(
+                DszCLibAddressGetCountry,
+                cLibAddress,
+                ref country);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (country);
         }
 
-        internal static string AddressToString(DszCLibAddress address)
+        internal static string AddressToString(DszCLibAddress cLibAddress)
         {
             var addressString = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibAddressToString, address, ref addressString);
+            var cLibErrorNum = GetStringHelper<DszCLibAddress>(
+                DszCLibAddressToString,
+                cLibAddress,
+                ref addressString);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (addressString);
         }
@@ -240,89 +265,98 @@ namespace DotSlashZero.DotNetCoreLib
             string lastName,
             string firstName,
             int age,
-            DszCLibAddress address)
+            DszCLibAddress cLibAddress)
         {
-            var person = DSZ_CLIB_PERSON_INVALID;
+            var cLibPerson = DSZ_CLIB_PERSON_INVALID;
 
-            var errorNum = DszCLibPersonCreate(
+            var cLibErrorNum = DszCLibPersonCreate(
                 lastName,
                 firstName,
                 age,
-                address,
-                ref person);
+                cLibAddress,
+                ref cLibPerson);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
-            return (person);
+            return (cLibPerson);
         }
 
-        internal static void PersonDestroy(DszCLibPerson person)
+        internal static void PersonDestroy(DszCLibPerson cLibPerson)
         {
-            DszCLibPersonDestroy(person);
+            DszCLibPersonDestroy(cLibPerson);
             return;
         }
 
-        internal static string PersonGetLastName(DszCLibPerson person)
+        internal static string PersonGetLastName(DszCLibPerson cLibPerson)
         {
-            string lastName = string.Empty;
+            var lastName = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibPersonGetLastName, person, ref lastName);
+            var cLibErrorNum = GetStringHelper<DszCLibPerson>(
+                DszCLibPersonGetLastName,
+                cLibPerson,
+                ref lastName);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (lastName);
         }
 
-        internal static string PersonGetFirstName(DszCLibPerson person)
+        internal static string PersonGetFirstName(DszCLibPerson cLibPerson)
         {
-            string firstName = string.Empty;
+            var firstName = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibPersonGetFirstName, person, ref firstName);
+            var cLibErrorNum = GetStringHelper<DszCLibPerson>(
+                DszCLibPersonGetFirstName,
+                cLibPerson,
+                ref firstName);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (firstName);
         }
 
-        internal static int PersonGetAge(DszCLibPerson person)
+        internal static int PersonGetAge(DszCLibPerson cLibPerson)
         {
             int age = 0;
 
-            var errorNum = DszCLibPersonGetAge(
-                person,
+            var cLibErrorNum = DszCLibPersonGetAge(
+                cLibPerson,
                 ref age);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (age);
         }
 
-        internal static DszCLibAddress PersonGetAddress(DszCLibPerson person)
+        internal static DszCLibAddress PersonGetAddress(DszCLibPerson cLibPerson)
         {
-            DszCLibAddress address = DSZ_CLIB_ADDRESS_INVALID;
+            var cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
 
-            var errorNum = DszCLibPersonGetAddress(
-                person,
-                ref address);
+            var cLibErrorNum = DszCLibPersonGetAddress(
+                cLibPerson,
+                ref cLibAddress);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
-            return (address);
+            return (cLibAddress);
         }
 
-        internal static string PersonToString(DszCLibPerson person)
+        internal static string PersonToString(DszCLibPerson cLibPerson)
         {
             string personString = string.Empty;
 
-            var errorNum = GetStringHelper<DszCLibAddress>(DszCLibPersonToString, person, ref personString);
+            var cLibErrorNum = GetStringHelper<DszCLibPerson>(
+                DszCLibPersonToString,
+                cLibPerson,
+                ref personString);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (personString);
         }
@@ -333,6 +367,8 @@ namespace DotSlashZero.DotNetCoreLib
 
         // a class that implements the generator delegates to be passed to native code
         // and provides an abstraction for the API IGenerator interface
+        // this is necessary to ensure that the GC will not collect or move the object instance
+        // to a different location before the native code has a chance to call the callback method
         internal sealed class GeneratorWrapper
         {
             public delegate int GenerateInt(int data);
@@ -406,22 +442,22 @@ namespace DotSlashZero.DotNetCoreLib
 
         internal static DszCLibGenerator GeneratorCreate(GeneratorWrapper generatorWrapper)
         {
-            var generator = DSZ_CLIB_GENERATOR_INVALID;
+            var cLibGenerator = DSZ_CLIB_GENERATOR_INVALID;
 
-            var errorNum = DszCLibGeneratorCreate(
+            var cLibErrorNum = DszCLibGeneratorCreate(
                 generatorWrapper.GenerateIntWrapped,
                 generatorWrapper.GenerateStringWrapped,
-                ref generator);
+                ref cLibGenerator);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
-            return (generator);
+            return (cLibGenerator);
         }
 
-        internal static void GeneratorDestroy(DszCLibGenerator generator)
+        internal static void GeneratorDestroy(DszCLibGenerator cLibGenerator)
         {
-            DszCLibGeneratorDestroy(generator);
+            DszCLibGeneratorDestroy(cLibGenerator);
             return;
         }
 
@@ -429,42 +465,42 @@ namespace DotSlashZero.DotNetCoreLib
 
         #region Printer
 
-        internal static DszCLibPrinter PrinterCreate(DszCLibGenerator generator)
+        internal static DszCLibPrinter PrinterCreate(DszCLibGenerator cLibGenerator)
         {
-            var printer = DSZ_CLIB_PRINTER_INVALID;
+            var cLibPrinter = DSZ_CLIB_PRINTER_INVALID;
 
-            var errorNum = DszCLibPrinterCreate(
-                generator,
-                ref printer);
+            var cLibErrorNum = DszCLibPrinterCreate(
+                cLibGenerator,
+                ref cLibPrinter);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
-            return (printer);
+            return (cLibPrinter);
         }
 
-        internal static void PrinterDestroy(DszCLibPrinter printer)
+        internal static void PrinterDestroy(DszCLibPrinter cLibPrinter)
         {
-            DszCLibPrinterDestroy(printer);
+            DszCLibPrinterDestroy(cLibPrinter);
             return;
         }
 
-        internal static void PrinterPrintInt(DszCLibPrinter printer)
+        internal static void PrinterPrintInt(DszCLibPrinter cLibPrinter)
         {
-            var errorNum = DszCLibPrinterPrintInt(printer);
+            var cLibErrorNum = DszCLibPrinterPrintInt(cLibPrinter);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return;
         }
 
-        internal static void PrinterPrintString(DszCLibPrinter printer)
+        internal static void PrinterPrintString(DszCLibPrinter cLibPrinter)
         {
-            var errorNum = DszCLibPrinterPrintString(printer);
+            var cLibErrorNum = DszCLibPrinterPrintString(cLibPrinter);
 
-            if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
-                throw (new Exception(ErrorNumGetMessage(errorNum)));
+            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return;
         }
