@@ -696,7 +696,7 @@ namespace DotSlashZero.DotNetCoreLib
         // a class to help allocate native memory
         private sealed class UnmanagedBuffer : IDisposable
         {
-            private const int DEFAULT_SIZE_TO_ALLOCATE = 128;
+            private const int DEFAULT_SIZE_TO_ALLOCATE = 160;
 
             private int m_size = DEFAULT_SIZE_TO_ALLOCATE;
 
