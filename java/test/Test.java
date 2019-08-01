@@ -1,5 +1,6 @@
 import net.dotslashzero.javalib.Address;
 import net.dotslashzero.javalib.IGenerator;
+import net.dotslashzero.javalib.JavaLibException;
 import net.dotslashzero.javalib.Library;
 import net.dotslashzero.javalib.Person;
 import net.dotslashzero.javalib.Printer;
@@ -55,13 +56,18 @@ public final class Test
             printer.printInt();
             printer.printString();
         }
+        catch (JavaLibException e) {
+            System.err.print("An error has occurred: ");
+            System.err.println(e.getMessage());
+            e.printStackTrace(System.err);
+        }
         catch (Exception e) {
-            System.err.print("Exception: ");
+            System.err.print("An error has occurred: ");
             System.err.println(e.getMessage());
             e.printStackTrace(System.err);
         }
         catch (Error e) {
-            System.err.print("Error: ");
+            System.err.print("An error has occurred: ");
             System.err.println(e.getMessage());
             e.printStackTrace(System.err);
         }

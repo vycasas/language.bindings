@@ -79,6 +79,10 @@ int main(void)
         std::cerr << "An error has occurred: " << e.what() << std::endl;
         return (-1);
     }
+    catch (...) {
+        std::cerr << "An unknown error has occurred." << std::endl;
+        return (-1);
+    }
 
     DotSlashZero::CxxLib::Library::Uninitialize();
 

@@ -78,6 +78,11 @@ namespace DotSlashZero.DotNetCoreLib.Test
 
                 return (0);
             }
+            catch (DotNetCoreLib.Exception e)
+            {
+                await Console.Error.WriteLineAsync($"An error has occurred: {e}");
+                return (-1);
+            }
             catch (System.Exception e)
             {
                 await Console.Error.WriteLineAsync($"An error has occurred: {e}");
