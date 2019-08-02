@@ -11,6 +11,8 @@ if (NOT TARGET clib)
     return ()
 endif ()
 
+set(LB_SWIFT_COMPILER "/usr/bin/swiftc")
+
 find_library(FOUNDATION Foundation)
 
 if (FOUNDATION-NOTFOUND)
@@ -68,12 +70,12 @@ set(LB_SWIFTLIB_FRAMEWORK_VERSION "A")
 
 add_custom_target(
     swiftlib ALL
-    COMMAND rm -fr ${LB_SWIFTLIB_FRAMEWORK_FILE}
-    COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}"
-    COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Headers"
-    COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Modules/SwiftLib.swiftmodule"
-    COMMAND mkdir -pv "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources"
-    COMMAND swiftc
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${LB_SWIFTLIB_FRAMEWORK_FILE}
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Headers"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Modules/SwiftLib.swiftmodule"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources"
+    COMMAND ${LB_SWIFT_COMPILER}
         -emit-library
         -o "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/SwiftLib"
         -emit-module
@@ -87,7 +89,7 @@ add_custom_target(
         "$<$<CONFIG:RelWithDebInfo>:${LB_SWIFTLIB_COMPILE_OPTIONS_RELWITHDEBINFO}>"
         -import-objc-header ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
         ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_LINK_OPTIONS}
-    COMMAND cp -v "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources/Info.plist"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}/Resources/Info.plist"
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     SOURCES ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
     DEPENDS ${LB_SWIFTLIB_SOURCE_FILES} ${LB_SWIFTLIB_BRIDGING_HEADER_FILE}
@@ -96,12 +98,12 @@ add_custom_target(
 add_custom_command(
     TARGET swiftlib
     POST_BUILD
-    COMMAND ln -sfvh "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current"
-    COMMAND ln -sfvh "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/SwiftLib" "${LB_SWIFTLIB_FRAMEWORK_FILE}/SwiftLib"
-    COMMAND ln -sfvh "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/Headers" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Headers"
-    COMMAND ln -sfvh "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/Modules" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Modules"
-    COMMAND ln -sfvh "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/Resources" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Resources"
-    COMMAND mv -v "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/SwiftLib.dSYM" "${LB_SWIFTLIB_OUTPUT_DIR}/SwiftLib.dSYM" || true
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/${LB_SWIFTLIB_FRAMEWORK_VERSION}" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/SwiftLib" "${LB_SWIFTLIB_FRAMEWORK_FILE}/SwiftLib"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/Headers" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Headers"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/Modules" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Modules"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/Resources" "${LB_SWIFTLIB_FRAMEWORK_FILE}/Resources"
+    COMMAND ${CMAKE_COMMAND} -E rename "${LB_SWIFTLIB_FRAMEWORK_FILE}/Versions/Current/SwiftLib.dSYM" "${LB_SWIFTLIB_OUTPUT_DIR}/SwiftLib.dSYM" || true
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_dependencies(swiftlib clib)

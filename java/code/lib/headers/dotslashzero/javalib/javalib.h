@@ -270,32 +270,12 @@ JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Person_nativeToString(
 
 /*
  * Class:     net_dotslashzero_javalib_Printer
- * Method:    nativeCreateGenerator
- * Signature: (Lnet/dotslashzero/javalib/Core/GeneratorType;)J
- */
-JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreateGenerator(
-    JNIEnv* pEnv,
-    jclass printerClass,
-    jobject generatorGeneratorType);
-/*
- * Class:     net_dotslashzero_javalib_Printer
- * Method:    nativeDestroyGenerator
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeDestroyGenerator(
-    JNIEnv* pEnv,
-    jclass printerClass,
-    jlong generatorImpl);
-
-/*
- * Class:     net_dotslashzero_javalib_Printer
  * Method:    nativeCreatePrinter
- * Signature: (JLnet/dotslashzero/javalib/Core/PrinterType;)J
+ * Signature: (Lnet/dotslashzero/javalib/Core/PrinterType;)J
  */
 JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinter(
     JNIEnv* pEnv,
     jclass printerClass,
-    jlong generatorImpl,
     jobject printerPrinterType);
 
 /*

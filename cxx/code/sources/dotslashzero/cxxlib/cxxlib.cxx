@@ -12,13 +12,13 @@ namespace DotSlashZero::CxxLib
 {
     namespace Core
     {
-        static std::string ErrorNumToStdString(DszCLibErrorNum errorNum)
+        static std::string ErrorNumToStdString(DszCLibErrorNum cLibErrorNum)
         {
             std::string::size_type constexpr ERRORNUM_STRING_SIZE = 40;
             std::string errorNumString(ERRORNUM_STRING_SIZE, '\0');
 
             DszCLibErrorNumGetMessage(
-                errorNum,
+                cLibErrorNum,
                 errorNumString.data(), errorNumString.size(),
                 nullptr);
 
@@ -100,9 +100,9 @@ namespace DotSlashZero::CxxLib
     {
         bool Initialize(void) noexcept
         {
-            auto errorNum = DszCLibLibraryInitialize();
+            auto cLibErrorNum = DszCLibLibraryInitialize();
 
-            return (errorNum == DSZ_CLIB_ERRORNUM_NO_ERROR);
+            return (cLibErrorNum == DSZ_CLIB_ERRORNUM_NO_ERROR);
         }
 
         void Uninitialize(void) noexcept
@@ -178,7 +178,7 @@ namespace DotSlashZero::CxxLib
         std::string const& country) :
         m_impl{ DSZ_CLIB_ADDRESS_INVALID }
     {
-        auto errorNum = DszCLibAddressCreate(
+        auto cLibErrorNum = DszCLibAddressCreate(
             streetNum,
             street.c_str(),
             city.c_str(),
@@ -187,7 +187,7 @@ namespace DotSlashZero::CxxLib
             country.c_str(),
             &m_impl);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return;
     }
@@ -196,7 +196,7 @@ namespace DotSlashZero::CxxLib
     {
         Destroy__();
 
-        auto errorNum = DszCLibAddressCreate(
+        auto cLibErrorNum = DszCLibAddressCreate(
             address.GetStreetNum(),
             address.GetStreet().c_str(),
             address.GetCity().c_str(),
@@ -205,7 +205,7 @@ namespace DotSlashZero::CxxLib
             address.GetCountry().c_str(),
             &m_impl);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return;
     }
@@ -221,7 +221,7 @@ namespace DotSlashZero::CxxLib
     {
         Destroy__();
 
-        auto errorNum = DszCLibAddressCreate(
+        auto cLibErrorNum = DszCLibAddressCreate(
             address.GetStreetNum(),
             address.GetStreet().c_str(),
             address.GetCity().c_str(),
@@ -230,7 +230,7 @@ namespace DotSlashZero::CxxLib
             address.GetCountry().c_str(),
             &m_impl);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (*this);
     }
@@ -239,21 +239,26 @@ namespace DotSlashZero::CxxLib
     {
         int streetNum = 0;
 
-        auto errorNum = DszCLibAddressGetStreetNum(m_impl, &streetNum);
+        auto cLibErrorNum = DszCLibAddressGetStreetNum(
+            m_impl,
+            &streetNum);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (streetNum);
     }
 
     std::string Address::GetStreet(void) const
     {
-        std::string::size_type constexpr STREET_SIZE = 40;
+        std::string::size_type constexpr STREET_SIZE = 16;
         std::string street(STREET_SIZE, '\0');
 
-        auto errorNum = DszCLibAddressGetStreet(m_impl, street.data(), street.size(), nullptr);
+        auto cLibErrorNum = DszCLibAddressGetStreet(
+            m_impl,
+            street.data(), street.size(),
+            nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (street.c_str());
     }
@@ -263,33 +268,42 @@ namespace DotSlashZero::CxxLib
         std::string::size_type constexpr CITY_SIZE = 16;
         std::string city(CITY_SIZE, '\0');
 
-        auto errorNum = DszCLibAddressGetCity(m_impl, city.data(), city.size(), nullptr);
+        auto cLibErrorNum = DszCLibAddressGetCity(
+            m_impl,
+            city.data(), city.size(),
+            nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (city.c_str());
     }
 
     std::string Address::GetProvince(void) const
     {
-        std::string::size_type constexpr PROVINCE_SIZE = 8;
+        std::string::size_type constexpr PROVINCE_SIZE = 16;
         std::string province(PROVINCE_SIZE, '\0');
 
-        auto errorNum = DszCLibAddressGetProvince(m_impl, province.data(), province.size(), nullptr);
+        auto cLibErrorNum = DszCLibAddressGetProvince(
+            m_impl,
+            province.data(), province.size(),
+            nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (province.c_str());
     }
 
     std::string Address::GetZipCode(void) const
     {
-        std::string::size_type constexpr ZIP_CODE_SIZE = 8;
+        std::string::size_type constexpr ZIP_CODE_SIZE = 16;
         std::string zipCode(ZIP_CODE_SIZE, '\0');
 
-        auto errorNum = DszCLibAddressGetCountry(m_impl, zipCode.data(), zipCode.size(), nullptr);
+        auto cLibErrorNum = DszCLibAddressGetCountry(
+            m_impl,
+            zipCode.data(), zipCode.size(),
+            nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (zipCode.c_str());
     }
@@ -299,21 +313,27 @@ namespace DotSlashZero::CxxLib
         std::string::size_type constexpr COUNTRY_SIZE = 16;
         std::string country(COUNTRY_SIZE, '\0');
 
-        auto errorNum = DszCLibAddressGetCountry(m_impl, country.data(), country.size(), nullptr);
+        auto cLibErrorNum = DszCLibAddressGetCountry(
+            m_impl,
+            country.data(), country.size(),
+            nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (country.c_str());
     }
 
     std::string Address::ToString(void) const
     {
-        std::string::size_type constexpr ADDRESS_STRING_SIZE = 256;
+        std::string::size_type constexpr ADDRESS_STRING_SIZE = 80;
         std::string addressString(ADDRESS_STRING_SIZE, '\0');
 
-        auto errorNum = DszCLibAddressToString(m_impl, addressString.data(), addressString.size(), nullptr);
+        auto cLibErrorNum = DszCLibAddressToString(
+            m_impl,
+            addressString.data(), addressString.size(),
+            nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (addressString.c_str());
     }
@@ -336,14 +356,14 @@ namespace DotSlashZero::CxxLib
         m_impl{ DSZ_CLIB_PERSON_INVALID }
     {
         // Remember: address.m_impl is copied.
-        auto errorNum = DszCLibPersonCreate(
+        auto cLibErrorNum = DszCLibPersonCreate(
             lastName.c_str(),
             firstName.c_str(),
             age,
             address.m_impl,
             &m_impl);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return;
     }
@@ -352,14 +372,14 @@ namespace DotSlashZero::CxxLib
     {
         Destroy__();
 
-        auto errorNum = DszCLibPersonCreate(
+        auto cLibErrorNum = DszCLibPersonCreate(
             person.GetLastName().c_str(),
             person.GetFirstName().c_str(),
             person.GetAge(),
             person.GetAddress().m_impl,
             &m_impl);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return;
     }
@@ -375,44 +395,44 @@ namespace DotSlashZero::CxxLib
     {
         Destroy__();
 
-        auto errorNum = DszCLibPersonCreate(
+        auto cLibErrorNum = DszCLibPersonCreate(
             person.GetLastName().c_str(),
             person.GetFirstName().c_str(),
             person.GetAge(),
             person.GetAddress().m_impl,
             &m_impl);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (*this);
     }
 
     std::string Person::GetLastName(void) const
     {
-        std::string::size_type const LAST_NAME_SIZE = 24;
+        std::string::size_type const LAST_NAME_SIZE = 16;
         std::string lastName(LAST_NAME_SIZE, '\0');
 
-        auto errorNum = DszCLibPersonGetLastName(
+        auto cLibErrorNum = DszCLibPersonGetLastName(
             m_impl,
             lastName.data(), lastName.size(),
             nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (lastName.c_str());
     }
 
     std::string Person::GetFirstName(void) const
     {
-        std::string::size_type const FIRST_NAME_SIZE = 24;
+        std::string::size_type const FIRST_NAME_SIZE = 16;
         std::string firstName(FIRST_NAME_SIZE, '\0');
 
-        auto errorNum = DszCLibPersonGetFirstName(
+        auto cLibErrorNum = DszCLibPersonGetFirstName(
             m_impl,
             firstName.data(), firstName.size(),
             nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (firstName.c_str());
     }
@@ -421,9 +441,11 @@ namespace DotSlashZero::CxxLib
     {
         int age = 0;
 
-        auto errorNum = DszCLibPersonGetAge(m_impl, &age);
+        auto cLibErrorNum = DszCLibPersonGetAge(
+            m_impl,
+            &age);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (age);
     }
@@ -432,24 +454,26 @@ namespace DotSlashZero::CxxLib
     {
         Address address;
 
-        auto errorNum = DszCLibPersonGetAddress(m_impl, &(address.m_impl));
+        auto cLibErrorNum = DszCLibPersonGetAddress(
+            m_impl,
+            &(address.m_impl));
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (address);
     }
 
     std::string Person::ToString(void) const
     {
-        std::string::size_type PERSON_STRING_SIZE = 512;
+        std::string::size_type PERSON_STRING_SIZE = 160;
         std::string personString(PERSON_STRING_SIZE, '\0');
 
-        auto errorNum = DszCLibPersonToString(
+        auto cLibErrorNum = DszCLibPersonToString(
             m_impl,
             personString.data(), personString.size(),
             nullptr);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return (personString.c_str());
     }
@@ -468,18 +492,20 @@ namespace DotSlashZero::CxxLib
         m_impl{ DSZ_CLIB_PRINTER_INVALID },
         m_pGenerator{ pGenerator }
     {
-        DszCLibGenerator generatorImpl = DSZ_CLIB_GENERATOR_INVALID;
+        DszCLibGenerator cLibGenerator = DSZ_CLIB_GENERATOR_INVALID;
 
-        auto errorNum = DszCLibGeneratorCreate(
+        auto cLibErrorNum = DszCLibGeneratorCreate(
             (DszCLibGenerateIntFunction) &(Core::GenerateIntRedirect),
             (DszCLibGenerateStringFunction) &(Core::GenerateStringRedirect),
-            &generatorImpl);
+            &cLibGenerator);
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
-        errorNum = DszCLibPrinterCreate(generatorImpl, &m_impl); // note: this takes ownership of generatorImpl, so don't destroy the instance
+        cLibErrorNum = DszCLibPrinterCreate(
+            cLibGenerator,
+            &m_impl); // note: this takes ownership of generatorImpl, so don't destroy the instance
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return;
     }
@@ -493,22 +519,22 @@ namespace DotSlashZero::CxxLib
 
     void Printer::PrintInt(void) const
     {
-        auto errorNum = DszCLibPrinterPrintIntWithUserData(
+        auto cLibErrorNum = DszCLibPrinterPrintIntWithUserData(
             m_impl,
             const_cast<void*>(reinterpret_cast<void const*>(m_pGenerator.get())));
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return;
     }
 
     void Printer::PrintString(void) const
     {
-        auto errorNum = DszCLibPrinterPrintStringWithUserData(
+        auto cLibErrorNum = DszCLibPrinterPrintStringWithUserData(
             m_impl,
             const_cast<void*>(reinterpret_cast<void const*>(m_pGenerator.get())));
 
-        DSZ_CXXLIBCORE_API_CHECK(errorNum);
+        DSZ_CXXLIBCORE_API_CHECK(cLibErrorNum);
 
         return;
     }

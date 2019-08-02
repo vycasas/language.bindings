@@ -61,14 +61,6 @@ class Core
         }
     }
 
-    static final class GeneratorType extends NativeType
-    {
-        public GeneratorType(long impl)
-        {
-            super(Long.valueOf(impl));
-        }
-    }
-
     static final class PrinterType extends NativeType
     {
         public PrinterType(long impl)

@@ -15,19 +15,10 @@ public class Printer extends Core.ApiBase<Core.PrinterType>
         m_impl = new Core.PrinterType(0);
         m_generator = generator;
 
-		Core.GeneratorType generatorImpl = new Core.GeneratorType(0);
-        long nativeErrorNum = nativeCreateGenerator(generatorImpl);
+		long nativeErrorNum = nativeCreatePrinter(m_impl);
 
         if (nativeErrorNum != 0)
             throw (new JavaLibException(nativeErrorNum));
-
-        // note: this will take ownership of generatorImpl, no need to destroy explicitly when succeeded
-		nativeErrorNum = nativeCreatePrinter(generatorImpl.getAddress(), m_impl);
-
-        if (nativeErrorNum != 0) {
-            nativeDestroyGenerator(generatorImpl.getAddress());
-            throw (new JavaLibException(nativeErrorNum));
-        }
     }
 
 	@SuppressWarnings("deprecation")
@@ -58,12 +49,7 @@ public class Printer extends Core.ApiBase<Core.PrinterType>
         return;
     }
 
-	private static native long nativeCreateGenerator(Core.GeneratorType generatorImpl);
-
-    private static native long nativeDestroyGenerator(long generatorImpl);
-
-    // note: this will take ownership of generatorImpl, no need to destroy explicitly when successful
-    private static native long nativeCreatePrinter(long generatorImpl, Core.PrinterType printerImpl);
+    private static native long nativeCreatePrinter(Core.PrinterType printerImpl);
 
     private static native long nativeDestroyPrinter(long printerImpl);
 

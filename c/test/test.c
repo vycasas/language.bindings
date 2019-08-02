@@ -71,13 +71,13 @@ int main(void)
 #if defined(_MSC_VER)
     #define ERROR_MESSAGE_SIZE 40
     #define VERSION_STRING_SIZE 16
-    #define ADDRESS_STRING_SIZE 256
-    #define PERSON_STRING_SIZE 512
+    #define ADDRESS_STRING_SIZE 80
+    #define PERSON_STRING_SIZE 160
 #else /* defined(_MSC_VER) */
     size_t const ERROR_MESSAGE_SIZE = 40;
     size_t const VERSION_STRING_SIZE = 16;
-    size_t const ADDRESS_STRING_SIZE = 256;
-    size_t const PERSON_STRING_SIZE = 512;
+    size_t const ADDRESS_STRING_SIZE = 80;
+    size_t const PERSON_STRING_SIZE = 160;
 #endif /* defined(_MSC_VER) */
 
     DszCLibErrorNum errorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
@@ -93,21 +93,33 @@ int main(void)
     DszCLibLibraryInitialize();
 
     memset(versionString, 0, VERSION_STRING_SIZE);
-    DszCLibLibraryGetVersionString(versionString, VERSION_STRING_SIZE, NULL);
+    DszCLibLibraryGetVersionString(
+        versionString, VERSION_STRING_SIZE,
+        NULL);
 
     fprintf(stdout, "Library initialized... version %s\n", versionString);
 
     do {
         fprintf(stdout, "Creating a new address...\n");
-        
-        errorNum = DszCLibAddressCreate(9898, "Corner St.", "Gotham", "CA", "4132", "Antartica", &address);
+
+        errorNum = DszCLibAddressCreate(
+            9898,
+            "Corner St.",
+            "Gotham",
+            "CA",
+            "4132",
+            "Antartica",
+            &address);
         if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
             break;
 
         fprintf(stdout, "New address created!\n");
 
         memset(addressString, 0, ADDRESS_STRING_SIZE);
-        errorNum = DszCLibAddressToString(address, addressString, ADDRESS_STRING_SIZE, NULL);
+        errorNum = DszCLibAddressToString(
+            address,
+            addressString, ADDRESS_STRING_SIZE,
+            NULL);
         if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
             break;
 
@@ -115,14 +127,22 @@ int main(void)
 
         fprintf(stdout, "Creating a new person...\n");
 
-        errorNum = DszCLibPersonCreate("Wayne", "Bruce", 25, address, &person);
+        errorNum = DszCLibPersonCreate(
+            "Wayne",
+            "Bruce",
+            25,
+            address,
+            &person);
         if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
             break;
 
         fprintf(stdout, "New person created!\n");
 
         memset(personString, 0, PERSON_STRING_SIZE);
-        errorNum = DszCLibPersonToString(person, personString, 512, NULL);
+        errorNum = DszCLibPersonToString(
+            person,
+            personString, PERSON_STRING_SIZE,
+            NULL);
         if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
             break;
 
@@ -173,7 +193,10 @@ int main(void)
 
     if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
         memset(errorMessage, 0, ERROR_MESSAGE_SIZE);
-        DszCLibErrorNumGetMessage(errorNum, errorMessage, ERROR_MESSAGE_SIZE, NULL);
+        DszCLibErrorNumGetMessage(
+            errorNum,
+            errorMessage, ERROR_MESSAGE_SIZE,
+            NULL);
     }
 
     DszCLibLibraryUninitialize();

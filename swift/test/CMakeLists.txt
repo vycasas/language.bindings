@@ -11,6 +11,8 @@ if (NOT TARGET swiftlib)
     return ()
 endif ()
 
+set(LB_SWIFT_COMPILER "/usr/bin/swiftc")
+
 find_library(FOUNDATION Foundation)
 
 if (FOUNDATION-NOTFOUND)
@@ -51,7 +53,7 @@ set(LB_SWIFTLIB_TEST_LINK_OPTIONS
 
 add_custom_target(
     swiftlib_test ALL
-    COMMAND swiftc
+    COMMAND ${LB_SWIFT_COMPILER}
         -emit-executable
         -o "${LB_SWIFTLIB_TEST_OUTPUT_DIR}/swiftlib_test"
         ${LB_SWIFTLIB_TEST_COMPILE_OPTIONS}
