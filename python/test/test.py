@@ -20,7 +20,11 @@ class MyGenerator(pythonlib.GeneratorBase):
 
 def main(args):
     try:
-        pythonlib.Library.initialize()
+        init_ok = pythonlib.Library.initialize()
+        if not init_ok:
+            sys.stderr.write('Failed to initialize library.')
+            return -1
+
         sys.stdout.write(f'Library initialized... version {pythonlib.Library.get_version_string()}\n')
 
         sys.stdout.write('Creating a new address...\n')

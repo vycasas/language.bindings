@@ -1,19 +1,29 @@
 #include <dotslashzero/dotnetframeworklib/dotnetframeworklib.hxx>
 
-#include <dotslashzero/cxxlib/cxxlib.hxx>
+#include <dotslashzero/clib/clib.h>
 
+#include <algorithm>
 #include <cassert>
+#include <exception>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <string_view>
 #include <vector>
 
 #include <vcclr.h>
+
+// The definitions of the opaque types are necessary to work around MSVC warnings for /clr.
+// These types are only used in the clib interface to hide the actual definitions of the internal types.
+struct DszCLibAddress_ { };
+struct DszCLibPerson_ { };
+struct DszCLibGenerator_ { };
+struct DszCLibPrinter_ { };
 
 #define DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD \
     try {
 
 #define DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD \
-    } \
-    catch (DotSlashZero::CxxLib::Exception const& e) { \
-        throw (Core::CreateNewException(e)); \
     } \
     catch (std::exception const& e) { \
         throw (Core::CreateNewException(e)); \
@@ -27,6 +37,12 @@
     catch (...) { \
         bool const NO_EXCEPTION_CAUGHT = false; \
         assert(NO_EXCEPTION_CAUGHT); \
+    }
+
+#define DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum) \
+    if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR) { \
+        auto errorNumStr = DotSlashZero::DotNetFrameworkLib::Core::ErrorNumToStdString(cLibErrorNum); \
+        throw (std::runtime_error(errorNumStr)); \
     }
 
 namespace DotSlashZero::DotNetFrameworkLib
@@ -72,24 +88,22 @@ namespace DotSlashZero::DotNetFrameworkLib
             return (result);
         }
 
+        static inline std::string ErrorNumToStdString(DszCLibErrorNum cLibErrorNum)
+        {
+            std::string::size_type constexpr ERROR_NUM_STRING_SIZE = 40;
+            std::string errorNumString(ERROR_NUM_STRING_SIZE, '\0');
+
+            DszCLibErrorNumGetMessage(
+                cLibErrorNum,
+                &(errorNumString.front()), errorNumString.size(),
+                nullptr);
+
+            return (errorNumString.c_str());
+        }
+
         static inline Exception^ CreateNewException(System::String^ message)
         {
             return (gcnew Exception(message));
-        }
-
-        static inline Exception^ CreateNewException(CxxLib::Exception const& e)
-        {
-            try
-            {
-                auto message = Core::StdStringToSystemString(e.GetMessage());
-                return (CreateNewException(message));
-            }
-            catch (...)
-            {
-                bool const NO_EXCEPTION_CAUGHT= false;
-                assert(NO_EXCEPTION_CAUGHT);
-                return (CreateNewException(L"A severe error has occurred while throwing an exception."));
-            }
         }
 
         static inline Exception^ CreateNewException(std::exception const& e)
@@ -107,51 +121,113 @@ namespace DotSlashZero::DotNetFrameworkLib
             }
         }
 
-        class GeneratorImpl final : public CxxLib::IGenerator
+        using IGeneratorGcRoot = msclr::gcroot<DotNetFrameworkLib::IGenerator^>;
+        using IGeneratorGcRootRawPtr = IGeneratorGcRoot*;
+
+        static DszCLibErrorNum GenerateIntRedirect(
+            int data,
+            int* pInt,
+            void* pUserData)
+        {
+            if (pUserData == nullptr)
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
+
+            if (pInt == nullptr)
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
+
+            auto pGenerator = reinterpret_cast<IGeneratorGcRootRawPtr>(pUserData);
+
+            if (!pGenerator)
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
+
+            *pInt = (*pGenerator)->GenerateInt(data);
+
+            return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
+        }
+
+        static DszCLibErrorNum GenerateStringRedirect(
+            int data,
+            char* pString, std::size_t stringSize,
+            std::size_t* pCharsWritten,
+            void* pUserData)
+        {
+            if (pUserData == nullptr)
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
+
+            auto pGenerator = reinterpret_cast<IGeneratorGcRootRawPtr>(pUserData);
+
+            if (!pGenerator)
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
+
+            auto generatedString = (*pGenerator)->GenerateString(data);
+            auto generatedStringStdString = Core::SystemStringToStdString(generatedString);
+
+            std::size_t numChars = 0;
+
+            if ((pString != nullptr) && (stringSize > 0)) {
+                std::fill_n(pString, stringSize, '\0');
+                auto const COPY_COUNT = (std::min)(stringSize, generatedStringStdString.size());
+                std::copy_n(generatedStringStdString.cbegin(), COPY_COUNT, pString);
+                pString[stringSize - 1] = '\0';
+                numChars = std::string_view(pString).size();
+            }
+            else {
+                numChars = generatedStringStdString.size();
+            }
+
+            if (pCharsWritten != nullptr)
+                *pCharsWritten = numChars;
+
+            return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
+        }
+
+        class DszCLibGeneratorGuarded final
         {
         public:
-            GeneratorImpl(DotNetFrameworkLib::IGenerator^ generator) :
-                m_rGenerator(generator)
+            DszCLibGeneratorGuarded(DszCLibGenerator cLibGenerator)
+                : m_cLibGenerator(cLibGenerator)
             { return; }
 
-            ~GeneratorImpl(void) noexcept
+            ~DszCLibGeneratorGuarded()
             {
-                m_rGenerator = nullptr;
+                if (m_cLibGenerator != DSZ_CLIB_GENERATOR_INVALID) {
+                    DszCLibGeneratorDestroy(m_cLibGenerator);
+                    m_cLibGenerator = DSZ_CLIB_GENERATOR_INVALID;
+                }
                 return;
             }
 
-            int GenerateInt(int data) const override
+            explicit operator bool() const
             {
-                try
-                {
-                    auto result = m_rGenerator->GenerateInt(static_cast<System::Int32>(data));
-
-                    return (static_cast<int>(result));
-                }
-                catch (System::Exception^ e)
-                {
-                    throw (std::runtime_error(Core::SystemStringToStdString(e->Message)));
-                }
+                return (m_cLibGenerator != DSZ_CLIB_GENERATOR_INVALID);
             }
 
-            std::string GenerateString(int data) const override
+            operator DszCLibGenerator() const
             {
-                try
-                {
-                    auto result = m_rGenerator->GenerateString(static_cast<System::Int32>(data));
-
-                    return (Core::SystemStringToStdString(result));
-                }
-                catch (System::Exception^ e)
-                {
-                    throw (std::runtime_error(Core::SystemStringToStdString(e->Message)));
-                }
+                return (m_cLibGenerator);
             }
 
+            DszCLibGenerator Release()
+            {
+                auto cLibGenerator = m_cLibGenerator;
+                m_cLibGenerator = DSZ_CLIB_GENERATOR_INVALID;
+                return (cLibGenerator);
+            }
         private:
-            msclr::gcroot<DotNetFrameworkLib::IGenerator^> m_rGenerator;
+            DszCLibGenerator m_cLibGenerator = DSZ_CLIB_GENERATOR_INVALID;
         };
-        // class GeneratorImpl
+
+        static DszCLibGeneratorGuarded CreateNewGenerator()
+        {
+            auto cLibGenerator = DSZ_CLIB_GENERATOR_INVALID;
+
+            DszCLibGeneratorCreate(
+                &Core::GenerateIntRedirect,
+                &Core::GenerateStringRedirect,
+                &cLibGenerator);
+
+            return (DszCLibGeneratorGuarded(cLibGenerator));
+        }
     }
     // namespace Core
 
@@ -184,9 +260,8 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        auto initOk = CxxLib::Library::Initialize();
-
-        return (static_cast<System::Boolean>(initOk));
+        auto cLibErrorNum = DszCLibLibraryInitialize();
+        return (cLibErrorNum == DSZ_CLIB_ERROR_NUM_NO_ERROR);
 
         DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
@@ -196,7 +271,7 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        CxxLib::Library::Uninitialize();
+        DszCLibLibraryUninitialize();
 
         return;
 
@@ -208,7 +283,15 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        auto const& versionString = CxxLib::Library::GetVersionString();
+        std::string::size_type constexpr VERSION_STRING_SIZE = 16;
+        std::string versionString(VERSION_STRING_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibLibraryGetVersionString(
+            &(versionString.front()),
+            versionString.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(versionString));
 
@@ -220,7 +303,11 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        auto const& versionMajor = CxxLib::Library::GetVersionMajor();
+        size_t versionMajor = 0;
+
+        auto cLibErrorNum = DszCLibLibraryGetVersionMajor(&versionMajor);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (static_cast<System::Int32>(versionMajor));
 
@@ -232,7 +319,11 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        auto const& versionMinor = CxxLib::Library::GetVersionMinor();
+        size_t versionMinor = 0;
+
+        auto cLibErrorNum = DszCLibLibraryGetVersionMajor(&versionMinor);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (static_cast<System::Int32>(versionMinor));
 
@@ -244,7 +335,11 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        auto const& versionPatch = CxxLib::Library::GetVersionPatch();
+        size_t versionPatch = 0;
+
+        auto cLibErrorNum = DszCLibLibraryGetVersionMajor(&versionPatch);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (static_cast<System::Int32>(versionPatch));
 
@@ -256,9 +351,17 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        auto const& versionString = CxxLib::Library::GetVersionExtra();
+        std::string::size_type constexpr VERSION_EXTRA_SIZE = 16;
+        std::string versionExtra(VERSION_EXTRA_SIZE, '\0');
 
-        return (Core::StdStringToSystemString(versionString));
+        auto cLibErrorNum = DszCLibLibraryGetVersionString(
+            &(versionExtra.front()),
+            versionExtra.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
+
+        return (Core::StdStringToSystemString(versionExtra));
 
         DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
@@ -280,19 +383,30 @@ namespace DotSlashZero::DotNetFrameworkLib
         auto zipCodeStdStr = Core::SystemStringToStdString(zipCode);
         auto countryStdStr = Core::SystemStringToStdString(country);
 
-        auto pAddress = std::make_unique<CxxLib::Address>(
-            streetNumInt,
-            streetStdStr,
-            cityStdStr,
-            provinceStdStr,
-            zipCodeStdStr,
-            countryStdStr);
+        auto cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
 
-        m_pImpl = pAddress.release();
+        auto cLibErrorNum = DszCLibAddressCreate(
+            streetNumInt,
+            streetStdStr.c_str(),
+            cityStdStr.c_str(),
+            provinceStdStr.c_str(),
+            zipCodeStdStr.c_str(),
+            countryStdStr.c_str(),
+            &cLibAddress);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
+
+        m_pImpl = reinterpret_cast<std::intptr_t>(cLibAddress);
 
         return;
 
         DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
+    }
+
+    Address::Address(std::intptr_t const& pImpl)
+        : m_pImpl(pImpl)
+    {
+        return;
     }
 
     Address::~Address()
@@ -310,9 +424,10 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        if (m_pImpl != nullptr) {
-            std::unique_ptr<CxxLib::Address> pAddress(m_pImpl); // a pattern to free objects without using delete explicitly
-            m_pImpl = nullptr;
+        if (m_pImpl != 0) {
+            auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
+            DszCLibAddressDestroy(cLibAddress);
+            m_pImpl = 0;
         }
 
         return;
@@ -325,9 +440,17 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& streetNum = m_pImpl->GetStreetNum();
+        auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
+  
+        int streetNum = 0;
+
+        auto cLibErrorNum = DszCLibAddressGetStreetNum(
+            cLibAddress,
+            &streetNum);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (static_cast<System::Int32>(streetNum));
 
@@ -339,9 +462,19 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& street = m_pImpl->GetStreet();
+        auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
+
+        std::string::size_type STREET_SIZE = 16;
+        std::string street(STREET_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibAddressGetStreet(
+            cLibAddress,
+            &(street.front()), street.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(street));
 
@@ -353,9 +486,19 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& city = m_pImpl->GetCity();
+        auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
+
+        std::string::size_type CITY_SIZE = 16;
+        std::string city(CITY_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibAddressGetCity(
+            cLibAddress,
+            &(city.front()), city.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(city));
 
@@ -367,9 +510,19 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& province = m_pImpl->GetProvince();
+        auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
+
+        std::string::size_type PROVINCE_SIZE = 16;
+        std::string province(PROVINCE_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibAddressGetProvince(
+            cLibAddress,
+            &(province.front()), province.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(province));
 
@@ -381,9 +534,19 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& zipCode = m_pImpl->GetZipCode();
+        auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
+
+        std::string::size_type ZIP_CODE_SIZE = 16;
+        std::string zipCode(ZIP_CODE_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibAddressGetZipCode(
+            cLibAddress,
+            &(zipCode.front()), zipCode.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(zipCode));
 
@@ -395,9 +558,19 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& country = m_pImpl->GetCountry();
+        auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
+
+        std::string::size_type COUNTRY_SIZE = 16;
+        std::string country(COUNTRY_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibAddressGetCountry(
+            cLibAddress,
+            &(country.front()), country.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(country));
 
@@ -408,24 +581,28 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& addressString = m_pImpl->ToString();
+        auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
+
+        std::string::size_type ADDRESS_STRING_SIZE = 80;
+        std::string addressString(ADDRESS_STRING_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibAddressToString(
+            cLibAddress,
+            &(addressString.front()), addressString.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(addressString));
 
         DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
-    CxxLib::Address* Address::GetImpl()
+    std::intptr_t Address::GetImpl()
     {
-        DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
-
-        assert(m_pImpl != nullptr);
-
         return (m_pImpl);
-
-        DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 
     Person::Person(
@@ -441,15 +618,21 @@ namespace DotSlashZero::DotNetFrameworkLib
         auto ageInt = static_cast<int>(age);
         auto pAddressImpl = address->GetImpl();
 
-        assert(pAddressImpl != nullptr);
+        assert(pAddressImpl != 0);
 
-        auto pPerson = std::make_unique<CxxLib::Person>(
-            lastNameStdStr,
-            firstNameStdStr,
+        auto cLibAddress = reinterpret_cast<DszCLibAddress>(pAddressImpl);
+        auto cLibPerson = DSZ_CLIB_PERSON_INVALID;
+
+        auto cLibErrorNum = DszCLibPersonCreate(
+            lastNameStdStr.c_str(),
+            firstNameStdStr.c_str(),
             ageInt,
-            *pAddressImpl);
+            cLibAddress,
+            &cLibPerson);
 
-        m_pImpl = pPerson.release();
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
+
+        m_pImpl = reinterpret_cast<std::intptr_t>(cLibPerson);
 
         return;
 
@@ -471,9 +654,10 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        if (m_pImpl != nullptr) {
-            std::unique_ptr<CxxLib::Person> pPerson(m_pImpl);
-            m_pImpl = nullptr;
+        if (m_pImpl != 0) {
+            auto cLibPerson = reinterpret_cast<DszCLibPerson>(m_pImpl);
+            DszCLibPersonDestroy(cLibPerson);
+            m_pImpl = 0;
         }
 
         return;
@@ -486,9 +670,19 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& lastName = m_pImpl->GetLastName();
+        auto cLibPerson = reinterpret_cast<DszCLibPerson>(m_pImpl);
+
+        std::string::size_type LAST_NAME_SIZE = 16;
+        std::string lastName(LAST_NAME_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibPersonGetLastName(
+            cLibPerson,
+            &(lastName.front()), lastName.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(lastName));
 
@@ -500,9 +694,19 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& firstName = m_pImpl->GetFirstName();
+        auto cLibPerson = reinterpret_cast<DszCLibPerson>(m_pImpl);
+
+        std::string::size_type FIRST_NAME_SIZE = 16;
+        std::string firstName(FIRST_NAME_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibPersonGetFirstName(
+            cLibPerson,
+            &(firstName.front()), firstName.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(firstName));
 
@@ -514,9 +718,17 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& age = m_pImpl->GetAge();
+        auto cLibPerson = reinterpret_cast<DszCLibPerson>(m_pImpl);
+
+        int age = 0;
+
+        auto cLibErrorNum = DszCLibPersonGetAge(
+            cLibPerson,
+            &age);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (static_cast<System::Int32>(age));
 
@@ -528,24 +740,20 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& address = m_pImpl->GetAddress();
+        auto cLibPerson = reinterpret_cast<DszCLibPerson>(m_pImpl);
+        auto cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
 
-        auto streetNum = static_cast<System::Int32>(address.GetStreetNum());
-        auto street = Core::StdStringToSystemString(address.GetStreet());
-        auto city = Core::StdStringToSystemString(address.GetCity());
-        auto province = Core::StdStringToSystemString(address.GetProvince());
-        auto zipCode = Core::StdStringToSystemString(address.GetZipCode());
-        auto country = Core::StdStringToSystemString(address.GetCountry());
+        auto cLibErrorNum = DszCLibPersonGetAddress(
+            cLibPerson,
+            &cLibAddress);
 
-        return (gcnew DotNetFrameworkLib::Address(
-            streetNum,
-            street,
-            city,
-            province,
-            zipCode,
-            country));
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
+
+        auto address = gcnew DotNetFrameworkLib::Address(reinterpret_cast<std::intptr_t>(cLibAddress));
+
+        return (address);
 
         DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
@@ -554,9 +762,19 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        auto const& personString = m_pImpl->ToString();
+        auto cLibPerson = reinterpret_cast<DszCLibPerson>(m_pImpl);
+
+        std::string::size_type PERSON_STRING_SIZE = 160;
+        std::string personString(PERSON_STRING_SIZE, '\0');
+
+        auto cLibErrorNum = DszCLibPersonToString(
+            cLibPerson,
+            &(personString.front()), personString.size(),
+            nullptr);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         return (Core::StdStringToSystemString(personString));
 
@@ -564,14 +782,21 @@ namespace DotSlashZero::DotNetFrameworkLib
     }
 
     Printer::Printer(IGenerator^ generator)
+        : m_generator(generator)
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        auto pGenerator = std::make_unique<Core::GeneratorImpl>(generator);
+        auto cLibGenerator = Core::CreateNewGenerator();
 
-        auto pPrinter = std::make_unique<CxxLib::Printer>(pGenerator.release());
+        auto cLibPrinter = DSZ_CLIB_PRINTER_INVALID;
 
-        m_pImpl = pPrinter.release();
+        auto cLibErrorNum = DszCLibPrinterCreate(
+            cLibGenerator.Release(),
+            &cLibPrinter);
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
+
+        m_pImpl = reinterpret_cast<std::intptr_t>(cLibPrinter);
 
         return;
         
@@ -593,9 +818,10 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        if (m_pImpl != nullptr) {
-            std::unique_ptr<CxxLib::Printer> pPrinter(m_pImpl);
-            m_pImpl = nullptr;
+        if (m_pImpl != 0) {
+            auto cLibPrinter = reinterpret_cast<DszCLibPrinter>(m_pImpl);
+            DszCLibPrinterDestroy(cLibPrinter);
+            m_pImpl = 0;
         }
 
         return;
@@ -607,11 +833,17 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        m_pImpl->PrintInt();
+        auto cLibPrinter = reinterpret_cast<DszCLibPrinter>(m_pImpl);
 
-        return;
+        std::unique_ptr<Core::IGeneratorGcRoot> pGenerator(new Core::IGeneratorGcRoot(m_generator));
+
+        auto cLibErrorNum = DszCLibPrinterPrintIntWithUserData(
+            cLibPrinter,
+            reinterpret_cast<void*>(pGenerator.get()));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
@@ -620,11 +852,17 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
-        assert(m_pImpl != nullptr);
+        assert(m_pImpl != 0);
 
-        m_pImpl->PrintString();
+        auto cLibPrinter = reinterpret_cast<DszCLibPrinter>(m_pImpl);
 
-        return;
+        std::unique_ptr<Core::IGeneratorGcRoot> pGenerator(new Core::IGeneratorGcRoot(m_generator));
+
+        auto cLibErrorNum = DszCLibPrinterPrintStringWithUserData(
+            cLibPrinter,
+            reinterpret_cast<void*>(pGenerator.get()));
+
+        DSZ_DOTNETFRAMEWORKLIBCORE_CHECK_ERROR_NUM(cLibErrorNum);
 
         DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }

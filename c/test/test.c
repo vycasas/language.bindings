@@ -25,7 +25,7 @@ static DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION GenerateInt(
 
     *pInt = data * data;
 
-    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+    return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
 static DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION GenerateString(
@@ -63,7 +63,7 @@ static DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION GenerateString(
     #undef BUFFER_SIZE
 #endif /* defined(_MSC_VER) */
 
-    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+    return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
 int main(void)
@@ -80,7 +80,7 @@ int main(void)
     size_t const PERSON_STRING_SIZE = 160;
 #endif /* defined(_MSC_VER) */
 
-    DszCLibErrorNum errorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum errorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     char errorMessage[ERROR_MESSAGE_SIZE];
     char versionString[VERSION_STRING_SIZE];
     DszCLibAddress address = DSZ_CLIB_ADDRESS_INVALID;
@@ -110,7 +110,7 @@ int main(void)
             "4132",
             "Antartica",
             &address);
-        if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
             break;
 
         fprintf(stdout, "New address created!\n");
@@ -120,7 +120,7 @@ int main(void)
             address,
             addressString, ADDRESS_STRING_SIZE,
             NULL);
-        if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
             break;
 
         fprintf(stdout, "Address:\n%s\n", addressString);
@@ -133,7 +133,7 @@ int main(void)
             25,
             address,
             &person);
-        if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
             break;
 
         fprintf(stdout, "New person created!\n");
@@ -143,7 +143,7 @@ int main(void)
             person,
             personString, PERSON_STRING_SIZE,
             NULL);
-        if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
             break;
 
         fprintf(stdout, "Person:\n%s\n", personString);
@@ -155,7 +155,7 @@ int main(void)
             &GenerateString,
             &generator);
 
-        if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
             break;
 
         fprintf(stdout, "New generator created!\n");
@@ -166,7 +166,7 @@ int main(void)
             generator,
             &printer);
 
-        if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+        if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
             break;
 
         /* generator is now owned by printer */
@@ -191,7 +191,7 @@ int main(void)
     if (address != DSZ_CLIB_ADDRESS_INVALID)
         DszCLibAddressDestroy(address);
 
-    if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+    if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR) {
         memset(errorMessage, 0, ERROR_MESSAGE_SIZE);
         DszCLibErrorNumGetMessage(
             errorNum,
@@ -208,7 +208,7 @@ int main(void)
     #undef PERSON_STRING_SIZE
 #endif /* defined(_MSC_VER) */
 
-    if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) {
+    if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR) {
         fprintf(stderr, "An error has occurred: %s\n", errorMessage);
         return (-1);
     }

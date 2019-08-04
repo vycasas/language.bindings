@@ -1,7 +1,13 @@
 #pragma once
 
 #define PY_SSIZE_T_CLEAN
+#if defined(_MSC_VER)
+    #pragma warning(push, 3)
+#endif /* defined(_MSC_VER) */
 #include <Python.h>
+#if defined(_MSC_VER)
+    #pragma warning(pop)
+#endif /* defined(_MSC_VER) */
 
 #if (PY_MAJOR_VERSION < 3)
     #error Python3 required for building pythonlib
@@ -28,10 +34,8 @@
         DSZ_PYTHONLIB_MODULE_VISIBILITY rt DSZ_PYTHONLIB_CALLING_CONVENTION
 #endif /* defined(__cplusplus) */
 
-DSZ_PYTHONLIB_MODULE_VISIBILITY
 PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInit_pythonlib_native(void);
 
-DSZ_PYTHONLIB_MODULE_VISIBILITY
 PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInitU_pythonlib_native(void);
 
 DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryInitialize(

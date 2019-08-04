@@ -30,8 +30,8 @@ typedef struct DszCLibGenerator_* DszCLibGenerator;
 typedef struct DszCLibPrinter_* DszCLibPrinter;
 
 /* Default values */
-static DszCLibErrorNum const DSZ_CLIB_ERRORNUM_NO_ERROR         = (DszCLibErrorNum) 0;
-static DszCLibErrorNum const DSZ_CLIB_ERRORNUM_CALLBACK_ERROR   = (DszCLibErrorNum) -1;
+static DszCLibErrorNum const DSZ_CLIB_ERROR_NUM_NO_ERROR         = (DszCLibErrorNum) 0;
+static DszCLibErrorNum const DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR   = (DszCLibErrorNum) -1;
 static DszCLibAddress const DSZ_CLIB_ADDRESS_INVALID            = (DszCLibAddress) NULL;
 static DszCLibPerson const DSZ_CLIB_PERSON_INVALID              = (DszCLibPerson) NULL;
 static DszCLibGenerator const DSZ_CLIB_GENERATOR_INVALID        = (DszCLibGenerator) NULL;

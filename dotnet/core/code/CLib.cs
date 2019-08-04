@@ -18,13 +18,13 @@ namespace DotSlashZero.DotNetCoreLib
 
     internal static class CLib
     {
-        private static readonly DszCLibErrorNum DSZ_CLIB_ERRORNUM_NO_ERROR = DszCLibErrorNum.Zero;
+        private static readonly DszCLibErrorNum DSZ_CLIB_ERROR_NUM_NO_ERROR = DszCLibErrorNum.Zero;
         private static readonly DszCLibAddress DSZ_CLIB_ADDRESS_INVALID = DszCLibAddress.Zero;
         private static readonly DszCLibPerson DSZ_CLIB_PERSON_INVALID = DszCLibAddress.Zero;
         private static readonly DszCLibGenerator DSZ_CLIB_GENERATOR_INVALID = DszCLibAddress.Zero;
         private static readonly DszCLibPrinter DSZ_CLIB_PRINTER_INVALID = DszCLibAddress.Zero;
 
-        private static readonly DszCLibErrorNum DSZ_CLIB_ERRORNUM_CALLBACK_ERROR = new DszCLibErrorNum(-1);
+        private static readonly DszCLibErrorNum DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR = new DszCLibErrorNum(-1);
 
         #region caller interface
 
@@ -45,7 +45,7 @@ namespace DotSlashZero.DotNetCoreLib
         internal static bool LibraryInitialize()
         {
             var cLibErrorNum = DszCLibLibraryInitialize();
-            return (cLibErrorNum == DSZ_CLIB_ERRORNUM_NO_ERROR);
+            return (cLibErrorNum == DSZ_CLIB_ERROR_NUM_NO_ERROR);
         }
 
         internal static void LibraryUninitialize()
@@ -62,7 +62,7 @@ namespace DotSlashZero.DotNetCoreLib
                 DszCLibLibraryGetVersionString,
                 ref versionString);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionString);
@@ -74,7 +74,7 @@ namespace DotSlashZero.DotNetCoreLib
 
             var cLibErrorNum = DszCLibLibraryGetVersionMajor(ref versionMajor);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionMajor.ToInt32());
@@ -86,7 +86,7 @@ namespace DotSlashZero.DotNetCoreLib
 
             var cLibErrorNum = DszCLibLibraryGetVersionMinor(ref versionMinor);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionMinor.ToInt32());
@@ -98,7 +98,7 @@ namespace DotSlashZero.DotNetCoreLib
 
             var cLibErrorNum = DszCLibLibraryGetVersionPatch(ref versionPatch);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionPatch.ToInt32());
@@ -112,7 +112,7 @@ namespace DotSlashZero.DotNetCoreLib
                 DszCLibLibraryGetVersionExtra,
                 ref versionExtra);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (versionExtra);
@@ -141,7 +141,7 @@ namespace DotSlashZero.DotNetCoreLib
                 country,
                 ref cLibAddress);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (cLibAddress);
@@ -161,7 +161,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibAddress,
                 ref streetNum);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (streetNum);
@@ -176,7 +176,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibAddress,
                 ref street);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (street);
@@ -191,7 +191,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibAddress,
                 ref city);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (city);
@@ -206,7 +206,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibAddress,
                 ref province);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (province);
@@ -221,7 +221,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibAddress,
                 ref zipCode);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (zipCode);
@@ -236,7 +236,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibAddress,
                 ref country);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (country);
@@ -251,7 +251,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibAddress,
                 ref addressString);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (addressString);
@@ -276,7 +276,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibAddress,
                 ref cLibPerson);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (cLibPerson);
@@ -297,7 +297,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibPerson,
                 ref lastName);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (lastName);
@@ -312,7 +312,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibPerson,
                 ref firstName);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (firstName);
@@ -326,7 +326,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibPerson,
                 ref age);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (age);
@@ -340,7 +340,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibPerson,
                 ref cLibAddress);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (cLibAddress);
@@ -355,7 +355,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibPerson,
                 ref personString);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (personString);
@@ -393,7 +393,7 @@ namespace DotSlashZero.DotNetCoreLib
                 var generatedInt = m_generateInt(data);
                 pInt = generatedInt;
 
-                return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+                return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
             }
 
             public DszCLibErrorNum GenerateStringWrapped(
@@ -436,7 +436,7 @@ namespace DotSlashZero.DotNetCoreLib
                         numBytesToCopyByteBuffer.Length);
                 }
 
-                return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+                return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
             }
         }
 
@@ -449,7 +449,7 @@ namespace DotSlashZero.DotNetCoreLib
                 generatorWrapper.GenerateStringWrapped,
                 ref cLibGenerator);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (cLibGenerator);
@@ -473,7 +473,7 @@ namespace DotSlashZero.DotNetCoreLib
                 cLibGenerator,
                 ref cLibPrinter);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return (cLibPrinter);
@@ -489,7 +489,7 @@ namespace DotSlashZero.DotNetCoreLib
         {
             var cLibErrorNum = DszCLibPrinterPrintInt(cLibPrinter);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return;
@@ -499,7 +499,7 @@ namespace DotSlashZero.DotNetCoreLib
         {
             var cLibErrorNum = DszCLibPrinterPrintString(cLibPrinter);
 
-            if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+            if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                 throw (new Exception(ErrorNumGetMessage(cLibErrorNum)));
 
             return;
@@ -766,7 +766,7 @@ namespace DotSlashZero.DotNetCoreLib
 
                 var cLibErrorNum = cLibFunctionCall(impl, unmanagedBuffer.Address, unmanagedBuffer.SizeAsIntPtr, ref pCharsWritten);
 
-                if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                     return (cLibErrorNum);
 
                 resultStr = unmanagedBuffer.ReadAsUtf8CString();
@@ -797,7 +797,7 @@ namespace DotSlashZero.DotNetCoreLib
 
                 var cLibErrorNum = cLibFunctionCall(unmanagedBuffer.Address, unmanagedBuffer.SizeAsIntPtr, ref pCharsWritten);
 
-                if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR)
+                if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
                     return (cLibErrorNum);
 
                 resultStr = unmanagedBuffer.ReadAsUtf8CString();

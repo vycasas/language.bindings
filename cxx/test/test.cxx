@@ -26,13 +26,13 @@ public:
 
 int main(void)
 {
-    auto initOk = DotSlashZero::CxxLib::Library::Initialize();
-    if (!initOk) {
-        std::cerr << "Failed to initialize library" << std::endl;
-        return (-1);
-    }
-
     try {
+        auto initOk = DotSlashZero::CxxLib::Library::Initialize();
+        if (!initOk) {
+            std::cerr << "Failed to initialize library." << std::endl;
+            return (-1);
+        }
+
         std::cout << "Library initialized... version " << DotSlashZero::CxxLib::Library::GetVersionString() << std::endl;
 
         std::cout << "Creating a new address..." << std::endl;

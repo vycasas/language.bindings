@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <stdio.h>
+
 #if defined(__cplusplus)
 #error Please use pure C compiler for this file.
 #endif /* defined(__cplusplus) */
@@ -25,32 +27,32 @@
 #define DSZ_PYTHONLIBCORE_ERROR_MESSAGE_SIZE 16
 #define DSZ_PYTHONLIBCORE_LIBRARY_VERSION_STRING_SIZE 16
 #define DSZ_PYTHONLIBCORE_LIBRARY_VERSION_EXTRA_SIZE 16
-#define DSZ_PYTHONLIBCORE_ADDRESS_STREET_SIZE 40
+#define DSZ_PYTHONLIBCORE_ADDRESS_STREET_SIZE 16
 #define DSZ_PYTHONLIBCORE_ADDRESS_CITY_SIZE 16
 #define DSZ_PYTHONLIBCORE_ADDRESS_PROVINCE_SIZE 16
-#define DSZ_PYTHONLIBCORE_ADDRESS_ZIP_CODE_SIZE 8
+#define DSZ_PYTHONLIBCORE_ADDRESS_ZIP_CODE_SIZE 16
 #define DSZ_PYTHONLIBCORE_ADDRESS_COUNTRY_SIZE 16
-#define DSZ_PYTHONLIBCORE_ADDRESS_STRING_SIZE 128
-#define DSZ_PYTHONLIBCORE_PERSON_LAST_NAME_SIZE 24
-#define DSZ_PYTHONLIBCORE_PERSON_FIRST_NAME_SIZE 24
-#define DSZ_PYTHONLIBCORE_PERSON_STRING_SIZE 256
-#else
+#define DSZ_PYTHONLIBCORE_ADDRESS_STRING_SIZE 80
+#define DSZ_PYTHONLIBCORE_PERSON_LAST_NAME_SIZE 16
+#define DSZ_PYTHONLIBCORE_PERSON_FIRST_NAME_SIZE 16
+#define DSZ_PYTHONLIBCORE_PERSON_STRING_SIZE 160
+#else /* defined(_MSC_VER) */
 static size_t const DSZ_PYTHONLIBCORE_ERROR_MESSAGE_SIZE = 16;
 static size_t const DSZ_PYTHONLIBCORE_LIBRARY_VERSION_STRING_SIZE = 16;
 static size_t const DSZ_PYTHONLIBCORE_LIBRARY_VERSION_EXTRA_SIZE = 16;
-static size_t const DSZ_PYTHONLIBCORE_ADDRESS_STREET_SIZE = 40;
+static size_t const DSZ_PYTHONLIBCORE_ADDRESS_STREET_SIZE = 16;
 static size_t const DSZ_PYTHONLIBCORE_ADDRESS_CITY_SIZE = 16;
 static size_t const DSZ_PYTHONLIBCORE_ADDRESS_PROVINCE_SIZE = 16;
-static size_t const DSZ_PYTHONLIBCORE_ADDRESS_ZIP_CODE_SIZE = 8;
+static size_t const DSZ_PYTHONLIBCORE_ADDRESS_ZIP_CODE_SIZE = 16;
 static size_t const DSZ_PYTHONLIBCORE_ADDRESS_COUNTRY_SIZE = 16;
-static size_t const DSZ_PYTHONLIBCORE_ADDRESS_STRING_SIZE = 128;
-static size_t const DSZ_PYTHONLIBCORE_PERSON_LAST_NAME_SIZE = 24;
-static size_t const DSZ_PYTHONLIBCORE_PERSON_FIRST_NAME_SIZE = 24;
-static size_t const DSZ_PYTHONLIBCORE_PERSON_STRING_SIZE = 256;
-#endif
+static size_t const DSZ_PYTHONLIBCORE_ADDRESS_STRING_SIZE = 80;
+static size_t const DSZ_PYTHONLIBCORE_PERSON_LAST_NAME_SIZE = 16;
+static size_t const DSZ_PYTHONLIBCORE_PERSON_FIRST_NAME_SIZE = 16;
+static size_t const DSZ_PYTHONLIBCORE_PERSON_STRING_SIZE = 160;
+#endif /* defined(_MSC_VER) */
 
 #define DSZ_PYTHONLIBCORE_API_CHECK(cLibErrorNum) \
-    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) { \
+    if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR) { \
         char errorMessage[DSZ_PYTHONLIBCORE_ERROR_MESSAGE_SIZE]; \
         memset(errorMessage, 0, DSZ_PYTHONLIBCORE_ERROR_MESSAGE_SIZE); \
         DszCLibErrorNumGetMessage(cLibErrorNum, errorMessage, DSZ_PYTHONLIBCORE_ERROR_MESSAGE_SIZE, NULL); \
@@ -219,17 +221,17 @@ DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateIntFunction(
     PyObject* pResult = NULL;
 
     if (pGenerator == NULL)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     pResult = PyObject_CallMethod(pGenerator, "generate_int", "(i)", data);
 
     if (pResult == NULL)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     if (pInt != NULL)
         *pInt = (int) PyLong_AsSsize_t(pResult);
 
-    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+    return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
 DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateStringFunction(
@@ -244,12 +246,12 @@ DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateStringFuncti
     size_t numChars = 0;
 
     if (pGenerator == NULL)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     pResult = PyObject_CallMethod(pGenerator, "generate_string", "(i)", data);
 
     if (pResult == NULL)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     pResultCstr = PyUnicode_AsUTF8(pResult);
 
@@ -263,10 +265,9 @@ DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateStringFuncti
     if (pCharsWritten != NULL)
         *pCharsWritten = numChars;
 
-    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+    return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
-DSZ_PYTHONLIB_MODULE_VISIBILITY
 PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInit_pythonlib_native(void)
 {
     PyObject* pModule = PyModule_Create(&g_pythonLibModule);
@@ -277,7 +278,6 @@ PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInit_pythonlib_native(void)
     return (pModule);
 }
 
-DSZ_PYTHONLIB_MODULE_VISIBILITY
 PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInitU_pythonlib_native(void)
 {
     return (PyInit_pythonlib_native());
@@ -287,16 +287,17 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryInitialize(
     PyObject* pSelf,
     PyObject* pArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
 
     (void) pSelf;
     (void) pArgs;
 
     cLibErrorNum = DszCLibLibraryInitialize();
 
-    DSZ_PYTHONLIBCORE_API_CHECK(cLibErrorNum);
+    if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR)
+        return (Py_False);
 
-    return (PyLong_FromLong(0));
+    return (Py_True);
 }
 
 DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryUninitialize(
@@ -315,7 +316,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryGetVersionString(
     PyObject* pSelf,
     PyObject* pArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     char versionString[DSZ_PYTHONLIBCORE_LIBRARY_VERSION_STRING_SIZE];
 
     (void) pSelf;
@@ -339,7 +340,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryGetVersionMajor(
     PyObject* pSelf,
     PyObject* pArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t versionMajor = 0;
 
     (void) pSelf;
@@ -356,7 +357,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryGetVersionMinor(
     PyObject* pSelf,
     PyObject* pArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t versionMinor = 0;
 
     (void) pSelf;
@@ -373,7 +374,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryGetVersionPatch(
     PyObject* pSelf,
     PyObject* pArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t versionPatch = 0;
 
     (void) pSelf;
@@ -390,7 +391,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryGetVersionExtra(
     PyObject* pSelf,
     PyObject* pArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     char versionExtra[DSZ_PYTHONLIBCORE_LIBRARY_VERSION_EXTRA_SIZE];
 
     (void) pSelf;
@@ -426,7 +427,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibAddressCreate(
         "country",
         NULL };
 
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
     int streetNum = 0;
     char const* street = NULL;
@@ -493,7 +494,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibAddressGetStreetNum(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
     int streetNum = 0;
 
@@ -520,7 +521,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibAddressGetStreet(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
     char street[DSZ_PYTHONLIBCORE_ADDRESS_STREET_SIZE];
 
@@ -552,7 +553,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibAddressGetCity(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
     char city[DSZ_PYTHONLIBCORE_ADDRESS_CITY_SIZE];
 
@@ -584,7 +585,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibAddressGetProvince(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
     char province[DSZ_PYTHONLIBCORE_ADDRESS_PROVINCE_SIZE];
 
@@ -616,7 +617,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibAddressGetZipCode(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
     char zipCode[DSZ_PYTHONLIBCORE_ADDRESS_ZIP_CODE_SIZE];
 
@@ -648,7 +649,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibAddressGetCountry(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
     char country[DSZ_PYTHONLIBCORE_ADDRESS_COUNTRY_SIZE];
 
@@ -680,7 +681,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibAddressToString(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
     char addressString[DSZ_PYTHONLIBCORE_ADDRESS_STRING_SIZE];
 
@@ -721,7 +722,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPersonCreate(
         "address_impl",
         NULL };
 
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPerson cLibPerson = DSZ_CLIB_PERSON_INVALID;
     char const* lastName = NULL;
     char const* firstName = NULL;
@@ -785,7 +786,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPersonGetLastName(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPerson cLibPerson = DSZ_CLIB_PERSON_INVALID;
     char lastName[DSZ_PYTHONLIBCORE_PERSON_LAST_NAME_SIZE];
 
@@ -817,7 +818,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPersonGetFirstName(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPerson cLibPerson = DSZ_CLIB_PERSON_INVALID;
     char firstName[DSZ_PYTHONLIBCORE_PERSON_FIRST_NAME_SIZE];
 
@@ -849,7 +850,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPersonGetAge(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPerson cLibPerson = DSZ_CLIB_PERSON_INVALID;
     int age = 0;
 
@@ -876,7 +877,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPersonGetAddress(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPerson cLibPerson = DSZ_CLIB_PERSON_INVALID;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
 
@@ -903,7 +904,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPersonToString(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPerson cLibPerson = DSZ_CLIB_PERSON_INVALID;
     char personString[DSZ_PYTHONLIBCORE_PERSON_STRING_SIZE];
 
@@ -935,7 +936,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPrinterCreate(
         PyObject* pArgs,
         PyObject* pKwArgs)
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPrinter cLibPrinter = DSZ_CLIB_PRINTER_INVALID;
     DszCLibGenerator cLibGenerator = DSZ_CLIB_GENERATOR_INVALID;
 
@@ -992,7 +993,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPrinterPrintInt(
         "generator",
         NULL };
 
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPrinter cLibPrinter = DSZ_CLIB_PRINTER_INVALID;
     Py_ssize_t implAddress = 0;
     PyObject* pGenerator = NULL;
@@ -1034,7 +1035,7 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPrinterPrintString(
         "generator",
         NULL };
 
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibPrinter cLibPrinter = DSZ_CLIB_PRINTER_INVALID;
     Py_ssize_t implAddress = 0;
     PyObject* pGenerator = NULL;

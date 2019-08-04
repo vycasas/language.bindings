@@ -5,21 +5,21 @@
 #include <string_view>
 
 #define DSZ_CXXLIBCORE_API_CHECK(errorNum) \
-    if (errorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) \
+    if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR) \
         throw (DotSlashZero::CxxLib::Exception(errorNum));
 
 namespace DotSlashZero::CxxLib
 {
     namespace Core
     {
-        static std::string ErrorNumToStdString(DszCLibErrorNum cLibErrorNum)
+        static inline std::string ErrorNumToStdString(DszCLibErrorNum cLibErrorNum)
         {
-            std::string::size_type constexpr ERRORNUM_STRING_SIZE = 40;
-            std::string errorNumString(ERRORNUM_STRING_SIZE, '\0');
+            std::string::size_type constexpr ERROR_NUM_STRING_SIZE = 40;
+            std::string errorNumString(ERROR_NUM_STRING_SIZE, '\0');
 
             DszCLibErrorNumGetMessage(
                 cLibErrorNum,
-                errorNumString.data(), errorNumString.size(),
+                &(errorNumString.front()), errorNumString.size(),
                 nullptr);
 
             return (errorNumString.c_str());
@@ -31,19 +31,19 @@ namespace DotSlashZero::CxxLib
             void* pUserData)
         {
             if (pUserData == nullptr)
-                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
             if (pInt == nullptr)
-                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
             auto pGenerator = reinterpret_cast<IGenerator*>(pUserData);
 
             if (!pGenerator)
-                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
             *pInt = pGenerator->GenerateInt(data);
 
-            return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+            return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
         }
 
         static DszCLibErrorNum GenerateStringRedirect(
@@ -53,12 +53,12 @@ namespace DotSlashZero::CxxLib
             void* pUserData)
         {
             if (pUserData == nullptr)
-                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
             auto pGenerator = reinterpret_cast<IGenerator*>(pUserData);
 
             if (!pGenerator)
-                return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+                return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
             auto generatedString = pGenerator->GenerateString(data);
 
@@ -78,7 +78,7 @@ namespace DotSlashZero::CxxLib
             if (pCharsWritten != nullptr)
                 *pCharsWritten = numChars;
 
-            return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+            return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
         }
     }
     // namespace Core
@@ -102,7 +102,7 @@ namespace DotSlashZero::CxxLib
         {
             auto cLibErrorNum = DszCLibLibraryInitialize();
 
-            return (cLibErrorNum == DSZ_CLIB_ERRORNUM_NO_ERROR);
+            return (cLibErrorNum == DSZ_CLIB_ERROR_NUM_NO_ERROR);
         }
 
         void Uninitialize(void) noexcept
