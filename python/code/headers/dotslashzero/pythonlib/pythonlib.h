@@ -34,8 +34,14 @@
         DSZ_PYTHONLIB_MODULE_VISIBILITY rt DSZ_PYTHONLIB_CALLING_CONVENTION
 #endif /* defined(__cplusplus) */
 
+#if !defined(_MSC_VER)
+DSZ_PYTHONLIB_MODULE_VISIBILITY
+#endif /* !defined(_MSC_VER) */
 PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInit_pythonlib_native(void);
 
+#if !defined(_MSC_VER)
+DSZ_PYTHONLIB_MODULE_VISIBILITY
+#endif /* !defined(_MSC_VER) */
 PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInitU_pythonlib_native(void);
 
 DSZ_PYTHONLIB_API(PyObject*) DszPythonLibLibraryInitialize(

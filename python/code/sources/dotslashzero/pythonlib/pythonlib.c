@@ -268,6 +268,9 @@ DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateStringFuncti
     return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
+#if !defined(_MSC_VER)
+DSZ_PYTHONLIB_MODULE_VISIBILITY
+#endif /* !defined(_MSC_VER) */
 PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInit_pythonlib_native(void)
 {
     PyObject* pModule = PyModule_Create(&g_pythonLibModule);
@@ -278,6 +281,9 @@ PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInit_pythonlib_native(void)
     return (pModule);
 }
 
+#if !defined(_MSC_VER)
+DSZ_PYTHONLIB_MODULE_VISIBILITY
+#endif /* !defined(_MSC_VER) */
 PyMODINIT_FUNC DSZ_PYTHONLIB_CALLING_CONVENTION PyInitU_pythonlib_native(void)
 {
     return (PyInit_pythonlib_native());
