@@ -18,26 +18,17 @@ class PythonLibError(RuntimeError):
         return message
 
 class Library(object):
-    __is_initialized = False
-
     @staticmethod
     def initialize():
-        if Library.__is_initialized:
-            return
-
         try:
-            pythonlib_native.library_initialize()
-        except RuntimeError as e:
-            raise PythonLibError(str(e))
-
-        Library.__is_initialized = True
+            return pythonlib_native.library_initialize()
+        except:
+            return False
 
     @staticmethod
     def uninitialize():
         try:
-            if Library.__is_initialized:
-                pythonlib_native.library_uninitialize()
-                Library.__is_initialized = False
+            pythonlib_native.library_uninitialize()
         except:
             return
 

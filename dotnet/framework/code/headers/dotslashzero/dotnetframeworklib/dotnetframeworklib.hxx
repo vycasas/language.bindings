@@ -1,16 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <exception>
 #include <memory>
-
-namespace DotSlashZero::CxxLib
-{
-    class Exception;
-    class Address;
-    class Person;
-    class Printer;
-}
-// namespace DotSlashZero::CxxLib
 
 namespace DotSlashZero::DotNetFrameworkLib
 {
@@ -18,7 +10,7 @@ namespace DotSlashZero::DotNetFrameworkLib
     {
     public:
         ~Exception();
-        
+
         !Exception();
 
     internal:
@@ -54,32 +46,34 @@ namespace DotSlashZero::DotNetFrameworkLib
         ~Address();
 
         !Address();
-        
+
         property System::Int32 StreetNum
         { System::Int32 get(); }
-        
+
         property System::String^ Street
         { System::String^ get(); }
-        
+
         property System::String^ City
         { System::String^ get(); }
-        
+
         property System::String^ Province
         { System::String^ get(); }
 
         property System::String^ ZipCode
         { System::String^ get(); }
-        
+
         property System::String^ Country
         { System::String^ get(); }
-        
+
         System::String^ ToString() override;
 
     internal:
-        CxxLib::Address* GetImpl(); // this is dangerous! it will be nice if managed classes can support C++ smart pointer members and use std::weak_ptr
+        Address(std::intptr_t const& pImpl);
+
+        std::intptr_t GetImpl();
 
     private:
-        CxxLib::Address* m_pImpl = nullptr;
+        std::intptr_t m_pImpl = 0;
     };
     // class Address
 
@@ -111,11 +105,10 @@ namespace DotSlashZero::DotNetFrameworkLib
         System::String^ ToString() override;
 
     private:
-        CxxLib::Person* m_pImpl = nullptr;
+        std::intptr_t m_pImpl = 0;
     };
     // class Person
 
-    
     public interface class IGenerator
     {
     public:
@@ -130,7 +123,7 @@ namespace DotSlashZero::DotNetFrameworkLib
         Printer(IGenerator^ generator);
 
         !Printer();
-        
+
         ~Printer();
 
         System::Void PrintInt();
@@ -138,9 +131,9 @@ namespace DotSlashZero::DotNetFrameworkLib
         System::Void PrintString();
 
     private:
-        CxxLib::Printer* m_pImpl = nullptr;
+        std::intptr_t m_pImpl = 0;
+        IGenerator^ m_generator = nullptr;
     };
     // class Printer
-    
 }
 // namespace DotSlashZero::DotNetFrameworkLib

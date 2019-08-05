@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(dotnetframeworklib CXX)
+project(dotnetframeworklib C CXX)
 
 if (NOT MSVC)
     message(FATAL_ERROR "Only MSVC compilers are supported for .NET Framework projects.")
     return ()
 endif ()
 
-if (NOT TARGET cxxlib)
-    message(FATAL_ERROR "Project dotnetframeworklib requires building cxxlib first.")
+if (NOT TARGET clib)
+    message(FATAL_ERROR "Project dotnetframeworklib requires building clib first.")
     return ()
 endif ()
 
@@ -55,7 +55,7 @@ target_link_options(
     PRIVATE ${LB_DOTNETFRAMEWORKLIB_LINK_OPTIONS})
 target_link_libraries(
     dotnetframeworklib
-    PUBLIC cxxlib)
+    PUBLIC clib)
 
 set_target_properties(dotnetframeworklib
     PROPERTIES COMMON_LANGUAGE_RUNTIME "")
