@@ -312,4 +312,5 @@ JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativePrintString(
 
 #if defined(__cplusplus)
 }
+/* extern "C" */
 #endif /* defined(__cplusplus) */

@@ -9,7 +9,7 @@
 #endif /* defined(__cplusplus) */
 
 #define DSZ_OBJCLIBCORE_API_CHECK(cLibErrorNum) \
-    if (cLibErrorNum != DSZ_CLIB_ERRORNUM_NO_ERROR) \
+    if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR) \
         @throw ([[OLException alloc] initWithDszCLibErrorNum: cLibErrorNum]);
 
 /* -------- */
@@ -54,19 +54,19 @@ static DszCLibErrorNum OLCorePrinterGenerateIntRedirect(
     id<OLGenerator> olGenerator = nil;
 
     if (pUserData == NULL)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     if (pInt == NULL)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     olGenerator = (__bridge id<OLGenerator>) pUserData; /* __bridge = no transfer of ownership */
 
     if (olGenerator == nil)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     *pInt = [olGenerator generateIntWithData: data];
 
-    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+    return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
 static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
@@ -81,17 +81,17 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
     size_t numChars = 0;
 
     if (pUserData == NULL)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     olGenerator = (__bridge id<OLGenerator>) pUserData; /* __bridge = no transfer of ownership */
 
     if (olGenerator == nil)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     nsGeneratedString = [olGenerator generateStringWithData: data];
 
     if (nsGeneratedString == nil)
-        return (DSZ_CLIB_ERRORNUM_CALLBACK_ERROR);
+        return (DSZ_CLIB_ERROR_NUM_CALLBACK_ERROR);
 
     cGeneratedString = [nsGeneratedString UTF8String];
     numChars = strlen(cGeneratedString);
@@ -105,7 +105,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
     if (pCharsWritten != NULL)
         *pCharsWritten = numChars;
 
-    return (DSZ_CLIB_ERRORNUM_NO_ERROR);
+    return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
 /* -------- */
@@ -117,15 +117,15 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (instancetype) initWithDszCLibErrorNum: (DszCLibErrorNum) errorNum
 {
-    size_t const ERRORNUM_STRING_SIZE = 40;
-    char errorNumString[ERRORNUM_STRING_SIZE];
+    size_t const ERROR_NUM_STRING_SIZE = 40;
+    char errorNumString[ERROR_NUM_STRING_SIZE];
     NSString* exceptionReason = nil;
 
-    memset(errorNumString, 0, ERRORNUM_STRING_SIZE);
+    memset(errorNumString, 0, ERROR_NUM_STRING_SIZE);
 
     DszCLibErrorNumGetMessage(
         errorNum,
-        errorNumString, ERRORNUM_STRING_SIZE,
+        errorNumString, ERROR_NUM_STRING_SIZE,
         NULL);
 
     exceptionReason = [[NSString alloc] initWithUTF8String: errorNumString];
@@ -141,7 +141,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 + (BOOL) initialize
 {
     DszCLibErrorNum errorNum = DszCLibLibraryInitialize();
-    return ((errorNum == DSZ_CLIB_ERRORNUM_NO_ERROR) ? YES : NO);
+    return ((errorNum == DSZ_CLIB_ERROR_NUM_NO_ERROR) ? YES : NO);
 }
 
 + (void) uninitialize
@@ -154,7 +154,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 {
     size_t const VERSION_STRING_SIZE = 16;
     char versionString[VERSION_STRING_SIZE];
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
 
     memset(versionString, 0, VERSION_STRING_SIZE);
 
@@ -170,7 +170,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 + (NSUInteger) getVersionMajor
 {
     size_t versionMajor = 0;
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
 
     cLibErrorNum = DszCLibLibraryGetVersionMajor(&versionMajor);
 
@@ -182,7 +182,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 + (NSUInteger) getVersionMinor
 {
     size_t versionMinor = 0;
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
 
     cLibErrorNum = DszCLibLibraryGetVersionMinor(&versionMinor);
 
@@ -194,7 +194,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 + (NSUInteger) getVersionPatch
 {
     size_t versionPatch = 0;
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
 
     cLibErrorNum = DszCLibLibraryGetVersionPatch(&versionPatch);
 
@@ -207,7 +207,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 {
     size_t const VERSION_EXTRA_STRING_SIZE = 16;
     char versionExtraString[VERSION_EXTRA_STRING_SIZE];
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
 
     memset(versionExtraString, 0, VERSION_EXTRA_STRING_SIZE);
 
@@ -231,7 +231,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
     zipCode:(NSString*) zipCode
     country:(NSString*) country
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
 
     self = [super init];
     if (self == nil)
@@ -265,7 +265,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (int) streetNum
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     int streetNum = 0;
 
     cLibErrorNum = DszCLibAddressGetStreetNum(m_impl, &streetNum);
@@ -277,7 +277,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) street
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const STREET_STRING_SIZE = 16;
     char streetString[STREET_STRING_SIZE];
 
@@ -295,7 +295,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) city
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const CITY_STRING_SIZE = 16;
     char cityString[CITY_STRING_SIZE];
 
@@ -313,7 +313,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) province
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const PROVINCE_STRING_SIZE = 16;
     char provinceString[PROVINCE_STRING_SIZE];
 
@@ -331,7 +331,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) zipCode
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const ZIP_CODE_STRING_SIZE = 16;
     char zipCodeString[ZIP_CODE_STRING_SIZE];
 
@@ -349,7 +349,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) country
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const COUNTRY_STRING_SIZE = 16;
     char countryString[COUNTRY_STRING_SIZE];
 
@@ -367,7 +367,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) toString
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const ADDRESS_STRING_SIZE = 80;
     char addressString[ADDRESS_STRING_SIZE];
 
@@ -411,7 +411,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
     age: (int) age
     address: (OLAddress*) address
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
 
     self = [super init];
     if (self == nil)
@@ -443,7 +443,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) lastName
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const LAST_NAME_STRING_SIZE = 24;
     char lastNameString[LAST_NAME_STRING_SIZE];
 
@@ -461,7 +461,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) firstName
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const FIRST_NAME_STRING_SIZE = 24;
     char firstNameString[FIRST_NAME_STRING_SIZE];
 
@@ -479,7 +479,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (int) age
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     int age = 0;
 
     cLibErrorNum = DszCLibPersonGetAge(
@@ -493,7 +493,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (OLAddress*) address
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibAddress cLibAddress = DSZ_CLIB_ADDRESS_INVALID;
 
     cLibErrorNum = DszCLibPersonGetAddress(
@@ -507,7 +507,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (NSString*) toString
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     size_t const PERSON_STRING_SIZE = 160;
     char personString[PERSON_STRING_SIZE];
 
@@ -529,7 +529,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (instancetype) initWithGenerator: (id<OLGenerator>) generator
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     DszCLibGenerator cLibGenerator = DSZ_CLIB_GENERATOR_INVALID;
 
     self = [super init];
@@ -566,7 +566,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (void) printInt
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     id<OLGenerator> generator = [self getGenerator];
 
     cLibErrorNum = DszCLibPrinterPrintIntWithUserData(
@@ -580,7 +580,7 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
 
 - (void) printString
 {
-    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERRORNUM_NO_ERROR;
+    DszCLibErrorNum cLibErrorNum = DSZ_CLIB_ERROR_NUM_NO_ERROR;
     id<OLGenerator> generator = [self getGenerator];
 
     cLibErrorNum = DszCLibPrinterPrintStringWithUserData(
