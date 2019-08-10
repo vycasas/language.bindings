@@ -13,6 +13,9 @@ endif ()
 
 set(LB_NODEJS_INCLUDE_DIR "${LB_NODEJS_HOME}/include/node")
 set(LB_NODEJS_LIBRARY)
+if (WIN32)
+    set(LB_NODEJS_LIBRARY "${LB_NODEJS_HOME}/lib/node.lib")
+endif ()
 
 message(STATUS "Building project: nodejslib")
 
