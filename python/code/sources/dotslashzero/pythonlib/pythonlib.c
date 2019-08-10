@@ -212,7 +212,7 @@ DszCLibPrinter DszPythonLibCoreGetPrinterImpl(PyObject* pArgs, PyObject* pKwArgs
     return ((DszCLibPrinter) implAddress);
 }
 
-DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateIntFunction(
+DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateIntRedirect(
     int data,
     int* pInt,
     void* pUserData)
@@ -234,7 +234,7 @@ DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateIntFunction(
     return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
-DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateStringFunction(
+DszCLibErrorNum DSZ_CLIB_CALLING_CONVENTION DszPythonLibCoreGenerateStringRedirect(
     int data,
     char* pString, size_t stringSize,
     size_t* pCharsWritten,
@@ -951,8 +951,8 @@ DSZ_PYTHONLIB_API(PyObject*) DszPythonLibPrinterCreate(
     (void) pKwArgs;
 
     cLibErrorNum = DszCLibGeneratorCreate(
-        &DszPythonLibCoreGenerateIntFunction,
-        &DszPythonLibCoreGenerateStringFunction,
+        &DszPythonLibCoreGenerateIntRedirect,
+        &DszPythonLibCoreGenerateStringRedirect,
         &cLibGenerator);
 
     DSZ_PYTHONLIBCORE_API_CHECK(cLibErrorNum);

@@ -8,6 +8,12 @@
 #error Please use pure C compiler for this file.
 #endif /* defined(__cplusplus) */
 
+#define DSZ_OBJCLIB_CALLING_CONVENTION
+#if defined(_MSC_VER)
+    #undef DSZ_OBJCLIB_CALLING_CONVENTION
+    #define DSZ_OBJCLIB_CALLING_CONVENTION __stdcall
+#endif /* defined(_MSC_VER) */
+
 #define DSZ_OBJCLIBCORE_API_CHECK(cLibErrorNum) \
     if (cLibErrorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR) \
         @throw ([[OLException alloc] initWithDszCLibErrorNum: cLibErrorNum]);
@@ -46,7 +52,7 @@
 /* -------- */
 /* internal helper functions that bridges C and Objective-C types */
 
-static DszCLibErrorNum OLCorePrinterGenerateIntRedirect(
+static DszCLibErrorNum DSZ_OBJCLIB_CALLING_CONVENTION OLCoreGenerateIntRedirect(
     int data,
     int* pInt,
     void* pUserData)
@@ -69,7 +75,7 @@ static DszCLibErrorNum OLCorePrinterGenerateIntRedirect(
     return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
-static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
+static DszCLibErrorNum DSZ_OBJCLIB_CALLING_CONVENTION OLCoreGenerateStringRedirect(
     int data,
     char* pString, size_t stringSize,
     size_t* pCharsWritten,
@@ -539,8 +545,8 @@ static DszCLibErrorNum OLCorePrinterGenerateStringRedirect(
     m_generator = generator;
 
     cLibErrorNum = DszCLibGeneratorCreate(
-        (DszCLibGenerateIntFunction) &OLCorePrinterGenerateIntRedirect,
-        (DszCLibGenerateStringFunction) &OLCorePrinterGenerateStringRedirect,
+        (DszCLibGenerateIntFunction) &OLCoreGenerateIntRedirect,
+        (DszCLibGenerateStringFunction) &OLCoreGenerateStringRedirect,
         &cLibGenerator);
 
     DSZ_OBJCLIBCORE_API_CHECK(cLibErrorNum);

@@ -4,6 +4,12 @@
 #include <functional>
 #include <string_view>
 
+#define DSZ_CXXLIB_CALLING_CONVENTION
+#if defined(_MSC_VER)
+    #undef DSZ_CXXLIB_CALLING_CONVENTION
+    #define DSZ_CXXLIB_CALLING_CONVENTION __stdcall
+#endif /* defined(_MSC_VER) */
+
 #define DSZ_CXXLIBCORE_API_CHECK(errorNum) \
     if (errorNum != DSZ_CLIB_ERROR_NUM_NO_ERROR) \
         throw (DotSlashZero::CxxLib::Exception(errorNum));
@@ -25,7 +31,7 @@ namespace DotSlashZero::CxxLib
             return (errorNumString.c_str());
         }
 
-        static DszCLibErrorNum GenerateIntRedirect(
+        static DszCLibErrorNum DSZ_CXXLIB_CALLING_CONVENTION GenerateIntRedirect(
             int data,
             int* pInt,
             void* pUserData)
@@ -46,7 +52,7 @@ namespace DotSlashZero::CxxLib
             return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
         }
 
-        static DszCLibErrorNum GenerateStringRedirect(
+        static DszCLibErrorNum DSZ_CXXLIB_CALLING_CONVENTION GenerateStringRedirect(
             int data,
             char* pString, std::size_t stringSize,
             std::size_t* pCharsWritten,

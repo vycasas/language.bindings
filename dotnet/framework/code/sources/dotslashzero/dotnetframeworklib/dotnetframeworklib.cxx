@@ -247,7 +247,7 @@ namespace DotSlashZero::DotNetFrameworkLib
     }
 
     Exception::!Exception()
-    { 
+    {
         DSZ_DOTNETFRAMEWORKLIBCORE_BEGIN_EX_GUARD;
 
         return;
@@ -443,7 +443,7 @@ namespace DotSlashZero::DotNetFrameworkLib
         assert(m_pImpl != 0);
 
         auto cLibAddress = reinterpret_cast<DszCLibAddress>(m_pImpl);
-  
+
         int streetNum = 0;
 
         auto cLibErrorNum = DszCLibAddressGetStreetNum(
@@ -799,7 +799,7 @@ namespace DotSlashZero::DotNetFrameworkLib
         m_pImpl = reinterpret_cast<std::intptr_t>(cLibPrinter);
 
         return;
-        
+
         DSZ_DOTNETFRAMEWORKLIBCORE_END_EX_GUARD;
     }
 

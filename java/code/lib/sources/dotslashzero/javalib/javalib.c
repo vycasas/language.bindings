@@ -12,6 +12,12 @@
 #error Please use pure C compiler for this file.
 #endif /* defined(__cplusplus) */
 
+#define DSZ_JAVALIB_CALLING_CONVENTION
+#if defined(_MSC_VER)
+    #undef DSZ_JAVALIB_CALLING_CONVENTION
+    #define DSZ_JAVALIB_CALLING_CONVENTION __stdcall
+#endif /* defined(_MSC_VER) */
+
 #define DSZ_JAVALIBCORE_INLINE inline
 
 #if defined(_MSC_VER)
@@ -286,7 +292,7 @@ static DszJavaLibCoreErrorNum DszJavaLibCoreCopyJStringToCString(
     return (DSZ_JAVALIBCORE_ERROR_NUM_NO_ERROR);
 }
 
-static DszCLibErrorNum DszJavaLibCorePrinterGenerateInt(
+static DszCLibErrorNum DSZ_JAVALIB_CALLING_CONVENTION DszJavaLibCoreGenerateIntRedirect(
     int data,
     int* pInt,
     void* pUserData)
@@ -341,7 +347,7 @@ static DszCLibErrorNum DszJavaLibCorePrinterGenerateInt(
     return (DSZ_CLIB_ERROR_NUM_NO_ERROR);
 }
 
-static DszCLibErrorNum DszJavaLibCorePrinterGenerateString(
+static DszCLibErrorNum DSZ_JAVALIB_CALLING_CONVENTION DszJavaLibCoreGenerateStringRedirect(
     int data,
     char* pString, size_t stringSize,
     size_t* pCharsWritten,
@@ -1375,8 +1381,8 @@ JNIEXPORT jlong JNICALL Java_net_dotslashzero_javalib_Printer_nativeCreatePrinte
         return (DSZ_JAVALIBCORE_RETURN_ERROR_NUM(DSZ_JAVALIBCORE_ERROR_NUM_JAVALIB_JNI_ERROR));
 
     cLibErrorNum = DszCLibGeneratorCreate(
-        &DszJavaLibCorePrinterGenerateInt,
-        &DszJavaLibCorePrinterGenerateString,
+        &DszJavaLibCoreGenerateIntRedirect,
+        &DszJavaLibCoreGenerateStringRedirect,
         &cLibGenerator);
 
     /* note: printer takes ownership of generator after this call is successful */
