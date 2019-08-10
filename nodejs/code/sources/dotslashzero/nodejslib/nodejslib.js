@@ -10,6 +10,7 @@ class Exception extends Error {
     }
   }
 }
+
 const Library = {
   initialize: () => {
     try {
