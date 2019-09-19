@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ProjectGuid>@LB_DOTNETCORELIB_TEST_GUID@</ProjectGuid>
+    <AssemblyName>@LB_DOTNETCORELIB_TEST_ASSEMBLY_NAME@</AssemblyName>
+    <RootNamespace>@LB_DOTNETCORELIB_TEST_ROOT_NAMESPACE@</RootNamespace>
+    <LangVersion>@LB_CSHARP_LANG_VERSION@</LangVersion>
+    <TargetFramework>@LB_DOTNETCORE_TARGET@</TargetFramework>
+    <Configurations>Debug;Release;MinSizeRel;RelWithDebInfo</Configurations>
+    <Platforms>@LB_DOTNETCORELIB_TEST_PLATFORM@</Platforms>
+    <OutputType>Exe</OutputType>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|@LB_DOTNETCORELIB_TEST_PLATFORM@'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <OutputPath>@LB_DOTNETCORELIB_TEST_OUTPUT_DIR@</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|@LB_DOTNETCORELIB_TEST_PLATFORM@'">
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <Optimize>true</Optimize>
+    <OutputPath>@LB_DOTNETCORELIB_TEST_OUTPUT_DIR@</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|@LB_DOTNETCORELIB_TEST_PLATFORM@'">
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <Optimize>true</Optimize>
+    <OutputPath>@LB_DOTNETCORELIB_TEST_OUTPUT_DIR@</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|@LB_DOTNETCORELIB_TEST_PLATFORM@'">
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <Optimize>true</Optimize>
+    <OutputPath>@LB_DOTNETCORELIB_TEST_OUTPUT_DIR@</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="@LB_DOTNETCORELIB_ASSEMBLY_NAME@">
+      <HintPath>@LB_DOTNETCORELIB_ASSEMBLY_FILE_PATH@</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="@LB_DOTNETCORELIB_TEST_SOURCE_FILES_GLOB@" />
+  </ItemGroup>
+
+</Project>

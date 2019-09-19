@@ -1,24 +1,22 @@
+#include <dotslashzero/cxxlib/cxxlib.hxx>
+
 #include <iostream>
 #include <memory>
 #include <sstream>
 
-#include <cxx/api.hxx>
-
-class MyGenerator : public CXXLib::GeneratorBase
+class MyGenerator final : public DotSlashZero::CxxLib::IGenerator
 {
 public:
-    MyGenerator(void)
-    { return; }
+    MyGenerator(void) = default;
 
-    virtual ~MyGenerator(void)
-    { return; }
+    ~MyGenerator(void) noexcept = default;
 
-    virtual int generateInt(int data) const
+    int GenerateInt(int data) const override
     {
         return (data * data);
     }
 
-    virtual std::string generateString(int data) const
+    std::string GenerateString(int data) const override
     {
         std::stringstream ss;
         ss << data;
@@ -29,41 +27,64 @@ public:
 int main(void)
 {
     try {
-        CXXLib::Library::initialize();
-    
-        std::cout << "Library initialized... version " << CXXLib::Library::getVersionString() << std::endl;
+        auto initOk = DotSlashZero::CxxLib::Library::Initialize();
+        if (!initOk) {
+            std::cerr << "Failed to initialize library." << std::endl;
+            return (-1);
+        }
+
+        std::cout << "Library initialized... version " << DotSlashZero::CxxLib::Library::GetVersionString() << std::endl;
 
         std::cout << "Creating a new address..." << std::endl;
-        CXXLib::Address address{ 9898, "Corner St.", "Gotham", "CA", "Antartica", "4132" };
+        DotSlashZero::CxxLib::Address address{
+            9898,
+            "Corner St.",
+            "Gotham",
+            "CA",
+            "4132",
+            "Antartica" };
         std::cout << "New address created!" << std::endl;
+
         std::cout << "Address:" << std::endl;
-        std::cout << address.toString() << std::endl;
+        std::cout << address.ToString() << std::endl;
 
         std::cout << "Creating a new person..." << std::endl;
-        CXXLib::Person person{ "Wayne", "Bruce", 25, address };
+        DotSlashZero::CxxLib::Person person{
+            "Wayne",
+            "Bruce",
+            25,
+            address };
         std::cout << "New person created!" << std::endl;
-        std::cout << person.toString() << std::endl;
+
+        std::cout << "Person:" << std::endl;
+        std::cout << person.ToString() << std::endl;
 
         std::cout << "Creating a new generator..." << std::endl;
-        std::unique_ptr<MyGenerator> generator(new MyGenerator);
+        auto pGenerator = std::make_unique<MyGenerator>();
         std::cout << "New generator created!" << std::endl;
-        std::cout << "Creating a new printer..." << std::endl;
-        CXXLib::Printer printer(std::move(generator));
-        std::cout << "New printer created!" << std::endl;
-        std::cout << "Performing printer actions..." << std::endl;
-        printer.printInt();
-        printer.printString();
 
-        CXXLib::Library::terminate();
+        std::cout << "Creating a new printer..." << std::endl;
+        DotSlashZero::CxxLib::Printer printer(pGenerator.release());
+        std::cout << "New printer created!" << std::endl;
+
+        std::cout << "Performing printer actions..." << std::endl;
+        printer.PrintInt();
+        printer.PrintString();
     }
-    catch (CXXLib::Exception& e) {
-        std::cerr << "An error has occurred: " << e.getMessage() << std::endl;
+    catch (DotSlashZero::CxxLib::Exception& e) {
+        std::cerr << "An error has occurred: " << e.GetMessage() << std::endl;
         return (-1);
     }
     catch (std::exception& e) {
         std::cerr << "An error has occurred: " << e.what() << std::endl;
         return (-1);
     }
+    catch (...) {
+        std::cerr << "An unknown error has occurred." << std::endl;
+        return (-1);
+    }
+
+    DotSlashZero::CxxLib::Library::Uninitialize();
 
     return (0);
 }

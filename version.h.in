@@ -1,0 +1,18 @@
+#pragma once
+
+#include <stddef.h>
+
+#if defined(__cplusplus)
+extern "C"
+{
+#endif /* defined(__cplusplus) */
+
+static size_t const         DSZ_LB_VERSION_MAJOR = @LB_VERSION_MAJOR@;
+static size_t const         DSZ_LB_VERSION_MINOR = @LB_VERSION_MINOR@;
+static size_t const         DSZ_LB_VERSION_PATCH = @LB_VERSION_PATCH@;
+static char const* const    DSZ_LB_VERSION_EXTRA = "@LB_VERSION_EXTRA@";
+static char const* const    DSZ_LB_VERSION_STRING = "@LB_VERSION_STRING@";
+
+#if defined(__cplusplus)
+}
+#endif /* defined(__cplusplus) */

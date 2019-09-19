@@ -1,34 +1,85 @@
+#!/usr/bin/env node
 'use strict';
 
-// TODO: add a commented section about using
-// node --expose-gc test.js
-// and global.gc(); to verify that v8's garbage collector eventually frees native objects.
+const process = require('process');
 
 const nodejslib = require('./nodejslib');
 
-const main = () => {
-  try {
-    nodejslib.Library.initialize();
-
-    console.log(`Library initialized... version ${nodejslib.Library.getVersionString()}`);
-
-    console.log('Creating a new address...');
-    const address = new nodejslib.Address(9898, 'Corner St.', 'Gotham', 'CA', 'Antartica', '4132');
-    console.log('New address created!');
-    console.log(`Address: ${address.toString()}`);
-
-    console.log('Creating a new person...');
-    const person = new nodejslib.Person('Wayne', 'Bruce', 25, address);
-    console.log('New person created!');
-    console.log(person.toString());
-
-    nodejslib.Library.terminate();
+class MyGenerator extends nodejslib.Generator {
+  generateInt(data) {
+    return (data * data);
   }
-  catch (error) {
-    console.error(`An error has occurred: ${error}`);
-    return (-1);
-  }
-  return (0);
-};
 
-process.exit(main());
+  generateString(data) {
+    return (`${data}`);
+  }
+}
+
+function main(args) {
+  return new Promise((resolve, reject) => {
+    const initOk = nodejslib.Library.initialize();
+    if (!initOk) {
+      reject('Failed to initialize library.');
+      return;
+    }
+
+    try {
+      console.log(`Library initialized... version ${nodejslib.Library.getVersionString()}`);
+
+      console.log('Creating a new address...');
+      const address = new nodejslib.Address({
+        streetNum: 9898,
+        street: 'Corner St.',
+        city: 'Gotham',
+        province: 'CA',
+        zipCode: '4132',
+        country:'Antartica'
+      });
+      console.log('New address created!');
+
+      console.log('Address:');
+      console.log(`${address}`);
+
+      console.log('Creating a new person...');
+      const person = new nodejslib.Person({
+        lastName: 'Wayne',
+        firstName: 'Bruce',
+        age: 25,
+        address: address
+      });
+      console.log('New person created!');
+
+      console.log('Person:');
+      console.log(`${person}`);
+
+      console.log('Creating a new generator...');
+      const myGenerator = new MyGenerator();
+      console.log('New generator created!');
+
+      console.log('Creating a new printer...');
+      const printer = new nodejslib.Printer({
+        generator: myGenerator
+      });
+      console.log('New printer created!');
+
+      console.log('Performing printer actions...');
+      printer.printInt();
+      printer.printString();
+
+      resolve();
+    }
+    catch (error) {
+      reject(error);
+    }
+    finally {
+      nodejslib.Library.uninitialize();
+    }
+  });
+}
+
+main(process.argv).then(() => {
+  process.exit(0);
+}).catch(error => {
+  console.error(`An error has occurred: ${error}`);
+  process.exit(-1);
+});
