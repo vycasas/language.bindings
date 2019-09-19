@@ -1,63 +1,72 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import os
+# To run this test:
+# export PYTHONPATH=/path/to/pythonlib_native.so/parent/directory
+# python3 pythonlib_test.py
+
 import sys
-
 import pythonlib
 
 class MyGenerator(pythonlib.GeneratorBase):
-    def __init__(self):
-        pass
-
-    def generate_int(self, data):
+    def generate_int(
+        self,
+        data):
         return data * data
 
-    def generate_string(self, data):
-        return '{}'.format(data)
+    def generate_string(
+        self,
+        data):
+        return f'{data}'
 
 def main(args):
     try:
-        pythonlib.Library.initialize()
+        init_ok = pythonlib.Library.initialize()
+        if not init_ok:
+            sys.stderr.write('Failed to initialize library.')
+            return -1
 
-        print('Library initialized... version {}'.format(pythonlib.Library.get_version_string()))
+        sys.stdout.write(f'Library initialized... version {pythonlib.Library.get_version_string()}\n')
 
-        print('Creating a new address...')
-        address = pythonlib.Address(9898, 'Corner St.', 'Gotham', 'CA', 'Antartica', '4132')
-        print('New address created!')
-        print('Address:')
-        print(address)
+        sys.stdout.write('Creating a new address...\n')
+        address = pythonlib.Address(
+            street_num=9898,
+            street='Corner St.',
+            city='Gotham',
+            province='CA',
+            zip_code='4132',
+            country='Antartica')
+        sys.stdout.write('New address created!\n')
 
-        print('Creating a new person...')
-        person = pythonlib.Person('Wayne', 'Bruce', 28, address)
-        print('New person created!')
-        print('Person:')
-        print(person)
+        sys.stdout.write(f'Address:\n{address}\n')
 
-        print('Creating a new generator...')
+        sys.stdout.write('Creating a new person...\n')
+        person = pythonlib.Person(
+            last_name='Wayne',
+            first_name='Bruce',
+            age=25,
+            address=address)
+        sys.stdout.write('New person created!\n')
+
+        sys.stdout.write(f'Person:\n{person}\n')
+
+        sys.stdout.write('Creating a new generator...\n')
         generator = MyGenerator()
-        print('New generator created!')
-        print('Creating a new printer...')
-        printer = pythonlib.Printer(generator)
-        print('New printer created!')
-        print('Performing printer actions...')
+        sys.stdout.write('New generator created!\n')
+
+        sys.stdout.write('Creating a new printer...\n')
+        printer = pythonlib.Printer(generator=generator)
+        sys.stdout.write('New printer created!\n')
+
+        sys.stdout.write('Performing printer actions...\n')
         printer.print_int()
         printer.print_string()
 
-        pythonlib.Library.terminate()
-    except pythonlib.PythonLibError as e:
-        sys.stderr.write('An error has occurred: {}.{}'.format(e.getMessage(), os.linesep))
-        sys.stderr.flush()
-        return -1
+        return 0
     except Exception as e:
-        sys.stderr.write('An error has occurred: {}.{}'.format(e, os.linesep))
-        sys.stderr.flush()
+        sys.stderr.write(f'An error has occurred: {e}\n')
         return -1
-    except:
-        sys.stderr.write('An unknown error has occurred.{}'.format(os.linesep))
-        sys.stderr.flush()
-        return -1
-
-    return 0
+    finally:
+        pythonlib.Library.uninitialize()
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

@@ -1,72 +1,83 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(nodejslib CXX)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+project(nodejslib C)
 
-# Ideally, it is recommended to use node-gyp (https://github.com/nodejs/node-gyp) to build Node.js addons, but because
-# we are already using CMake, it is easier to just stick with it for this sample project.
+if (NOT TARGET clib)
+    message(FATAL_ERROR "Project nodejslib requires building clib first.")
+    return ()
+endif ()
+
+if (NOT LB_NODEJS_HOME)
+    message(FATAL_ERROR "LB_NODEJS_HOME must be set to build nodejslib.")
+    return ()
+endif ()
+
+set(LB_NODEJS_INCLUDE_DIR "${LB_NODEJS_HOME}/include/node")
+set(LB_NODEJS_LIBRARY)
+
+message(STATUS "Building project: nodejslib")
+
+set(LB_NODEJSLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
+set(LB_NODEJSLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
+
+set(LB_NODEJSLIB_HEADER_FILES
+    "${LB_NODEJSLIB_HEADER_DIR}/dotslashzero/nodejslib/nodejslib.h")
+set(LB_NODEJSLIB_SOURCE_FILES
+    "${LB_NODEJSLIB_SOURCE_DIR}/dotslashzero/nodejslib/nodejslib.c")
+set(LB_NODEJSLIB_NODEJS_SOURCE_FILE
+    "${LB_NODEJSLIB_SOURCE_DIR}/dotslashzero/nodejslib/nodejslib.js")
+
+source_group(headers\\dotslashzero\\nodejslib FILES ${LB_NODEJSLIB_HEADER_FILES})
+source_group(sources\\dotslashzero\\nodejslib FILES ${LB_NODEJSLIB_SOURCE_FILES} ${LB_NODEJSLIB_NODEJS_SOURCE_FILE})
 
 if (UNIX)
-    set(CXX_FLAGS "-std=c++11 -W -Wall -Wextra -Wno-unused-parameter -pedantic -pedantic-errors") # -Werror
-    set(SHARED_LIBRARY_CXX_FLAGS "-fpic -fPIC -fvisibility=hidden")
-    set(EXECUTABLE_CXX_FLAGS "-fpie -fPIE")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS c++ c)
+    set(LB_NODEJSLIB_COMPILE_DEFINITIONS)
+    set(LB_NODEJSLIB_COMPILE_OPTIONS
+        -W -Wall -Wextra -Werror
+        -pedantic -pedantic-errors
+        -fvisibility=hidden
+        -fpic -fPIC
+        -fexceptions -frtti)
+    set(LB_NODEJSLIB_LINK_OPTIONS)
+    if (APPLE)
+        set(LB_NODEJSLIB_LINK_OPTIONS ${LB_NODEJSLIB_LINK_OPTIONS} -undefined dynamic_lookup)
+    endif ()
 elseif (MSVC)
-    set(CXX_FLAGS "")
-    set(SHARED_LIBRARY_CXX_FLAGS "")
-    set(EXECUTABLE_CXX_FLAGS "")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS "")
+    set(LB_NODEJSLIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
+    set(LB_NODEJSLIB_COMPILE_OPTIONS /W4 /WX /EHsc /GR /openmp-)
+    set(LB_NODEJSLIB_LINK_OPTIONS /WX)
 endif ()
 
-if (UNIX)
-    set(COPY_COMMAND cp)
-    set(COPY_ARGS -rv)
-elseif (WIN32)
-    set(COPY_COMMAND copy)
-    set(COPY_ARGS /y)
-endif ()
+add_library(
+    nodejslib SHARED
+    ${LB_NODEJSLIB_HEADER_FILES}
+    ${LB_NODEJSLIB_SOURCE_FILES}
+    ${LB_NODEJSLIB_NODEJS_SOURCE_FILE})
 
-# TODO: find a way to easily search for the headers and library
-if (NODEJS_INCLUDE_DIR)
-    message(STATUS "Using NODEJS_INCLUDE_DIR: ${NODEJS_INCLUDE_DIR}.")
-else ()
-    message(FATAL_ERROR "Please set NODEJS_INCLUDE_DIR CMake variable.")
-endif ()
+target_compile_definitions(
+    nodejslib
+    PRIVATE ${LB_NODEJSLIB_COMPILE_DEFINITIONS})
+target_compile_options(
+    nodejslib
+    PRIVATE ${LB_NODEJSLIB_COMPILE_OPTIONS})
+target_include_directories(
+    nodejslib
+    PUBLIC ${LB_NODEJSLIB_HEADER_DIR}
+    PRIVATE ${LB_NODEJS_INCLUDE_DIR})
+target_link_options(
+    nodejslib
+    PRIVATE ${LB_NODEJSLIB_LINK_OPTIONS})
+target_link_libraries(
+    nodejslib
+    PUBLIC ${LB_NODEJS_LIBRARY} clib)
 
-set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-set(CMAKE_MODULE_LINKER_FLAGS "${LINKER_FLAGS} ${SHARED_LIBRARY_LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS} ${EXECUTABLE_LINKER_FLAGS}")
-include_directories(
-    ${CMAKE_SOURCE_DIR}
-    ${NODEJS_INCLUDE_DIR}
-)
-
-add_library(nodejslib MODULE api_nodejs.cxx api_nodejs.hxx)
-target_link_libraries(nodejslib cxxlib clib ${SYSTEM_LIBS})
-set_target_properties(nodejslib PROPERTIES COMPILE_FLAGS "${SHARED_LIBRARY_CXX_FLAGS}")
-set_target_properties(nodejslib PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")#"-Wl,--unresolved-symbols=ignore-all")
 set_target_properties(nodejslib PROPERTIES OUTPUT_NAME "nodejslib_native")
 set_target_properties(nodejslib PROPERTIES PREFIX "")
 set_target_properties(nodejslib PROPERTIES SUFFIX ".node")
-if (APPLE)
-    set_target_properties(nodejslib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
-endif ()
+
 add_custom_command(
     TARGET nodejslib
     POST_BUILD
-    COMMAND ${COPY_COMMAND} ${COPY_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}/nodejslib.js ${CMAKE_BINARY_DIR}/nodejslib.js
-    VERBATIM
-)
+    COMMAND
+        ${CMAKE_COMMAND} -E copy ${LB_NODEJSLIB_NODEJS_SOURCE_FILE} "$<TARGET_FILE_DIR:nodejslib>/nodejslib.js")
 
-add_custom_target(
-    test_nodejs ALL
-    COMMAND ${COPY_COMMAND} ${COPY_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}/test/test.js ${CMAKE_BINARY_DIR}/test.js
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test/test.js
-    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test/test.js
-    VERBATIM
-)
-add_dependencies(test_nodejs nodejslib)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")

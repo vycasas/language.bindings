@@ -1,63 +1,86 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(pythonlib CXX)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+project(pythonlib C)
+
+if (NOT TARGET clib)
+    message(FATAL_ERROR "Project pythonlib requires building clib first.")
+    return ()
+endif ()
+
+find_package(Python3 COMPONENTS Interpreter Development)
+if (NOT Python3_FOUND)
+    message(FATAL_ERROR "Python3 not found")
+    return ()
+endif ()
+
+message(STATUS "Building project: pythonlib")
+
+set(LB_PYTHONLIB_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/headers")
+set(LB_PYTHONLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/code/sources")
+
+set(LB_PYTHONLIB_HEADER_FILES
+    "${LB_PYTHONLIB_HEADER_DIR}/dotslashzero/pythonlib/pythonlib.h")
+set(LB_PYTHONLIB_SOURCE_FILES
+    "${LB_PYTHONLIB_SOURCE_DIR}/dotslashzero/pythonlib/pythonlib.c")
+set(LB_PYTHONLIB_PYTHON_SOURCE_FILE
+    "${LB_PYTHONLIB_SOURCE_DIR}/dotslashzero/pythonlib/pythonlib.py")
+
+source_group(headers\\dotslashzero\\pythonlib FILES ${LB_PYTHONLIB_HEADER_FILES})
+source_group(sources\\dotslashzero\\pythonlib FILES ${LB_PYTHONLIB_SOURCE_FILES} ${LB_PYTHONLIB_PYTHON_SOURCE_FILE})
 
 if (UNIX)
-    set(CXX_FLAGS "-std=c++11 -W -Wall -Wextra -Werror -pedantic -pedantic-errors")
-    set(SHARED_LIBRARY_CXX_FLAGS "-fpic -fPIC -fvisibility=hidden")
-    set(EXECUTABLE_CXX_FLAGS "-fpie -fPIE")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS c++ c)
+    set(LB_PYTHONLIB_COMPILE_DEFINITIONS)
+    set(LB_PYTHONLIB_COMPILE_OPTIONS
+        -W -Wall -Wextra -Werror
+        -pedantic -pedantic-errors
+        -fvisibility=hidden
+        -fpic -fPIC
+        -fexceptions -frtti)
+    set(LB_PYTHONLIB_LINK_OPTIONS)
 elseif (MSVC)
-    set(CXX_FLAGS "")
-    set(SHARED_LIBRARY_CXX_FLAGS "")
-    set(EXECUTABLE_CXX_FLAGS "")
-    set(LINKER_FLAGS "")
-    set(SHARED_LIBRARY_LINKER_FLAGS "")
-    set(EXECUTABLE_LINKER_FLAGS "")
-    set(SYSTEM_LIBS "")
+    set(LB_PYTHONLIB_COMPILE_DEFINITIONS -DUNICODE -D_UNICODE)
+    set(LB_PYTHONLIB_COMPILE_OPTIONS /W4 /WX /EHsc /GR /openmp-)
+    set(LB_PYTHONLIB_LINK_OPTIONS /WX)
 endif ()
 
-if (UNIX)
-    set(COPY_COMMAND cp)
-    set(COPY_ARGS -rv)
-elseif (WIN32)
-    set(COPY_COMMAND copy)
-    set(COPY_ARGS /y)
-endif ()
+add_library(
+    pythonlib SHARED
+    ${LB_PYTHONLIB_HEADER_FILES}
+    ${LB_PYTHONLIB_SOURCE_FILES}
+    ${LB_PYTHONLIB_PYTHON_SOURCE_FILE})
 
-find_package(PythonInterp)
-find_package(PythonLibs)
+target_compile_definitions(
+    pythonlib
+    PRIVATE ${LB_PYTHONLIB_COMPILE_DEFINITIONS})
+target_compile_options(
+    pythonlib
+    PRIVATE ${LB_PYTHONLIB_COMPILE_OPTIONS})
+target_include_directories(
+    pythonlib
+    PUBLIC ${LB_PYTHONLIB_HEADER_DIR}
+    PRIVATE ${Python3_INCLUDE_DIRS})
+target_link_options(
+    pythonlib
+    PRIVATE ${LB_PYTHONLIB_LINK_OPTIONS})
+target_link_libraries(
+    pythonlib
+    PUBLIC ${Python3_LIBRARIES} clib)
 
-set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-set(CMAKE_MODULE_LINKER_FLAGS "${LINKER_FLAGS} ${SHARED_LIBRARY_LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS} ${EXECUTABLE_LINKER_FLAGS}")
-include_directories(
-    ${CMAKE_SOURCE_DIR}
-    ${PYTHON_INCLUDE_DIRS}
-)
-
-add_library(pythonlib MODULE api_python.cxx api_python.hxx)
-target_link_libraries(pythonlib ${PYTHON_LIBRARIES} cxxlib clib ${SYSTEM_LIBS})
-set_target_properties(pythonlib PROPERTIES COMPILE_FLAGS "${SHARED_LIBRARY_CXX_FLAGS}")
 set_target_properties(pythonlib PROPERTIES OUTPUT_NAME "pythonlib_native")
 set_target_properties(pythonlib PROPERTIES PREFIX "")
-if (APPLE)
-    set_target_properties(pythonlib PROPERTIES MACOSX_RPATH "${CMAKE_BINARY_DIR}")
+if (WIN32)
+    set_target_properties(
+        pythonlib
+        PROPERTIES SUFFIX ".pyd")
+else ()
+    set_target_properties(
+        pythonlib
+        PROPERTIES SUFFIX ".so")
 endif ()
+
 add_custom_command(
     TARGET pythonlib
     POST_BUILD
-    COMMAND ${COPY_COMMAND} ${COPY_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}/pythonlib.py ${CMAKE_BINARY_DIR}/pythonlib.py
-    VERBATIM
-)
+    COMMAND
+        ${CMAKE_COMMAND} -E copy ${LB_PYTHONLIB_PYTHON_SOURCE_FILE} "$<TARGET_FILE_DIR:pythonlib>/pythonlib.py")
 
-add_custom_target(
-    test_python ALL
-    COMMAND ${COPY_COMMAND} ${COPY_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}/test/test.py ${CMAKE_BINARY_DIR}/test.py
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test/test.py
-    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test/test.py
-    VERBATIM
-)
-add_dependencies(test_python pythonlib)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")
